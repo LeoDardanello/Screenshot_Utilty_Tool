@@ -1,4 +1,5 @@
 use eframe::{egui,run_native};  
+mod screenshot;
 
 #[derive(Default)]//needed for default trait in inizialization
 struct MyApp{}
@@ -22,6 +23,7 @@ impl eframe::App for MyApp{
                 
                 if ui.button("Take Screenshot!").clicked(){
                     ui.label("pressed!");
+                    screenshot::full_screen();
                 }
             });
         });
