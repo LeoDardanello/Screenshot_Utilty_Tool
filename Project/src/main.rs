@@ -6,7 +6,8 @@ enum Enum { First, Second, Third }
 
 struct MyApp{
     hotkeys:Vec<String>,
-    output_format:String
+    output_format:String,
+    mode:i32
 }
 
 impl MyApp{
@@ -21,7 +22,8 @@ impl MyApp{
 
         MyApp{
             hotkeys:h,
-            output_format:default_output_format
+            output_format:default_output_format,
+            mode:0
         }
     }
 }
@@ -39,54 +41,64 @@ impl eframe::App for MyApp{
         custom_window_frame(ctx, frame, "Screenshot Utility Tool", |ui| {//the title in this row is used
             let mut my_enum = Enum::First;
             //ui is needed to place widgets
-            ui.label(egui::RichText::new(
-                "Welcome to the Screenshot Utility Tool, everything is ready to take a screenshot!")
-                .font(egui::FontId::proportional(17.5)));
-            ui.horizontal(|ui| {//to place widgets on the same row
-                
-                if ui.button("Take Screenshot!").clicked(){
-                    println!("pressed");
-                    screenshot::full_screen();
-                }
-            });
-            ui.add_space(10.0);
-            ui.label(egui::RichText::new("Hotkey List:").font(egui::FontId::proportional(17.0)));
-            ui.add_space(10.0);
-            ui.label(egui::RichText::new("Click on the shortcut to edit it").font(egui::FontId::proportional(17.0)));
-            ui.add_space(10.0);
+            if self.mode==0{
+                ui.label(egui::RichText::new(
+                    "Welcome to the Screenshot Utility Tool, everything is ready to take a screenshot!")
+                    .font(egui::FontId::proportional(17.5)));
+                ui.horizontal(|ui| {//to place widgets on the same row
+                    
+                    if ui.button("Take Screenshot!").clicked(){
+                        println!("pressed");
+                        self.mode=1;
+                        //screenshot::full_screen();
+                    }
+                });
+                ui.add_space(10.0);
+                ui.label(egui::RichText::new("Hotkey List:").font(egui::FontId::proportional(17.0)));
+                ui.add_space(10.0);
+                ui.label(egui::RichText::new("Click on the shortcut to edit it").font(egui::FontId::proportional(17.0)));
+                ui.add_space(10.0);
 
-            ui.horizontal(|ui|{
-
-            //hotkeys display 
-            ui.vertical(|ui|{
-
-            for h in &self.hotkeys{
-                let parts:Vec<&str>=h.split(":").collect();
-                
                 ui.horizontal(|ui|{
-                ui.label(egui::RichText::new(parts[0]).font(egui::FontId::proportional(14.0)));
-                if ui.link(egui::RichText::new(parts[1]).font(egui::FontId::proportional(14.0))).clicked(){
-                    //modify hotkey
-                }
-            });
-            }   
-        });
-            ui.add_space(60.0);
-            //radio button for format selection
-            ui.vertical(|ui|{
-                /* 
-                if ui.radio(selected_option, 0, Label::new("Opzione 1")).clicked() {
-                    selected_option = 0;
-                }
-                if ui.radio(selected_option, 1, Label::new("Opzione 2")).clicked() {
-                    selected_option = 1;
-                }
-                */
-            })
 
-            });
+                //hotkeys display 
+                ui.vertical(|ui|{
 
-        });
+                for h in &self.hotkeys{
+                    let parts:Vec<&str>=h.split(":").collect();
+                    
+                    ui.horizontal(|ui|{
+                    ui.label(egui::RichText::new(parts[0]).font(egui::FontId::proportional(14.0)));
+                    if ui.link(egui::RichText::new(parts[1]).font(egui::FontId::proportional(14.0))).clicked(){
+                        //modify hotkey
+                    }
+                    });
+                }   
+                });
+                ui.add_space(60.0);
+                //radio button for format selection
+                ui.vertical(|ui|{
+                    /* 
+                    if ui.radio(selected_option, 0, Label::new("Opzione 1")).clicked() {
+                        selected_option = 0;
+                    }
+                    if ui.radio(selected_option, 1, Label::new("Opzione 2")).clicked() {
+                        selected_option = 1;
+                    }
+                    */
+                })
+
+                });
+
+            }
+            else if self.mode==1{
+                println!("cambiato modalita!");
+                if ui.button("return").clicked(){
+                    self.mode=0;
+                }
+            }
+            });
+    
     }
 }
 
