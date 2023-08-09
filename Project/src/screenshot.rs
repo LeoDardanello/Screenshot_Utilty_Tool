@@ -12,8 +12,8 @@ pub fn full_screen() {
 
 fn show_screen(image: screenshots::Image) {
     let image_rgba = image.rgba();
-    let new_width= image.width() as f32 * 0.3;
-    let new_heigth= image.height() as f32 * 0.3;
+    let width= image.width();
+    let heigth= image.height();
 
     let mut image_data: Vec<u32> = Vec::new();
     for pixel in image_rgba.chunks_exact(4) {
@@ -26,8 +26,8 @@ fn show_screen(image: screenshots::Image) {
 
     let mut window = Window::new(
         "Rust Image Viewer",
-        new_width as usize,
-        new_heigth as usize,
+        width as usize,
+        heigth as usize,
         WindowOptions::default()
     )
     .unwrap_or_else(|e| {
@@ -37,7 +37,7 @@ fn show_screen(image: screenshots::Image) {
 
     while window.is_open() && !window.is_key_down(Key::Escape) {
         window
-            .update_with_buffer(&image_data, image.width()  as usize, image.height() as usize)
+            .update_with_buffer(&image_data, width as usize, heigth as usize)
             .expect("Impossibile aggiornare la finestra");
     }
 }
