@@ -46,6 +46,7 @@ impl eframe::App for MyApp{
                 
                 if ui.button("Take Screenshot!").clicked(){
                     println!("pressed");
+                    screenshot::full_screen();
                 }
             });
             ui.add_space(10.0);
