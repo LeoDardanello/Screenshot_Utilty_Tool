@@ -1,20 +1,16 @@
+use minifb::{Key, KeyRepeat,/*  MouseButton, MouseMode,*/ Window, WindowOptions};
 use screenshots::Screen;
-// use std::fs;
-use minifb::{Key, Window, WindowOptions};
+use std::fs;
 
 pub fn full_screen() {
     let screens = Screen::all().unwrap();
     for screen in screens {
-        let image = screen.capture().unwrap();
-        show_screen(image)
+        show_screen(screen);
     }
 }
 
-fn show_screen(image: screenshots::Image) {
+fn visualize_image(image: &screenshots::Image) -> Vec<u32> {
     let image_rgba = image.rgba();
-    let width= image.width();
-    let heigth= image.height();
-
     let mut image_data: Vec<u32> = Vec::new();
     for pixel in image_rgba.chunks_exact(4) {
         let u32_pixel = ((pixel[3] as u32) << 24)
@@ -23,30 +19,80 @@ fn show_screen(image: screenshots::Image) {
             | (pixel[2] as u32);
         image_data.push(u32_pixel);
     }
+    image_data
+}
+
+
+fn show_screen(screen: screenshots::Screen) {
+    let mut image = screen.capture().unwrap();
+    let mut image_data = visualize_image(&image);
 
     let mut window = Window::new(
         "Rust Image Viewer",
-        width as usize,
-        heigth as usize,
-        WindowOptions::default()
+        image.width() as usize,
+        image.height() as usize,
+        WindowOptions::default(),
     )
     .unwrap_or_else(|e| {
         panic!("{}", e);
     });
-    window.set_position(300, 10);
+    window.set_position(10, 10);
+
 
     while window.is_open() && !window.is_key_down(Key::Escape) {
         window
-            .update_with_buffer(&image_data, width as usize, heigth as usize)
+            .update_with_buffer(&image_data, image.width() as usize, image.height() as usize)
             .expect("Impossibile aggiornare la finestra");
+
+        if window.is_key_pressed(Key::S, KeyRepeat::No) {
+            let buffer = image.to_png(None).unwrap();
+            fs::write(format!("./{}.png", screen.display_info.id), buffer).unwrap();
+        }
+
+        if window.is_key_pressed(Key::A, KeyRepeat::No) && !window.is_key_down(Key::X) {
+            println!("Screenshot di un'area");
+            
+        image = screen_area(screen, &mut image_data);
+    } 
+
+        if window.is_key_pressed(Key::C, KeyRepeat::No) {
+            println!("Copia");
+        }
+
+        if window.is_key_pressed(Key::M, KeyRepeat::No) {
+            println!("Modifica");
+        }
+        window.update()
     }
 }
 
-// fn screen_area(x: u8 ,y: u8, width: u8,eigth: u8){
-//     let screens = Screen::all().unwrap();
-//     for screen in screens {
-//         let  image = screen.capture_area(x,y,widt,heigth).unwrap();
-//         let  buffer = image.to_png(None).unwrap();
-//         fs::write(format!("./{}-2.png", screen.display_info.id), buffer).unwrap();
+fn screen_area(screen: screenshots::Screen, image_data: &mut Vec<u32>) -> screenshots::Image {
+    let dimensions = (10, 20, 150, 140);
+    let area = screen
+        .capture_area(dimensions.0, dimensions.1, dimensions.2, dimensions.3)
+        .unwrap();
+    *image_data = visualize_image(&area);
+    area
+}
+
+// fn find_dimension(window: MutexGuard<minifb::Window>) ->  Option<(i32, i32, u32, u32)> {
+//     let mut d: (i32, i32, u32, u32)=(0,0,0,0);
+//     while window.get_mouse_down(MouseButton::Left) {
+//         if d.0==0 && d.1==0 {
+//             let pos = window.get_mouse_pos(MouseMode::Clamp);
+//             if let Some((x, y)) = pos {
+//                 d.0 = x as i32;
+//                 d.1 = y as i32;
+//             }
+//         }
 //     }
+//     if (d.0!=0 || d.1!=0) && d.2==0 && d.3==0{
+//         let pos = window.get_mouse_pos(MouseMode::Clamp);
+//             if let Some((x, y)) = pos {
+//                 d.2 = (d.0- (x as i32)) as u32;
+//                 d.3 = (d.1-(y as i32)) as u32;
+//             }
+//     }
+
+//     Some(d)
 // }
