@@ -1,7 +1,30 @@
 use eframe::{egui,run_native};  
+mod screenshot;
 
-#[derive(Default)]//needed for default trait in inizialization
-struct MyApp{}
+#[derive(PartialEq)]
+enum Enum { First, Second, Third }
+
+struct MyApp{
+    hotkeys:Vec<String>,
+    output_format:String
+}
+
+impl MyApp{
+    //costructor for MyApp
+    fn new()->MyApp{
+        let mut h=Vec::new();
+        let default_output_format=String::from(".jpg");
+        //initial static hotkeys list
+        h.push(ToString::to_string("Take Screenshot: Ctrl+K"));
+        h.push(ToString::to_string("Save: Maiusc+C+U"));
+        h.push(ToString::to_string("Boh: LOLOLOLOLOL"));
+
+        MyApp{
+            hotkeys:h,
+            output_format:default_output_format
+        }
+    }
+}
 
 //implementing eframe::App trait for MyApp
 impl eframe::App for MyApp{
@@ -14,6 +37,7 @@ impl eframe::App for MyApp{
     fn update(&mut self, ctx: &egui::Context, frame: &mut eframe::Frame) {
         //custom window frame
         custom_window_frame(ctx, frame, "Screenshot Utility Tool", |ui| {//the title in this row is used
+            let mut my_enum = Enum::First;
             //ui is needed to place widgets
             ui.label(egui::RichText::new(
                 "Welcome to the Screenshot Utility Tool, everything is ready to take a screenshot!")
@@ -21,9 +45,46 @@ impl eframe::App for MyApp{
             ui.horizontal(|ui| {//to place widgets on the same row
                 
                 if ui.button("Take Screenshot!").clicked(){
-                    ui.label("pressed!");
+                    println!("pressed");
                 }
             });
+            ui.add_space(10.0);
+            ui.label(egui::RichText::new("Hotkey List:").font(egui::FontId::proportional(17.0)));
+            ui.add_space(10.0);
+            ui.label(egui::RichText::new("Click on the shortcut to edit it").font(egui::FontId::proportional(17.0)));
+            ui.add_space(10.0);
+
+            ui.horizontal(|ui|{
+
+            //hotkeys display 
+            ui.vertical(|ui|{
+
+            for h in &self.hotkeys{
+                let parts:Vec<&str>=h.split(":").collect();
+                
+                ui.horizontal(|ui|{
+                ui.label(egui::RichText::new(parts[0]).font(egui::FontId::proportional(14.0)));
+                if ui.link(egui::RichText::new(parts[1]).font(egui::FontId::proportional(14.0))).clicked(){
+                    //modify hotkey
+                }
+            });
+            }   
+        });
+            ui.add_space(60.0);
+            //radio button for format selection
+            ui.vertical(|ui|{
+                /* 
+                if ui.radio(selected_option, 0, Label::new("Opzione 1")).clicked() {
+                    selected_option = 0;
+                }
+                if ui.radio(selected_option, 1, Label::new("Opzione 2")).clicked() {
+                    selected_option = 1;
+                }
+                */
+            })
+
+            });
+
         });
     }
 }
@@ -165,7 +226,7 @@ let native_options=eframe::NativeOptions{
 
 //app_name,native_options,app_creator, when usign the custom frame window the name in the first field is not used
 run_native("Screenshot Utility Tool",native_options, 
-                Box::new(|_cc| Box::<MyApp>::default())).expect("A probelem has occurred while starting up!");
+                Box::new(|_cc| Box::new(MyApp::new()))).expect("A probelem has occurred while starting up!");
                 //|_cc| dummy closure, needed to make 
                 // on the fly function
 }
