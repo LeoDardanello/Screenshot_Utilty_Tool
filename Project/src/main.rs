@@ -4,7 +4,7 @@ mod screenshot;
 #[derive(PartialEq)]
 enum Enum { First, Second, Third }
 
-struct MyApp{
+struct MyApp{   
     hotkeys:Vec<String>,
     output_format:String,
     mode:i32
@@ -30,7 +30,7 @@ impl MyApp{
 
 //implementing eframe::App trait for MyApp
 impl eframe::App for MyApp{
-    
+
     fn clear_color(&self, _visuals: &egui::Visuals) -> [f32; 4] {
         egui::Rgba::TRANSPARENT.to_array() // Make sure we don't paint anything behind the rounded corners
     }
@@ -38,7 +38,7 @@ impl eframe::App for MyApp{
     //mandatory function for App trait
     fn update(&mut self, ctx: &egui::Context, frame: &mut eframe::Frame) {
         //custom window frame
-        custom_window_frame(ctx, frame, "Screenshot Utility Tool", |ui| {//the title in this row is used
+        custom_window_frame(ctx, frame, "Screenshot Utility Tool", |frame,ui| {//the title in this row is used
             let mut my_enum = Enum::First;
             //ui is needed to place widgets
             if self.mode==0{
@@ -48,9 +48,9 @@ impl eframe::App for MyApp{
                 ui.horizontal(|ui| {//to place widgets on the same row
                     
                     if ui.button("Take Screenshot!").clicked(){
-                        println!("pressed");
+                        frame.set_minimized(true);
                         self.mode=1;
-                        //screenshot::full_screen();
+                        screenshot::full_screen();
                     }
                 });
                 ui.add_space(10.0);
@@ -79,13 +79,13 @@ impl eframe::App for MyApp{
                 //radio button for format selection
                 ui.vertical(|ui|{
                     /* 
-                    if ui.radio(selected_option, 0, Label::new("Opzione 1")).clicked() {
+                    if ui.radio(selected_option, 0, "Opzione 1").clicked() {
                         selected_option = 0;
                     }
-                    if ui.radio(selected_option, 1, Label::new("Opzione 2")).clicked() {
+                    if ui.radio(selected_option, 1, "Opzione 2").clicked() {
                         selected_option = 1;
                     }
-                    */
+                    */     
                 })
 
                 });
@@ -106,7 +106,7 @@ fn custom_window_frame(
     ctx: &egui::Context,
     frame: &mut eframe::Frame,
     title: &str,
-    add_contents: impl FnOnce(&mut egui::Ui),
+    add_contents: impl FnOnce(&mut eframe::Frame,&mut egui::Ui),
 ) {
 
 
@@ -138,7 +138,7 @@ fn custom_window_frame(
         }
         .shrink(4.0);
         let mut content_ui = ui.child_ui(content_rect, *ui.layout());
-        add_contents(&mut content_ui);
+        add_contents(frame,&mut content_ui);
     });
 }
 
