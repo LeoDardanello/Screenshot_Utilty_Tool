@@ -1,9 +1,9 @@
 use minifb::{Key, KeyRepeat,/*  MouseButton, MouseMode,*/ Window, WindowOptions};
 use screenshots::Screen;
 use std::fs;
-use egui::{Ui, TextureId};
+use egui::{Ui, /*TextureId*/};
 use eframe::egui;
-use std::collections::HashMap;
+// use std::collections::HashMap;
 
 
 pub fn full_screen(ui: &mut Ui) {
