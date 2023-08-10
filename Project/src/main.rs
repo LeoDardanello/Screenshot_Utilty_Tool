@@ -7,7 +7,8 @@ enum Enum { First, Second, Third }
 struct MyApp{   
     hotkeys:Vec<String>,
     output_format:String,
-    mode:i32
+    mode:i32,
+    take_screen: bool
 }
 
 impl MyApp{
@@ -23,7 +24,8 @@ impl MyApp{
         MyApp{
             hotkeys:h,
             output_format:default_output_format,
-            mode:0
+            mode:0,
+            take_screen: false
         }
     }
 }
@@ -38,7 +40,7 @@ impl eframe::App for MyApp{
     //mandatory function for App trait
     fn update(&mut self, ctx: &egui::Context, frame: &mut eframe::Frame) {
         //custom window frame
-        custom_window_frame(ctx, frame, "Screenshot Utility Tool", |frame,ui| {//the title in this row is used
+        custom_window_frame(ctx, frame, "Screenshot Utility Tool", |frame: &mut eframe::Frame, ui| {//the title in this row is used
             let mut my_enum = Enum::First;
             //ui is needed to place widgets
             if self.mode==0{
@@ -48,9 +50,11 @@ impl eframe::App for MyApp{
                 ui.horizontal(|ui| {//to place widgets on the same row
                     
                     if ui.button("Take Screenshot!").clicked(){
+                        println!("pressed"); 
+                        
                         frame.set_minimized(true);
                         self.mode=1;
-                        screenshot::full_screen();
+                        self.take_screen=true;
                     }
                 });
                 ui.add_space(10.0);
@@ -96,6 +100,11 @@ impl eframe::App for MyApp{
                 if ui.button("return").clicked(){
                     self.mode=0;
                 }
+                if self.take_screen==true{
+                    screenshot::full_screen(ui);
+                    self.take_screen=false;
+                }
+                
             }
             });
     
@@ -106,7 +115,7 @@ fn custom_window_frame(
     ctx: &egui::Context,
     frame: &mut eframe::Frame,
     title: &str,
-    add_contents: impl FnOnce(&mut eframe::Frame,&mut egui::Ui),
+    add_contents: impl FnOnce(&mut eframe::Frame, &mut egui::Ui),
 ) {
 
 
@@ -138,7 +147,7 @@ fn custom_window_frame(
         }
         .shrink(4.0);
         let mut content_ui = ui.child_ui(content_rect, *ui.layout());
-        add_contents(frame,&mut content_ui);
+        add_contents(frame, &mut content_ui);
     });
 }
 
