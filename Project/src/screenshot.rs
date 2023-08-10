@@ -1,16 +1,34 @@
 use minifb::{Key, KeyRepeat,/*  MouseButton, MouseMode,*/ Window, WindowOptions};
 use screenshots::Screen;
 use std::fs;
+use egui::{Ui, TextureId};
+use eframe::egui;
+use std::collections::HashMap;
 
-pub fn full_screen() {
+
+pub fn full_screen(ui: &mut Ui) {
+    
+    
     let screens = Screen::all().unwrap();
     for screen in screens {
-        show_screen(screen);
+        show_screen(screen, ui);
+        
     }
+    
 }
 
 fn visualize_image(image: &screenshots::Image) -> Vec<u32> {
-    let image_rgba = image.rgba();
+    let image_rgba= image.rgba();
+
+    // let mut textures: HashMap<TextureId, egui::Texture> = HashMap::new();
+    // let texture_id = egui::TextureId::User(0);
+    // let texture = egui::Texture {
+    //     width: image.width() as usize,
+    //     height: image.height() as usize,
+    //     pixels: image.rgba()
+    // };
+        // textures.insert(texture_id, texture);
+
     let mut image_data: Vec<u32> = Vec::new();
     for pixel in image_rgba.chunks_exact(4) {
         let u32_pixel = ((pixel[3] as u32) << 24)
@@ -23,7 +41,7 @@ fn visualize_image(image: &screenshots::Image) -> Vec<u32> {
 }
 
 
-fn show_screen(screen: screenshots::Screen) {
+fn show_screen(screen: screenshots::Screen, ui: &mut Ui) {
     let mut image = screen.capture().unwrap();
     let mut image_data = visualize_image(&image);
 
