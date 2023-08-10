@@ -1,36 +1,36 @@
-use eframe::{egui,run_native};  
+use eframe::{egui, run_native};
 mod screenshot;
 
-
-struct MyApp{   
-    hotkeys:Vec<String>,
-    output_format:String,
-    mode:i32,
-    take_screen: bool
+struct MyApp {
+    hotkeys: Vec<String>,
+    output_format: String,
+    mode: i32,
+    take_screen: bool,
+    start_screen: bool,
 }
 
-impl MyApp{
+impl MyApp {
     //costructor for MyApp
-    fn new()->MyApp{
-        let mut h=Vec::new();
-        let default_output_format=String::from(".jpg");//default output format
-        //initial static hotkeys list
+    fn new() -> MyApp {
+        let mut h = Vec::new();
+        let default_output_format = String::from(".jpg"); //default output format
+                                                          //initial static hotkeys list
         h.push(ToString::to_string("Take Screenshot: Ctrl+K"));
         h.push(ToString::to_string("Save: Maiusc+C+U"));
         h.push(ToString::to_string("Boh: LOLOLOLOLOL"));
 
-        MyApp{
-            hotkeys:h,
-            output_format:default_output_format,
-            mode:0,
-            take_screen: false
+        MyApp {
+            hotkeys: h,
+            output_format: default_output_format,
+            mode: 0,
+            take_screen: false,
+            start_screen: false,
         }
     }
 }
 
 //implementing eframe::App trait for MyApp
-impl eframe::App for MyApp{
-
+impl eframe::App for MyApp {
     fn clear_color(&self, _visuals: &egui::Visuals) -> [f32; 4] {
         egui::Rgba::TRANSPARENT.to_array() // Make sure we don't paint anything behind the rounded corners
     }
@@ -38,121 +38,164 @@ impl eframe::App for MyApp{
     //mandatory function for App trait
     fn update(&mut self, ctx: &egui::Context, frame: &mut eframe::Frame) {
         //custom window frame
-        custom_window_frame(ctx, frame, "Screenshot Utility Tool", |frame: &mut eframe::Frame, ui| {//the title in this row is used
-            //ui is needed to place widgets
-            if self.mode==0{
-                ui.label(egui::RichText::new(
+        custom_window_frame(
+            &mut self.mode,
+            self.take_screen,
+            ctx,
+            frame,
+            "Screenshot Utility Tool",
+            |frame: &mut eframe::Frame, mode, ui| {
+                //the title in this row is used
+                //ui is needed to place widgets
+                if *mode == 0 {
+                    ui.label(egui::RichText::new(
                     "Welcome to the Screenshot Utility Tool, everything is ready to take a screenshot!")
                     .font(egui::FontId::proportional(17.5)));
-                ui.add_space(10.0);
-                ui.horizontal(|ui|{
-                ui.label(egui::RichText::new("Hotkey List:").font(egui::FontId::proportional(17.0)));
-                ui.add_space(250.0);
-                ui.label(egui::RichText::new("Format Selection:").font(egui::FontId::proportional(17.0)));
-                });
-                ui.add_space(10.0);
-                ui.label(egui::RichText::new("Click on the shortcut to edit it").font(egui::FontId::proportional(17.0)));
-                ui.add_space(10.0);
-
-                ui.horizontal(|ui|{
-
-                //hotkeys display 
-                ui.vertical(|ui|{
-
-                for h in &self.hotkeys{
-                    let parts:Vec<&str>=h.split(":").collect();
-                    
-                    ui.horizontal(|ui|{
-                    ui.label(egui::RichText::new(parts[0]).font(egui::FontId::proportional(14.0)));
-                    if ui.link(egui::RichText::new(parts[1]).font(egui::FontId::proportional(14.0))).clicked(){
-                        //modify hotkey
-                    }
+                    ui.add_space(10.0);
+                    ui.horizontal(|ui| {
+                        ui.label(
+                            egui::RichText::new("Hotkey List:")
+                                .font(egui::FontId::proportional(17.0)),
+                        );
+                        ui.add_space(250.0);
+                        ui.label(
+                            egui::RichText::new("Format Selection:")
+                                .font(egui::FontId::proportional(17.0)),
+                        );
                     });
-                }   
-                });
-                ui.add_space(185.0);
-                //radio button for format selection
-                ui.vertical(|ui|{
+                    ui.add_space(10.0);
+                    ui.label(
+                        egui::RichText::new("Click on the shortcut to edit it")
+                            .font(egui::FontId::proportional(17.0)),
+                    );
+                    ui.add_space(10.0);
 
-                    if ui.add(egui::RadioButton::new(self.output_format ==".jpg", ".jpg")).clicked() {
-                        self.output_format =String::from(".jpg");
-                    }
+                    ui.horizontal(|ui| {
+                        //hotkeys display
+                        ui.vertical(|ui| {
+                            for h in &self.hotkeys {
+                                let parts: Vec<&str> = h.split(":").collect();
 
-                    if ui.add(egui::RadioButton::new(self.output_format ==".png", ".png")).clicked() {
-                        self.output_format =String::from(".png");
-                    }
-                    if ui.add(egui::RadioButton::new(self.output_format ==".gif", ".gif")).clicked() {
-                        self.output_format =String::from(".gif");
-                    }
-                })
+                                ui.horizontal(|ui| {
+                                    ui.label(
+                                        egui::RichText::new(parts[0])
+                                            .font(egui::FontId::proportional(14.0)),
+                                    );
+                                    if ui
+                                        .link(
+                                            egui::RichText::new(parts[1])
+                                                .font(egui::FontId::proportional(14.0)),
+                                        )
+                                        .clicked()
+                                    {
+                                        //modify hotkey
+                                    }
+                                });
+                            }
+                        });
+                        ui.add_space(185.0);
+                        //radio button for format selection
+                        ui.vertical(|ui| {
+                            if ui
+                                .add(egui::RadioButton::new(self.output_format == ".jpg", ".jpg"))
+                                .clicked()
+                            {
+                                self.output_format = String::from(".jpg");
+                            }
 
-                });
-                ui.add_space(10.0);
-                ui.horizontal(|ui| {//to place widgets on the same row
-                    
-                    if ui.button("Take Screenshot!").clicked(){
-                        println!("pressed"); 
-                        
-                        frame.set_minimized(true);
-                        self.mode=1;
-                        self.take_screen=true;
-                    }
-                });
+                            if ui
+                                .add(egui::RadioButton::new(self.output_format == ".png", ".png"))
+                                .clicked()
+                            {
+                                self.output_format = String::from(".png");
+                            }
+                            if ui
+                                .add(egui::RadioButton::new(self.output_format == ".gif", ".gif"))
+                                .clicked()
+                            {
+                                self.output_format = String::from(".gif");
+                            }
+                        })
+                    });
+                    ui.add_space(10.0);
+                    ui.horizontal(|ui| {
+                        //to place widgets on the same row
 
-            }
-            else if self.mode==1{
-                println!("cambiato modalita!");
-                if ui.button("return").clicked(){
-                    self.mode=0;
+                        if ui.button("Take Screenshot!").clicked() {
+                            println!("pressed");
+                            frame.set_fullscreen(true);
+
+                            self.take_screen = true;
+                        }
+                    });
+                } else if *mode == 1 {
+                    if frame.info().window_info.fullscreen == true {
+                        if self.start_screen == false {
+                            self.start_screen = true;
+                        } else {
+                            screenshot::full_screen(ui);
+                            self.take_screen = false;
+                            self.start_screen = false;
+                            frame.set_fullscreen(false);
+                            *mode = 2;
+                        }
+                    }
+                } else if *mode == 2 {
+                    println!("cambiato modalita!");
+                    if ui.button("return").clicked() {
+                        *mode = 0;
+                    }
                 }
-                if self.take_screen==true{
-                    screenshot::full_screen(ui);
-                    self.take_screen=false;
-                }
-                
-            }
-            });
-    
+            },
+        );
     }
 }
 
 fn custom_window_frame(
+    mode: &mut i32,
+    screen: bool,
     ctx: &egui::Context,
     frame: &mut eframe::Frame,
     title: &str,
-    add_contents: impl FnOnce(&mut eframe::Frame, &mut egui::Ui),
+    add_contents: impl FnOnce(&mut eframe::Frame, &mut i32, &mut egui::Ui),
 ) {
-
-    let panel_frame = egui::Frame {
+    let mut panel_frame = egui::Frame {
         fill: egui::Color32::LIGHT_BLUE, //background color
         rounding: 10.0.into(),
         stroke: ctx.style().visuals.widgets.noninteractive.fg_stroke,
         outer_margin: 0.5.into(), // so the stroke is within the bounds
         ..Default::default()
     };
+    if screen {
+        panel_frame.fill = egui::Color32::TRANSPARENT;
+
+        *mode = 1;
+    }
 
     //Central Panel Component that implements custom panel_frame
-    egui::CentralPanel::default().frame(panel_frame).show(ctx, |ui| {
-        let app_rect = ui.max_rect();
+    egui::CentralPanel::default()
+        .frame(panel_frame)
+        .show(ctx, |ui| {
+            let app_rect = ui.max_rect();
 
-        let title_bar_height = 32.0;
-        let title_bar_rect = {
-            let mut rect = app_rect;
-            rect.max.y = rect.min.y + title_bar_height;
-            rect
-        };
-        title_bar_ui(ui, frame, title_bar_rect, title);
+            let title_bar_height = 32.0;
+            let title_bar_rect = {
+                let mut rect = app_rect;
+                rect.max.y = rect.min.y + title_bar_height;
+                rect
+            };
+            title_bar_ui(ui, frame, title_bar_rect, title);
 
-        // Add the contents:
-        let content_rect = {
-            let mut rect = app_rect;
-            rect.min.y = title_bar_rect.max.y;
-            rect
-        }
-        .shrink(4.0);
-        let mut content_ui = ui.child_ui(content_rect, *ui.layout());
-        add_contents(frame, &mut content_ui);
-    });
+            // Add the contents:
+            let content_rect = {
+                let mut rect = app_rect;
+                rect.min.y = title_bar_rect.max.y;
+                rect
+            }
+            .shrink(4.0);
+            let mut content_ui = ui.child_ui(content_rect, *ui.layout());
+            add_contents(frame, mode, &mut content_ui);
+        });
 }
 
 fn title_bar_ui(
@@ -161,17 +204,20 @@ fn title_bar_ui(
     title_bar_rect: eframe::epaint::Rect,
     title: &str,
 ) {
-
     let painter = ui.painter();
 
-    let title_bar_response = ui.interact(title_bar_rect, egui::Id::new("title_bar"), egui::Sense::click());
+    let title_bar_response = ui.interact(
+        title_bar_rect,
+        egui::Id::new("title_bar"),
+        egui::Sense::click(),
+    );
 
     // Paint the title:
     painter.text(
         title_bar_rect.center(),
         egui::Align2::CENTER_CENTER,
         title,
-        egui::FontId::proportional(20.0),//title dimension 
+        egui::FontId::proportional(20.0), //title dimension
         ui.style().visuals.text_color(),
     );
 
@@ -203,11 +249,12 @@ fn title_bar_ui(
 
 //function to show the close/minimize/expand icon on the frame window
 fn close_maximize_minimize(ui: &mut egui::Ui, frame: &mut eframe::Frame) {
-
     let button_height = 12.0;
 
     let close_response = ui
-        .add(egui::Button::new(egui::RichText::new("❌").size(button_height)))
+        .add(egui::Button::new(
+            egui::RichText::new("❌").size(button_height),
+        ))
         .on_hover_text("Close the window");
     if close_response.clicked() {
         frame.close();
@@ -215,14 +262,18 @@ fn close_maximize_minimize(ui: &mut egui::Ui, frame: &mut eframe::Frame) {
 
     if frame.info().window_info.maximized {
         let maximized_response = ui
-            .add(egui::Button::new(egui::RichText::new("🗗").size(button_height)))
+            .add(egui::Button::new(
+                egui::RichText::new("🗗").size(button_height),
+            ))
             .on_hover_text("Restore window");
         if maximized_response.clicked() {
             frame.set_maximized(false);
         }
     } else {
         let maximized_response = ui
-            .add(egui::Button::new(egui::RichText::new("🗗").size(button_height)))
+            .add(egui::Button::new(
+                egui::RichText::new("🗗").size(button_height),
+            ))
             .on_hover_text("Maximize window");
         if maximized_response.clicked() {
             frame.set_maximized(true);
@@ -230,29 +281,33 @@ fn close_maximize_minimize(ui: &mut egui::Ui, frame: &mut eframe::Frame) {
     }
 
     let minimized_response = ui
-        .add(egui::Button::new(egui::RichText::new("🗕").size(button_height)))
+        .add(egui::Button::new(
+            egui::RichText::new("🗕").size(button_height),
+        ))
         .on_hover_text("Minimize the window");
     if minimized_response.clicked() {
         frame.set_minimized(true);
     }
 }
 
-
-
 fn main() {
-//GUI(eframe) setup
+    //GUI(eframe) setup
 
-let native_options=eframe::NativeOptions{
-    //options for GUI window
-    decorated: false,//roundede corners
-    transparent: true,//no OS-specific bar
-    ..Default::default()
-};
-//let native_options=eframe::NativeOptions::default();
+    let native_options = eframe::NativeOptions {
+        //options for GUI window
+        decorated: false,  //roundede corners
+        transparent: true, //no OS-specific bar
+        ..Default::default()
+    };
+    //let native_options=eframe::NativeOptions::default();
 
-//app_name,native_options,app_creator, when usign the custom frame window the name in the first field is not used
-run_native("Screenshot Utility Tool",native_options, 
-                Box::new(|_cc| Box::new(MyApp::new()))).expect("A probelem has occurred while starting up!");
-                //|_cc| dummy closure, needed to make 
-                // on the fly function
+    //app_name,native_options,app_creator, when usign the custom frame window the name in the first field is not used
+    run_native(
+        "Screenshot Utility Tool",
+        native_options,
+        Box::new(|_cc| Box::new(MyApp::new())),
+    )
+    .expect("A probelem has occurred while starting up!");
+    //|_cc| dummy closure, needed to make
+    // on the fly function
 }
