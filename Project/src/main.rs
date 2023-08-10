@@ -1,8 +1,6 @@
 use eframe::{egui,run_native};  
 mod screenshot;
 
-#[derive(PartialEq)]
-enum Enum { First, Second, Third }
 
 struct MyApp{   
     hotkeys:Vec<String>,
@@ -15,7 +13,7 @@ impl MyApp{
     //costructor for MyApp
     fn new()->MyApp{
         let mut h=Vec::new();
-        let default_output_format=String::from(".jpg");
+        let default_output_format=String::from(".jpg");//default output format
         //initial static hotkeys list
         h.push(ToString::to_string("Take Screenshot: Ctrl+K"));
         h.push(ToString::to_string("Save: Maiusc+C+U"));
@@ -41,24 +39,17 @@ impl eframe::App for MyApp{
     fn update(&mut self, ctx: &egui::Context, frame: &mut eframe::Frame) {
         //custom window frame
         custom_window_frame(ctx, frame, "Screenshot Utility Tool", |frame: &mut eframe::Frame, ui| {//the title in this row is used
-            let mut my_enum = Enum::First;
             //ui is needed to place widgets
             if self.mode==0{
                 ui.label(egui::RichText::new(
                     "Welcome to the Screenshot Utility Tool, everything is ready to take a screenshot!")
                     .font(egui::FontId::proportional(17.5)));
-                ui.horizontal(|ui| {//to place widgets on the same row
-                    
-                    if ui.button("Take Screenshot!").clicked(){
-                        println!("pressed"); 
-                        
-                        frame.set_minimized(true);
-                        self.mode=1;
-                        self.take_screen=true;
-                    }
-                });
                 ui.add_space(10.0);
+                ui.horizontal(|ui|{
                 ui.label(egui::RichText::new("Hotkey List:").font(egui::FontId::proportional(17.0)));
+                ui.add_space(250.0);
+                ui.label(egui::RichText::new("Format Selection:").font(egui::FontId::proportional(17.0)));
+                });
                 ui.add_space(10.0);
                 ui.label(egui::RichText::new("Click on the shortcut to edit it").font(egui::FontId::proportional(17.0)));
                 ui.add_space(10.0);
@@ -79,19 +70,33 @@ impl eframe::App for MyApp{
                     });
                 }   
                 });
-                ui.add_space(60.0);
+                ui.add_space(185.0);
                 //radio button for format selection
                 ui.vertical(|ui|{
-                    /* 
-                    if ui.radio(selected_option, 0, "Opzione 1").clicked() {
-                        selected_option = 0;
+
+                    if ui.add(egui::RadioButton::new(self.output_format ==".jpg", ".jpg")).clicked() {
+                        self.output_format =String::from(".jpg");
                     }
-                    if ui.radio(selected_option, 1, "Opzione 2").clicked() {
-                        selected_option = 1;
+
+                    if ui.add(egui::RadioButton::new(self.output_format ==".png", ".png")).clicked() {
+                        self.output_format =String::from(".png");
                     }
-                    */     
+                    if ui.add(egui::RadioButton::new(self.output_format ==".gif", ".gif")).clicked() {
+                        self.output_format =String::from(".gif");
+                    }
                 })
 
+                });
+                ui.add_space(10.0);
+                ui.horizontal(|ui| {//to place widgets on the same row
+                    
+                    if ui.button("Take Screenshot!").clicked(){
+                        println!("pressed"); 
+                        
+                        frame.set_minimized(true);
+                        self.mode=1;
+                        self.take_screen=true;
+                    }
                 });
 
             }
@@ -117,7 +122,6 @@ fn custom_window_frame(
     title: &str,
     add_contents: impl FnOnce(&mut eframe::Frame, &mut egui::Ui),
 ) {
-
 
     let panel_frame = egui::Frame {
         fill: egui::Color32::LIGHT_BLUE, //background color
