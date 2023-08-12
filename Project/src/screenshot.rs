@@ -11,7 +11,10 @@ pub fn full_screen(ui: &mut Ui) {
     
     let screens = Screen::all().unwrap();
     for screen in screens {
-        show_screen(screen, ui);
+        let image = screen.capture().unwrap();
+        let buffer = image.to_png(None).unwrap();
+            fs::write(format!("./{}.png", screen.display_info.id), buffer).unwrap();
+        // show_screen(screen, ui);
         
     }
     
