@@ -77,6 +77,7 @@ pub fn gui_mode0(my_app:&mut MyApp,frame: &mut eframe::Frame,ui:&mut egui::Ui) {
 
         if ui.button("Take Screenshot!").clicked() {
             println!("pressed");
+            frame.set_maximized(true);
             my_app.mode=1;
             
         }
