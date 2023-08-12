@@ -1,4 +1,5 @@
 use eframe::{egui, run_native};
+
 mod gui;
 mod screenshot;
 
@@ -8,6 +9,7 @@ pub struct MyApp {
     mode: i32,
     take_screen: bool,
     start_screen: bool,
+    image: Vec<screenshots::Image>
 }
 
 impl MyApp {
@@ -26,6 +28,7 @@ impl MyApp {
             mode: 0,
             take_screen: false,
             start_screen: false,
+            image: Vec::new()
         }
     }
 }
@@ -39,6 +42,7 @@ impl eframe::App for MyApp {
     //mandatory function for App trait
     fn update(&mut self, ctx: &egui::Context, frame: &mut eframe::Frame) {
         //custom window frame
+        egui::Window::new("").show(ctx, |ui|{
         if self.mode == 0 {
             gui::custom_window_frame(
                 self,
@@ -65,7 +69,7 @@ impl eframe::App for MyApp {
                     ui.label("dovrei essere trasparente");
                     frame.set_fullscreen(true);
                     gui::gui_mode2(self, frame, ui);
-           
+
                 });
         } else if self.mode == 2 {
             gui::custom_window_frame(
@@ -84,16 +88,12 @@ impl eframe::App for MyApp {
                 frame,
                 "Screenshot Utility Tool", //the title in this row is used
                 |my_app: &mut Self, frame: &mut eframe::Frame, ui| {
-                    frame.set_fullscreen(false);
-                    frame.set_maximized(false);
-                    if ui.button("return").clicked() {
-                        
-                        my_app.mode = 0;
-                    }
+                    gui::gui_mode3(my_app, frame, ui);
                 },
             );
         }
-    }
+    });
+}
 }
 
 fn main() {
@@ -105,6 +105,7 @@ fn main() {
         transparent: true, //no OS-specific bar
         follow_system_theme: false,
         default_theme: eframe::Theme::Light,
+        resizable: true,
         
         ..Default::default()
     };

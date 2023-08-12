@@ -93,14 +93,24 @@ pub fn gui_mode2(
 ) {
     if ui.button("screen").clicked() {
 
-            screenshot::full_screen(ui);
-            my_self.take_screen= false;
-
-            
-            my_self.mode = 3;
-            frame.set_maximized(false);
+            my_self.image=screenshot::full_screen();
         
+            my_self.take_screen= false;
+            my_self.mode=3;
     }
+}
+pub fn gui_mode3(my_self: &mut MyApp, frame: &mut eframe::Frame,
+    ui: &mut egui::Ui) {
+                    
+
+
+                    
+                    screenshot::visualize_image(&mut my_self.image, ui, frame.info().window_info.size);
+                    if ui.button("return").clicked() {
+                        
+                        my_self.mode = 0;
+                    }
+
 }
 
 

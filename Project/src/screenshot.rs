@@ -1,100 +1,128 @@
 use minifb::{Key, KeyRepeat,/*  MouseButton, MouseMode,*/ Window, WindowOptions};
 use screenshots::Screen;
 use std::fs;
-use egui::{Ui, /*TextureId*/};
+use egui::{Ui, ColorImage, /*TextureId*/};
 use eframe::egui;
 // use std::collections::HashMap;
 
+struct MyImage {
+    texture: Option<egui::TextureHandle>,
+}
 
-pub fn full_screen(ui: &mut Ui) {
+impl MyImage {
+    
+
+    fn ui(&mut self, ui: &mut egui::Ui, im: ColorImage, size: egui::Vec2) {
+        let texture: &egui::TextureHandle = self.texture.get_or_insert_with(|| {
+            // Load the texture only once.
+            ui.ctx().load_texture(
+                "my-image",
+                im,
+                Default::default()
+            )
+        });
+        // Show the image: 
+        // ui.add();
+
+        // // Shorter version:
+        let max_size= egui::vec2(size.x*0.2, size.y*0.2);
+        
+
+        ui.add_sized(size, egui::Image::new(texture, texture.size_vec2()));
+    
+    }
+}
+
+
+pub fn full_screen( )->Vec<screenshots::Image>{
     
     
-    let screens = Screen::all().unwrap();
+    let screens= Screen::all().unwrap();
+    let mut screen_image= Vec::new();
     for screen in screens {
-        let image = screen.capture().unwrap();
-        let buffer = image.to_png(None).unwrap();
-            fs::write(format!("./{}.png", screen.display_info.id), buffer).unwrap();
-        // show_screen(screen, ui);
+       screen_image.push(screen.capture().unwrap());
+
         
     }
+    screen_image
+
+}
+
+pub fn visualize_image(screens: &mut Vec<screenshots::Image>, ui: &mut Ui, size: egui::Vec2){
     
-}
+    for image in screens {
 
-fn visualize_image(image: &screenshots::Image) -> Vec<u32> {
-    let image_rgba= image.rgba();
+            let image_rgba= image.rgba();
+            let mut my_image = MyImage {
+                texture: None,
+            };
+            let im=egui::ColorImage::from_rgba_unmultiplied([image.width() as usize, image.height() as usize], image_rgba);
+            my_image.ui(ui, im, size);
 
-    // let mut textures: HashMap<TextureId, egui::Texture> = HashMap::new();
-    // let texture_id = egui::TextureId::User(0);
-    // let texture = egui::Texture {
-    //     width: image.width() as usize,
-    //     height: image.height() as usize,
-    //     pixels: image.rgba()
-    // };
-        // textures.insert(texture_id, texture);
-
-    let mut image_data: Vec<u32> = Vec::new();
-    for pixel in image_rgba.chunks_exact(4) {
-        let u32_pixel = ((pixel[3] as u32) << 24)
-            | ((pixel[0] as u32) << 16)
-            | ((pixel[1] as u32) << 8)
-            | (pixel[2] as u32);
-        image_data.push(u32_pixel);
-    }
-    image_data
-}
-
-
-fn show_screen(screen: screenshots::Screen, ui: &mut Ui) {
-    let mut image = screen.capture().unwrap();
-    let mut image_data = visualize_image(&image);
-
-    let mut window = Window::new(
-        "Rust Image Viewer",
-        image.width() as usize,
-        image.height() as usize,
-        WindowOptions::default(),
-    )
-    .unwrap_or_else(|e| {
-        panic!("{}", e);
-    });
-    window.set_position(10, 10);
-
-
-    while window.is_open() && !window.is_key_down(Key::Escape) {
-        window
-            .update_with_buffer(&image_data, image.width() as usize, image.height() as usize)
-            .expect("Impossibile aggiornare la finestra");
-
-        if window.is_key_pressed(Key::S, KeyRepeat::No) {
-            let buffer = image.to_png(None).unwrap();
-            fs::write(format!("./{}.png", screen.display_info.id), buffer).unwrap();
-        }
-
-        if window.is_key_pressed(Key::A, KeyRepeat::No) && !window.is_key_down(Key::X) {
-            println!("Screenshot di un'area");
+     
+            // let buffer = image.to_png(None).unwrap();
+            // fs::write(format!("./{}.png", screen.display_info.id), buffer).unwrap();
             
-        image = screen_area(screen, &mut image_data);
-    } 
-
-        if window.is_key_pressed(Key::C, KeyRepeat::No) {
-            println!("Copia");
+    
+                
+            // show_screen(screen, ui);
+            
         }
-
-        if window.is_key_pressed(Key::M, KeyRepeat::No) {
-            println!("Modifica");
-        }
-        window.update()
     }
-}
 
-fn screen_area(screen: screenshots::Screen, image_data: &mut Vec<u32>) -> screenshots::Image {
-    let dimensions = (10, 20, 150, 140);
-    let area = screen
-        .capture_area(dimensions.0, dimensions.1, dimensions.2, dimensions.3)
-        .unwrap();
-    *image_data = visualize_image(&area);
-    area
-}
+
+
+// fn show_screen(screen: screenshots::Screen, ui: &mut Ui) {
+//     let mut image = screen.capture().unwrap();
+//     let mut image_data = visualize_image(&image);
+
+//     let mut window = Window::new(
+//         "Rust Image Viewer",
+//         image.width() as usize,
+//         image.height() as usize,
+//         WindowOptions::default(),
+//     )
+//     .unwrap_or_else(|e| {
+//         panic!("{}", e);
+//     });
+//     window.set_position(10, 10);
+
+
+//     while window.is_open() && !window.is_key_down(Key::Escape) {
+//         window
+//             .update_with_buffer(&image_data, image.width() as usize, image.height() as usize)
+//             .expect("Impossibile aggiornare la finestra");
+
+//         if window.is_key_pressed(Key::S, KeyRepeat::No) {
+//             let buffer = image.to_png(None).unwrap();
+//             fs::write(format!("./{}.png", screen.display_info.id), buffer).unwrap();
+//         }
+
+//         if window.is_key_pressed(Key::A, KeyRepeat::No) && !window.is_key_down(Key::X) {
+//             println!("Screenshot di un'area");
+            
+//         image = screen_area(screen, &mut image_data);
+//     } 
+
+//         if window.is_key_pressed(Key::C, KeyRepeat::No) {
+//             println!("Copia");
+//         }
+
+//         if window.is_key_pressed(Key::M, KeyRepeat::No) {
+//             println!("Modifica");
+//         }
+//         window.update()
+//     }
+// }
+
+// fn screen_area(screen: screenshots::Screen, image_data: &mut Vec<u32>) -> screenshots::Image {
+//     let dimensions = (10, 20, 150, 140);
+//     let area = screen
+//         .capture_area(dimensions.0, dimensions.1, dimensions.2, dimensions.3)
+//         .unwrap();
+//     *image_data = visualize_image(&area);
+//     area
+// }
 
 // fn find_dimension(window: MutexGuard<minifb::Window>) ->  Option<(i32, i32, u32, u32)> {
 //     let mut d: (i32, i32, u32, u32)=(0,0,0,0);
