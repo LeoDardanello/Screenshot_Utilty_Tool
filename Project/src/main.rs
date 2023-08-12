@@ -1,10 +1,11 @@
 use eframe::{egui, run_native};
-
+use hotkeys::HotkeysConfig;
 mod gui;
 mod screenshot;
+mod hotkeys;
 
 pub struct MyApp {
-    hotkeys: Vec<String>,
+    hotkey_conf: HotkeysConfig,
     output_format: String,
     mode: i32,
     take_screen: bool,
@@ -23,7 +24,7 @@ impl MyApp {
         h.push(ToString::to_string("Boh: LOLOLOLOLOL JOJOOOOOO"));
 
         MyApp {
-            hotkeys: h,
+            hotkey_conf: HotkeysConfig::new(),
             output_format: default_output_format,
             mode: 0,
             take_screen: false,
@@ -53,6 +54,7 @@ impl eframe::App for MyApp {
                     gui::gui_mode0(my_app, frame, ui);
                 },
             );
+            self.hotkey_conf.listen_to_event();
         } else if self.mode == 1 {
             if frame.info().window_info.minimized{
                 self.mode=2
@@ -60,7 +62,6 @@ impl eframe::App for MyApp {
             }
 
         } else if self.mode == 2 {
-            println!("{:?}", frame.info().window_info);
             if frame.info().window_info.fullscreen==false{
                 self.image=screenshot::full_screen();
             frame.set_minimized(false);
@@ -77,7 +78,6 @@ impl eframe::App for MyApp {
                 frame,
                 "Screenshot Utility Tool", //the title in this row is used
                 |my_app: &mut Self, frame: &mut eframe::Frame, ui| {
-                    println!("{:?}", frame.info().window_info);
                     gui::gui_mode3(my_app, frame, ui);
                 },
             );

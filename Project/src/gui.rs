@@ -1,4 +1,5 @@
 use crate::{screenshot, MyApp};
+use keyboard_types::{Code, Modifiers};
 use eframe::egui;
 
 pub fn gui_mode0(my_app:&mut MyApp,frame: &mut eframe::Frame,ui:&mut egui::Ui) {
@@ -27,22 +28,78 @@ pub fn gui_mode0(my_app:&mut MyApp,frame: &mut eframe::Frame,ui:&mut egui::Ui) {
         ui.horizontal(|ui| {
             //hotkeys display
             ui.vertical(|ui| {
-                for h in &my_app.hotkeys {
-                    let parts: Vec<&str> = h.split(":").collect();
+                for i in 0..my_app.hotkey_conf.get_hotkeys_len() {
 
                     ui.horizontal(|ui| {
-                        ui.label(
-                            egui::RichText::new(parts[0]).font(egui::FontId::proportional(14.0)),
-                        );
-                        if ui
-                            .link(
-                                egui::RichText::new(parts[1])
-                                    .font(egui::FontId::proportional(14.0)),
-                            )
-                            .clicked()
-                        {
-                            //modify hotkey
+                        let u = my_app.hotkey_conf.get_hotkey_as_string(i);
+                    ui.label(egui::RichText::new(my_app.hotkey_conf.get_command(i)).font(egui::FontId::proportional(14.0)));
+
+
+
+                    if my_app.hotkey_conf.get_enable(){
+                        if ui.link(egui::RichText::new(u).font(egui::FontId::proportional(14.0))).clicked(){
+                            //If I click on the link, I unregister the hotkey                            
+                            my_app.hotkey_conf.delete_hotkey(i);
+                        };
+                    }
+                    else{
+                        let mut new_mod = my_app.hotkey_conf.get_new_mod();
+                        let mut new_key = my_app.hotkey_conf.get_new_key();
+                        if i != my_app.hotkey_conf.get_changed_hotkey(){
+                            ui.label(u);
                         }
+                        else{
+                            ui.vertical(|ui|{
+                                //println!("{:?} + {:?}", self.modif, new_key);
+                                egui::ComboBox::from_label("Set new modifier")
+                                .selected_text(format!("{:?}", new_mod.1))
+                                .show_ui(ui, |ui| {
+                                    ui.selectable_value(&mut new_mod, (None, "".to_string()), "".to_string());
+                                    ui.selectable_value(&mut new_mod, (Some(Modifiers::SHIFT), "SHIFT".to_string()), "SHIFT");
+                                    ui.selectable_value(&mut new_mod, (Some(Modifiers::CONTROL), "CTRL".to_string()), "CTRL");
+                                });
+                                egui::ComboBox::from_label("Set new key")
+                                .selected_text(format!("{:?}", new_key.1))
+                                .show_ui(ui, |ui| {
+                                    ui.selectable_value(&mut new_key, (Code::KeyA, "A".to_string()), "A");
+                                    ui.selectable_value(&mut new_key, (Code::KeyB, "B".to_string()), "B");
+                                    ui.selectable_value(&mut new_key, (Code::KeyC, "C".to_string()), "C");
+                                    ui.selectable_value(&mut new_key, (Code::KeyD, "D".to_string()), "D");
+                                    ui.selectable_value(&mut new_key, (Code::KeyE, "E".to_string()), "E");
+                                    ui.selectable_value(&mut new_key, (Code::KeyF, "F".to_string()), "F");
+                                    ui.selectable_value(&mut new_key, (Code::KeyG, "G".to_string()), "G");
+                                    ui.selectable_value(&mut new_key, (Code::KeyH, "H".to_string()), "H");
+                                    ui.selectable_value(&mut new_key, (Code::KeyI, "I".to_string()), "I");
+                                    ui.selectable_value(&mut new_key, (Code::KeyJ, "J".to_string()), "J");
+                                    ui.selectable_value(&mut new_key, (Code::KeyK, "K".to_string()), "K");
+                                    ui.selectable_value(&mut new_key, (Code::KeyL, "L".to_string()), "L");
+                                    ui.selectable_value(&mut new_key, (Code::KeyM, "M".to_string()), "M");
+                                    ui.selectable_value(&mut new_key, (Code::KeyN, "N".to_string()), "N");
+                                    ui.selectable_value(&mut new_key, (Code::KeyO, "O".to_string()), "O");
+                                    ui.selectable_value(&mut new_key, (Code::KeyP, "P".to_string()), "P");
+                                    ui.selectable_value(&mut new_key, (Code::KeyQ, "Q".to_string()), "Q");
+                                    ui.selectable_value(&mut new_key, (Code::KeyR, "R".to_string()), "R");
+                                    ui.selectable_value(&mut new_key, (Code::KeyS, "S".to_string()), "S");
+                                    ui.selectable_value(&mut new_key, (Code::KeyT, "T".to_string()), "T");
+                                    ui.selectable_value(&mut new_key, (Code::KeyU, "U".to_string()), "U");
+                                    ui.selectable_value(&mut new_key, (Code::KeyV, "V".to_string()), "V");
+                                    ui.selectable_value(&mut new_key, (Code::KeyW, "W".to_string()), "W");
+                                    ui.selectable_value(&mut new_key, (Code::KeyX, "X".to_string()), "X");
+                                    ui.selectable_value(&mut new_key, (Code::KeyY, "Y".to_string()), "Y");
+                                    ui.selectable_value(&mut new_key, (Code::KeyZ, "Z".to_string()), "Z");
+                                });
+
+                                if ui.button("Save").clicked(){
+                                    let success = my_app.hotkey_conf.change_hotkey(i, new_mod.clone(), new_key.clone());
+                                    if success {  //modification could fail if for example I try to set an already registered hotkey
+                                        my_app.hotkey_conf.set_enable(true);
+                                    }
+                                }
+
+                                my_app.hotkey_conf.set_new_hotkey(new_mod, new_key);   
+                            });
+                        }
+                    }
                     });
                 }
             });
