@@ -152,6 +152,11 @@ pub fn gui_mode3(my_self: &mut MyApp, frame: &mut eframe::Frame,
                         
                         my_self.mode = 0;
                     }
+                    if ui.button("save").clicked() {
+                        screenshot::save_image(&mut my_self.image,&mut  my_self.output_format);
+                        
+                        my_self.mode = 0;
+                    }
 
 }
 
@@ -173,11 +178,7 @@ pub fn custom_window_frame(
     };
 
     //Central Panel Component that implements custom panel_frame
-    let central=egui::CentralPanel::default().frame(panel_frame);;
-        
-
-
-        central.show(ctx, |ui| {
+   egui::CentralPanel::default().frame(panel_frame).show(ctx, |ui| {
             let app_rect = ui.max_rect();
 
             let mut title_bar_height = 32.0;
