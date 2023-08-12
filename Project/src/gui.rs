@@ -101,9 +101,8 @@ pub fn gui_mode2(
 }
 pub fn gui_mode3(my_self: &mut MyApp, frame: &mut eframe::Frame,
     ui: &mut egui::Ui) {
-                    
-
-
+        frame.set_fullscreen(false);
+                    frame.set_maximized(false);
                     
                     screenshot::visualize_image(&mut my_self.image, ui, frame.info().window_info.size);
                     if ui.button("return").clicked() {

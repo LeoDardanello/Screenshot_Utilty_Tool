@@ -42,7 +42,7 @@ impl eframe::App for MyApp {
     //mandatory function for App trait
     fn update(&mut self, ctx: &egui::Context, frame: &mut eframe::Frame) {
         //custom window frame
-        egui::Window::new("").show(ctx, |ui|{
+
         if self.mode == 0 {
             gui::custom_window_frame(
                 self,
@@ -92,8 +92,8 @@ impl eframe::App for MyApp {
                 },
             );
         }
-    });
-}
+    }
+
 }
 
 fn main() {

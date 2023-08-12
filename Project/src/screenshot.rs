@@ -25,10 +25,12 @@ impl MyImage {
         // ui.add();
 
         // // Shorter version:
-        let max_size= egui::vec2(size.x*0.2, size.y*0.2);
+        let max_size= egui::vec2(size.x*0.5, size.y*0.5).to_pos2();
         
+        let my_rect= egui::Rect::from_two_pos(egui::pos2(10.0,  34.0), max_size);
+        ui.painter().image(texture.id(),my_rect, egui::Rect::from_min_max(egui::pos2(0.0, 0.0), egui::pos2(1.0, 1.0)), egui::Color32::WHITE);
 
-        ui.add_sized(size, egui::Image::new(texture, texture.size_vec2()));
+        // ui.add_sized(size, egui::Image::new(texture, texture.size_vec2()));
     
     }
 }
