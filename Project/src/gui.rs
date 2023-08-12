@@ -77,7 +77,7 @@ pub fn gui_mode0(my_app:&mut MyApp,frame: &mut eframe::Frame,ui:&mut egui::Ui) {
 
         if ui.button("Take Screenshot!").clicked() {
             println!("pressed");
-            frame.set_maximized(true);
+            frame.set_minimized(true);
             my_app.mode=1;
             
         }
@@ -85,24 +85,10 @@ pub fn gui_mode0(my_app:&mut MyApp,frame: &mut eframe::Frame,ui:&mut egui::Ui) {
     });
 }
 
-pub fn gui_mode2(
-    my_self: &mut MyApp,
-
-    frame: &mut eframe::Frame,
-    ui: &mut egui::Ui,
-) {
-    if ui.button("screen").clicked() {
-
-            my_self.image=screenshot::full_screen();
-        
-            my_self.take_screen= false;
-            my_self.mode=3;
-    }
-}
 pub fn gui_mode3(my_self: &mut MyApp, frame: &mut eframe::Frame,
     ui: &mut egui::Ui) {
-        frame.set_fullscreen(false);
-                    frame.set_maximized(false);
+        
+
                     
                     screenshot::visualize_image(&mut my_self.image, ui, frame.info().window_info.size);
                     if ui.button("return").clicked() {
@@ -128,16 +114,11 @@ pub fn custom_window_frame(
         outer_margin: 0.5.into(), // so the stroke is within the bounds
         ..Default::default()
     };
-    if panel_frame.fill == egui::Color32::TRANSPARENT {
-        my_app.mode=2;
-    }
 
     //Central Panel Component that implements custom panel_frame
-    let mut central=egui::CentralPanel::default();
+    let central=egui::CentralPanel::default().frame(panel_frame);;
         
-    if my_app.mode!=1{
-        central= central.frame(panel_frame);
-    }
+
 
         central.show(ctx, |ui| {
             let app_rect = ui.max_rect();

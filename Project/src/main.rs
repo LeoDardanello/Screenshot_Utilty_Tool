@@ -54,33 +54,22 @@ impl eframe::App for MyApp {
                 },
             );
         } else if self.mode == 1 {
-            self.take_screen=true;
-            let panel_frame_1 = egui::Frame {
-                fill: egui::Color32::TRANSPARENT, //background color
-                rounding: 10.0.into(),
-                stroke: ctx.style().visuals.widgets.noninteractive.fg_stroke,
-                outer_margin: 0.5.into(), // so the stroke is within the bounds
-                ..Default::default()
-            };
+            if frame.info().window_info.minimized{
+                self.mode=2
 
-            egui::CentralPanel::default()
-                .frame(panel_frame_1)
-                .show(ctx, |ui| {
-                    ui.label("dovrei essere trasparente");
-                    frame.set_fullscreen(true);
-                    gui::gui_mode2(self, frame, ui);
+            }
 
-                });
         } else if self.mode == 2 {
-            gui::custom_window_frame(
-                self,
-                ctx,
-                frame,
-                "", //the title in this row is used
-                |my_app: &mut Self, frame: &mut eframe::Frame, ui| {
-                    
-                },
-            );
+            println!("{:?}", frame.info().window_info);
+            if frame.info().window_info.fullscreen==false{
+                self.image=screenshot::full_screen();
+            frame.set_minimized(false);
+            frame.set_fullscreen(true);
+            }else{
+                self.mode=3;
+            }
+
+            
         } else if self.mode == 3 {
             gui::custom_window_frame(
                 self,
@@ -88,6 +77,7 @@ impl eframe::App for MyApp {
                 frame,
                 "Screenshot Utility Tool", //the title in this row is used
                 |my_app: &mut Self, frame: &mut eframe::Frame, ui| {
+                    println!("{:?}", frame.info().window_info);
                     gui::gui_mode3(my_app, frame, ui);
                 },
             );
