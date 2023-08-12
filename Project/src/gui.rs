@@ -97,7 +97,7 @@ pub fn gui_mode2(
 
             
             my_self.mode = 3;
-            frame.set_fullscreen(false);
+            frame.set_maximized(false);
         
     }
 }

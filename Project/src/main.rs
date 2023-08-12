@@ -63,7 +63,7 @@ impl eframe::App for MyApp {
                 .frame(panel_frame_1)
                 .show(ctx, |ui| {
                     ui.label("dovrei essere trasparente");
-                    frame.set_fullscreen(true);
+                    frame.set_maximized(true);
                     gui::gui_mode2(self, frame, ui);
            
                 });
@@ -84,7 +84,7 @@ impl eframe::App for MyApp {
                 frame,
                 "Screenshot Utility Tool", //the title in this row is used
                 |my_app: &mut Self, frame: &mut eframe::Frame, ui| {
-                    frame.set_fullscreen(false);
+                    frame.set_maximized(false);
                     if ui.button("return").clicked() {
                         
                         my_app.mode = 0;
@@ -102,6 +102,9 @@ fn main() {
         //options for GUI window
         decorated: false,  //roundede corners
         transparent: true, //no OS-specific bar
+        follow_system_theme: false,
+        default_theme: eframe::Theme::Light,
+        
         ..Default::default()
     };
     //let native_options=eframe::NativeOptions::default();
