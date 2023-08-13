@@ -54,22 +54,18 @@ impl eframe::App for MyApp {
                     gui::gui_mode0(my_app, frame, ui);
                 },
             );
+
+
             self.hotkey_conf.listen_to_event();
         } else if self.mode == 1 {
-            if frame.info().window_info.minimized{
-                self.mode=2
 
-            }
+            self.mode=2;
 
         } else if self.mode == 2 {
-            if frame.info().window_info.fullscreen==false{
+            
                 self.image=screenshot::full_screen();
-            frame.set_minimized(false);
-            frame.set_fullscreen(true);
-            }else{
+                frame.set_visible(true);
                 self.mode=3;
-            }
-
             
         } else if self.mode == 3 {
             gui::custom_window_frame(

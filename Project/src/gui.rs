@@ -1,4 +1,5 @@
 use crate::{screenshot, MyApp};
+use egui::pos2;
 use keyboard_types::{Code, Modifiers};
 use eframe::egui;
 
@@ -33,8 +34,6 @@ pub fn gui_mode0(my_app:&mut MyApp,frame: &mut eframe::Frame,ui:&mut egui::Ui) {
                     ui.horizontal(|ui| {
                         let u = my_app.hotkey_conf.get_hotkey_as_string(i);
                     ui.label(egui::RichText::new(my_app.hotkey_conf.get_command(i)).font(egui::FontId::proportional(14.0)));
-
-
 
                     if my_app.hotkey_conf.get_enable(){
                         if ui.link(egui::RichText::new(u).font(egui::FontId::proportional(14.0))).clicked(){
@@ -134,7 +133,8 @@ pub fn gui_mode0(my_app:&mut MyApp,frame: &mut eframe::Frame,ui:&mut egui::Ui) {
 
         if ui.button("Take Screenshot!").clicked() {
             println!("pressed");
-            frame.set_minimized(true);
+            frame.set_visible(false);
+
             my_app.mode=1;
             
         }
@@ -146,7 +146,6 @@ pub fn gui_mode3(my_self: &mut MyApp, frame: &mut eframe::Frame,
     ui: &mut egui::Ui) {
         
 
-                    
                     screenshot::visualize_image(&mut my_self.image, ui, frame.info().window_info.size);
                     if ui.button("return").clicked() {
                         
