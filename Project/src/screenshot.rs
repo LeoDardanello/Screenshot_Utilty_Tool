@@ -1,116 +1,146 @@
-use minifb::{Key, KeyRepeat,/*  MouseButton, MouseMode,*/ Window, WindowOptions};
-use screenshots::Screen;
-use std::fs;
-use egui::{Ui, TextureId};
 use eframe::egui;
-use std::collections::HashMap;
+use egui::{ColorImage, Ui};
+// use gif::{Encoder, Frame};  servono per save as gif (forse non necessaria)
+//use std::fs::File;
+use image::{self, ImageFormat};
+use screenshots::Screen;
 
 
-pub fn full_screen(ui: &mut Ui) {
-    
-    
+use crate::MyScreen;
+
+struct MyImage {
+    texture: Option<egui::TextureHandle>,
+}
+
+impl MyImage {
+    fn ui(&mut self, ui: &mut egui::Ui, im: ColorImage, size: egui::Vec2) {
+        let texture: &egui::TextureHandle = self.texture.get_or_insert_with(|| {
+            // Load the texture only once.
+            ui.ctx().load_texture("my-image", im, Default::default())
+        });
+
+        let max_size = egui::vec2(size.x - 20.0, size.y - 44.0).to_pos2();
+
+        let my_rect = egui::Rect::from_two_pos(egui::pos2(10.0, 34.0), max_size);
+        ui.painter().image(
+            texture.id(),
+            my_rect,
+            egui::Rect::from_min_max(egui::pos2(0.0, 0.0), egui::pos2(1.0, 1.0)),
+            egui::Color32::WHITE,
+        );
+    }
+}
+
+pub fn full_screen() -> Vec<MyScreen> {
     let screens = Screen::all().unwrap();
+    let mut screen_image = Vec::new();
     for screen in screens {
-        show_screen(screen, ui);
-        
+        let img = screen.capture().unwrap();
+        let image = MyScreen {
+            screens: img.rgba().to_vec(),
+            size: (img.width() as usize, img.height() as usize),
+        };
+        screen_image.push(image);
     }
-    
+    screen_image
 }
 
-fn visualize_image(image: &screenshots::Image) -> Vec<u32> {
-    let image_rgba= image.rgba();
-
-    // let mut textures: HashMap<TextureId, egui::Texture> = HashMap::new();
-    // let texture_id = egui::TextureId::User(0);
-    // let texture = egui::Texture {
-    //     width: image.width() as usize,
-    //     height: image.height() as usize,
-    //     pixels: image.rgba()
-    // };
-        // textures.insert(texture_id, texture);
-
-    let mut image_data: Vec<u32> = Vec::new();
-    for pixel in image_rgba.chunks_exact(4) {
-        let u32_pixel = ((pixel[3] as u32) << 24)
-            | ((pixel[0] as u32) << 16)
-            | ((pixel[1] as u32) << 8)
-            | (pixel[2] as u32);
-        image_data.push(u32_pixel);
-    }
-    image_data
-}
-
-
-fn show_screen(screen: screenshots::Screen, ui: &mut Ui) {
-    let mut image = screen.capture().unwrap();
-    let mut image_data = visualize_image(&image);
-
-    let mut window = Window::new(
-        "Rust Image Viewer",
-        image.width() as usize,
-        image.height() as usize,
-        WindowOptions::default(),
-    )
-    .unwrap_or_else(|e| {
-        panic!("{}", e);
-    });
-    window.set_position(10, 10);
-
-
-    while window.is_open() && !window.is_key_down(Key::Escape) {
-        window
-            .update_with_buffer(&image_data, image.width() as usize, image.height() as usize)
-            .expect("Impossibile aggiornare la finestra");
-
-        if window.is_key_pressed(Key::S, KeyRepeat::No) {
-            let buffer = image.to_png(None).unwrap();
-            fs::write(format!("./{}.png", screen.display_info.id), buffer).unwrap();
-        }
-
-        if window.is_key_pressed(Key::A, KeyRepeat::No) && !window.is_key_down(Key::X) {
-            println!("Screenshot di un'area");
-            
-        image = screen_area(screen, &mut image_data);
-    } 
-
-        if window.is_key_pressed(Key::C, KeyRepeat::No) {
-            println!("Copia");
-        }
-
-        if window.is_key_pressed(Key::M, KeyRepeat::No) {
-            println!("Modifica");
-        }
-        window.update()
+pub fn visualize_image(screens: &mut Vec<MyScreen>, ui: &mut Ui, size: egui::Vec2) {
+    for image in screens {
+        let mut my_image = MyImage { texture: None };
+        let im =
+            egui::ColorImage::from_rgba_unmultiplied([image.size.0, image.size.1], &image.screens);
+        my_image.ui(ui, im, size);
     }
 }
 
-fn screen_area(screen: screenshots::Screen, image_data: &mut Vec<u32>) -> screenshots::Image {
-    let dimensions = (10, 20, 150, 140);
-    let area = screen
-        .capture_area(dimensions.0, dimensions.1, dimensions.2, dimensions.3)
-        .unwrap();
-    *image_data = visualize_image(&area);
-    area
+// pub fn screen_area(screens: &mut Vec<MyScreen>, x: u32, y: u32, width: usize, height: usize) {
+    // for image in screens {
+    //     let rgba_img = image::ImageBuffer::from_raw(width as u32, height as u32, image.screens)
+    //         .expect("Errore nella conversione dell'immagine");
+    //     let cropped_img = image::ImageBuffer::from_fn(width as u32, height as u32, |x, y| {
+    //         rgba_img.get_pixel(x, y).clone()
+    //     });
+    // }
+// }
+
+pub fn save_image(path: &String, screens: &mut Vec<MyScreen>, format: &mut String) {
+    let image_format = if format == ".jpg" {
+        ImageFormat::Jpeg
+    } else if format == ".png" {
+        ImageFormat::Png
+    } else {
+        ImageFormat::Gif
+    };
+
+    for image in screens {
+        let img_buf = image::ImageBuffer::<image::Rgba<u8>, _>::from_vec(
+            image.size.0 as u32,
+            image.size.1 as u32,
+            image.screens.to_vec(),
+        )
+        .expect("impossibile creare l'immagine");
+
+        img_buf
+            .save_with_format(path.to_string(), image_format)
+            .expect("impossibile salvare l'immagine");
+    }
 }
 
-// fn find_dimension(window: MutexGuard<minifb::Window>) ->  Option<(i32, i32, u32, u32)> {
-//     let mut d: (i32, i32, u32, u32)=(0,0,0,0);
-//     while window.get_mouse_down(MouseButton::Left) {
-//         if d.0==0 && d.1==0 {
-//             let pos = window.get_mouse_pos(MouseMode::Clamp);
-//             if let Some((x, y)) = pos {
-//                 d.0 = x as i32;
-//                 d.1 = y as i32;
-//             }
-//         }
+// fn save_images_as_gif2(image: screenshots::Image){
+
+//         let mut encoder = gif::Encoder::new(image.rgba().to_vec(), image.width() as u16, image.height() as u16,&[0xFF, 0xFF, 0xFF]).expect("msg");
+//         let img_buf = image::ImageBuffer::<image::Rgba<u8>, _>::from_vec(
+//             image.width(),
+//             image.height(),
+//             image.rgba().to_vec(),
+//         ).expect("impossibile creare l'immagine");
+//         let mut my_img = image::RgbaImage::from(img_buf).into_raw();
+//         let mut gif_frame = gif::Frame::from_rgba_speed(
+//             image.width() as u16,
+//             image.height() as u16,
+//             &mut my_img,
+//             10, // Adjust the speed (in hundredths of a second) as needed
+//         );
+
+//             gif_frame.dispose = gif::DisposalMethod::Background;
+//             encoder.write_frame(&gif_frame).expect("Failed to write GIF frame");
+//             std::fs::
+
+// }
+
+// fn save_images_as_gif(path: &String, screens: &mut Vec<screenshots::Image>) {
+//     // Crea un nuovo file GIF
+//     let mut output_file = File::create(path).expect("Impossibile creare il file GIF");
+
+//     // Configura l'encoder GIF
+//     let mut encoder = Encoder::new(
+//         &mut output_file,
+//         screens[0].width() as u16,
+//         screens[0].height() as u16,
+//         &[0xFF, 0xFF, 0xFF],
+//     )
+//     .expect("Impossibile creare l'encoder GIF");
+
+//     // Aggiungi i frame all'encoder
+//     for image in screens {
+//         let image_rgba = image.rgba();
+//         let img_buf = image::ImageBuffer::<image::Rgba<u8>, _>::from_vec(
+//             image.width(),
+//             image.height(),
+//             image_rgba.to_vec(),
+//         )
+//         .expect("impossibile creare l'immagine");
+
+//         let mut my_img = image::RgbaImage::from(img_buf).into_raw();
+
+//         let frame = Frame::from_rgba(
+//             image.width() as u16,
+//             image.height() as u16,
+//             my_img.as_mut_slice(),
+//         );
+//         encoder
+//             .write_frame(&frame)
+//             .expect("Impossibile scrivere il frame");
 //     }
-//     if (d.0!=0 || d.1!=0) && d.2==0 && d.3==0{
-//         let pos = window.get_mouse_pos(MouseMode::Clamp);
-//             if let Some((x, y)) = pos {
-//                 d.2 = (d.0- (x as i32)) as u32;
-//                 d.3 = (d.1-(y as i32)) as u32;
-//             }
-//     }
-
-//     Some(d)
 // }
