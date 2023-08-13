@@ -55,8 +55,7 @@ impl eframe::App for MyApp {
                 },
             );
 
-
-            self.hotkey_conf.listen_to_event();
+            //self.hotkey_conf.listen_to_event();
         } else if self.mode == 1 {
 
             self.mode=2;
