@@ -1,9 +1,10 @@
 use crate::{screenshot, MyApp};
+use std::time::{Instant,Duration};
 use native_dialog::FileDialog;
 use keyboard_types::{Code, Modifiers};
 use eframe::egui;
 
-pub fn gui_mode0(my_app:&mut MyApp,frame: &mut eframe::Frame,ui:&mut egui::Ui) {
+pub  fn gui_mode0(my_app:&mut MyApp,frame: &mut eframe::Frame,ui:&mut egui::Ui) {
         ui.label(
             egui::RichText::new(
                 "Welcome to the Screenshot Utility Tool, everything is ready to take a screenshot!",
@@ -126,19 +127,32 @@ pub fn gui_mode0(my_app:&mut MyApp,frame: &mut eframe::Frame,ui:&mut egui::Ui) {
             })
         });
         ui.add_space(10.0);
-    
-    ui.horizontal(|ui| {
+        ui.label(egui::RichText::new("Set delay:").font(egui::FontId::proportional(17.0)));
+        ui.add_space(10.0);
+        ui.add(egui::Slider::new(&mut my_app.delay_time, 0..=10).text("Delay in seconds"));
+        ui.add_space(10.0);
+
         //to place widgets on the same row
 
-        if ui.button("Take Screenshot!").clicked() {
+        if ui.add_enabled(my_app.enable_screenshot ,egui::Button::new("Take Screenshot!")).clicked() {
             println!("pressed");
-            frame.set_visible(false);
-
-            my_app.mode=1;
+            if my_app.delay_time!=0{
+                //tokio::time::delay_for(tokio::time::Duration::new(u64::from(my_app.delay_time),0)).await;
+                my_app.delay_start=Instant::now();
+                my_app.enable_screenshot=false;
+            }else{
+                frame.set_visible(false);
+                my_app.mode=1;
+            }
             
+
+        }
+        if my_app.enable_screenshot==false && my_app.delay_start.elapsed()>=Duration::new(u64::from(my_app.delay_time),0){
+           // println!("{}",Duration::new(u64::from(my_app.delay_time),0).as_secs());
+            my_app.mode=1;
+            my_app.enable_screenshot=true;
         }
 
-    });
 
     let ev = my_app.hotkey_conf.listen_to_event();
     match ev {
@@ -161,13 +175,13 @@ pub fn gui_mode0(my_app:&mut MyApp,frame: &mut eframe::Frame,ui:&mut egui::Ui) {
 pub fn gui_mode3(my_self: &mut MyApp, frame: &mut eframe::Frame,
     ui: &mut egui::Ui) {
         
-
                     screenshot::visualize_image(&mut my_self.image, ui, frame.info().window_info.size);
                     if ui.button("return").clicked() {
                         
                         my_self.mode = 0;
+                        
                     }
-                    let window_name=String::from(String::from("screenshot")+&(my_self.default_name.to_string()));
+                    let window_name=String::from(String::from("screenshot")+&(my_self.default_name_index.to_string()));
                     if ui.button("save").clicked() {
                         let mut format_for_dialog="";
                         let mut format="";
@@ -188,7 +202,7 @@ pub fn gui_mode3(my_self: &mut MyApp, frame: &mut eframe::Frame,
                             //if path_file inserted by user is valid enter here
                             screenshot::save_image(&file_path.to_string_lossy().to_string(),&mut my_self.image,&mut  my_self.output_format);
                                 println!("path:{:?}",file_path);
-                            my_self.default_name=my_self.default_name+1;
+                            my_self.default_name_index=my_self.default_name_index+1;
                         }
                         my_self.mode = 0;
                     }
