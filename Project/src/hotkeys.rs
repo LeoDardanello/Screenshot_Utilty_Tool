@@ -71,11 +71,18 @@ impl HotkeysConfig{
         }
     }
 
-    pub fn listen_to_event(self:&Self){
+    pub fn listen_to_event(self:&Self) -> Option<usize>{
         if let Ok(event) = GlobalHotKeyEvent::receiver().try_recv() {
-            println!("tray event: {event:?}");
-            println!("{:?}", self.hotkeys_seq);
-            println!("{:?}", self.commands);
+            for i in 0..self.hotkeys.len(){
+                if event.id == self.hotkeys[i].id(){
+                    println!("Hotkey # {:?}", i+1);
+                    return Some(i);
+                }
+            }
+            return None;
+        }
+        else{
+            return None;
         }
     }
 

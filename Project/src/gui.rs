@@ -140,6 +140,23 @@ pub fn gui_mode0(my_app:&mut MyApp,frame: &mut eframe::Frame,ui:&mut egui::Ui) {
         }
 
     });
+
+    let ev = my_app.hotkey_conf.listen_to_event();
+    match ev {
+        None => {},
+        Some(i) => {
+            if i == 0 {
+                frame.set_visible(false);    //Per ora sono uguali
+
+                my_app.mode=1;
+            }
+            else if i == 1{
+                frame.set_visible(false);
+
+                my_app.mode=1;
+            }
+        }
+    }
 }
 
 pub fn gui_mode3(my_self: &mut MyApp, frame: &mut eframe::Frame,
