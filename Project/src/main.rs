@@ -1,16 +1,19 @@
 use eframe::{egui, run_native};
 use hotkeys::HotkeysConfig;
 mod gui;
-mod screenshot;
 mod hotkeys;
+mod screenshot;
+
+pub struct MyScreen {
+    screens: Vec<u8>,
+    size: (usize, usize),
+}
 
 pub struct MyApp {
     hotkey_conf: HotkeysConfig,
     output_format: String,
     mode: i32,
-    take_screen: bool,
-    start_screen: bool,
-    image: Vec<screenshots::Image>
+    image: Vec<MyScreen>,
 }
 
 impl MyApp {
@@ -27,9 +30,7 @@ impl MyApp {
             hotkey_conf: HotkeysConfig::new(),
             output_format: default_output_format,
             mode: 0,
-            take_screen: false,
-            start_screen: false,
-            image: Vec::new()
+            image: Vec::new(),
         }
     }
 }
@@ -57,15 +58,11 @@ impl eframe::App for MyApp {
 
             //self.hotkey_conf.listen_to_event();
         } else if self.mode == 1 {
-
-            self.mode=2;
-
+            self.mode = 2;
         } else if self.mode == 2 {
-            
-                self.image=screenshot::full_screen();
-                frame.set_visible(true);
-                self.mode=3;
-            
+            self.mode = 3;
+            self.image = screenshot::full_screen();
+            frame.set_visible(true);
         } else if self.mode == 3 {
             gui::custom_window_frame(
                 self,
@@ -78,7 +75,6 @@ impl eframe::App for MyApp {
             );
         }
     }
-
 }
 
 fn main() {

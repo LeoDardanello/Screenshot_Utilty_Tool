@@ -1,10 +1,9 @@
 use crate::{screenshot, MyApp};
-use native_dialog::{FileDialog};
+use native_dialog::FileDialog;
 use keyboard_types::{Code, Modifiers};
 use eframe::egui;
 
 pub fn gui_mode0(my_app:&mut MyApp,frame: &mut eframe::Frame,ui:&mut egui::Ui) {
-    if my_app.take_screen == false {
         ui.label(
             egui::RichText::new(
                 "Welcome to the Screenshot Utility Tool, everything is ready to take a screenshot!",
@@ -127,7 +126,7 @@ pub fn gui_mode0(my_app:&mut MyApp,frame: &mut eframe::Frame,ui:&mut egui::Ui) {
             })
         });
         ui.add_space(10.0);
-    }
+    
     ui.horizontal(|ui| {
         //to place widgets on the same row
 
@@ -215,10 +214,7 @@ pub fn custom_window_frame(
    egui::CentralPanel::default().frame(panel_frame).show(ctx, |ui| {
             let app_rect = ui.max_rect();
 
-            let mut title_bar_height = 32.0;
-            if my_app.take_screen {
-                title_bar_height = 0.0 as f32;
-            }
+            let title_bar_height = 32.0;
 
             let title_bar_rect = {
                 let mut rect = app_rect;
