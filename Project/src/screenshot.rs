@@ -18,7 +18,6 @@ impl MyImage {
             // Load the texture only once.
             ui.ctx().load_texture("my-image", im, Default::default())
         });
-
         let max_size = egui::vec2(size.x - 20.0, size.y - 44.0).to_pos2();
 
         let my_rect = egui::Rect::from_two_pos(egui::pos2(10.0, 34.0), max_size);
@@ -54,15 +53,35 @@ pub fn visualize_image(screens: &mut Vec<MyScreen>, ui: &mut Ui, size: egui::Vec
     }
 }
 
-// pub fn screen_area(screens: &mut Vec<MyScreen>, x: u32, y: u32, width: usize, height: usize) {
-    // for image in screens {
-    //     let rgba_img = image::ImageBuffer::from_raw(width as u32, height as u32, image.screens)
-    //         .expect("Errore nella conversione dell'immagine");
-    //     let cropped_img = image::ImageBuffer::from_fn(width as u32, height as u32, |x, y| {
-    //         rgba_img.get_pixel(x, y).clone()
-    //     });
-    // }
-// }
+pub fn screen_area(screens: &mut Vec<MyScreen>, x0: u32, y0: u32, width: usize, height: usize){
+    let mut screen_image = Vec::new();
+
+    for image in &mut *screens {
+
+        let rgba_img= image::RgbaImage::from_raw(image.size.0 as u32, image.size.1 as u32, image.screens.to_vec()).expect("Errore nella conversione dell'immagine");
+        let cropped_img = image::ImageBuffer::from_fn(width as u32, height as u32, |x, y| {
+            rgba_img.get_pixel(x0 + x, y0 + y).clone()
+        });
+
+        let mut cropped_bytes = Vec::new();
+
+    for pixel in cropped_img.pixels() {
+
+        cropped_bytes.push(pixel[0]); // Red
+        cropped_bytes.push(pixel[1]); // Green
+        cropped_bytes.push(pixel[2]); // Blue
+        cropped_bytes.push(pixel[3]); // Alpha
+    }
+    let img = MyScreen {
+        screens: cropped_bytes,
+        size: (width, height),
+    };
+    screen_image.push(img);
+        
+    }
+    *screens=screen_image;
+    
+}
 
 pub fn save_image(path: &String, screens: &mut Vec<MyScreen>, format: &mut String) {
     let image_format = if format == ".jpg" {
