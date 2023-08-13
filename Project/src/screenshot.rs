@@ -49,7 +49,7 @@ pub fn visualize_image(screens: &mut Vec<screenshots::Image>, ui: &mut Ui, size:
     }
 }
 
-pub fn save_image(screens: &mut Vec<screenshots::Image>, format: &mut String) {
+pub fn save_image(path:&String,screens: &mut Vec<screenshots::Image>, format: &mut String) {
 
     let image_format = if format == ".jpg" {
         ImageFormat::Jpeg
@@ -57,29 +57,22 @@ pub fn save_image(screens: &mut Vec<screenshots::Image>, format: &mut String) {
         ImageFormat::Png
     }else{
         ImageFormat::Gif
-    };
-if format==".gif"{
-    save_images_as_gif(screens)
-}
-else{
+    };  
 
+    for image in screens {
+            let image_rgba = image.rgba();
+            let img_buf = image::ImageBuffer::<image::Rgba<u8>, _>::from_vec(
+                image.width(),
+                image.height(),
+                image_rgba.to_vec(),
+            )
+            .expect("impossibile creare l'immagine");
 
-for image in screens {
-        let image_rgba = image.rgba();
-        let img_buf = image::ImageBuffer::<image::Rgba<u8>, _>::from_vec(
-            image.width(),
-            image.height(),
-            image_rgba.to_vec(),
-        )
-        .expect("impossibile creare l'immagine");
-
-            img_buf
-                .save_with_format("./image".to_string() + &(*format).to_string(), image_format)
-                .expect("impossibile salvare l'immagine");
+                img_buf
+                    .save_with_format(path.to_string(), image_format)
+                    .expect("impossibile salvare l'immagine");
+        }
     }
-
-    }
-}
 
 
 // fn save_images_as_gif2(image: screenshots::Image){
@@ -105,9 +98,9 @@ for image in screens {
         
 // }
 
-fn save_images_as_gif(screens: &mut Vec<screenshots::Image>) {
+fn save_images_as_gif(path:&String,screens: &mut Vec<screenshots::Image>) {
     // Crea un nuovo file GIF
-    let mut output_file = File::create("./image.gif").expect("Impossibile creare il file GIF");
+    let mut output_file = File::create(path).expect("Impossibile creare il file GIF");
 
 
     // Configura l'encoder GIF

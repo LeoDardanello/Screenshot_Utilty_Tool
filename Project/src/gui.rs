@@ -1,5 +1,5 @@
 use crate::{screenshot, MyApp};
-use egui::pos2;
+use native_dialog::{FileDialog};
 use keyboard_types::{Code, Modifiers};
 use eframe::egui;
 
@@ -152,8 +152,26 @@ pub fn gui_mode3(my_self: &mut MyApp, frame: &mut eframe::Frame,
                         my_self.mode = 0;
                     }
                     if ui.button("save").clicked() {
-                        screenshot::save_image(&mut my_self.image,&mut  my_self.output_format);
-                        
+                        let mut format_for_dialog="";
+                        let mut format="";
+                        if  my_self.output_format==".png"{
+                            format_for_dialog="PNG";
+                            format="png";
+                        }else if my_self.output_format==".jpg"{
+                            format_for_dialog="JPG";
+                            format="jpg";
+                        }
+                        else if my_self.output_format==".gif"{
+                            format_for_dialog="GIF";
+                            format="gif";
+                        }
+                        //leave SOME as path wrapper!!!!!!!!
+                        //format without the "." in front
+                        if let Some(file_path)=FileDialog::new().add_filter(format_for_dialog,&[format]).show_save_single_file().ok().unwrap(){
+                            //if path_file inserted by user is valid enter here
+                            screenshot::save_image(&file_path.to_string_lossy().to_string(),&mut my_self.image,&mut  my_self.output_format);
+                                println!("path:{:?}",file_path);
+                        }
                         my_self.mode = 0;
                     }
 

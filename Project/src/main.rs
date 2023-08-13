@@ -92,7 +92,6 @@ fn main() {
         follow_system_theme: false,
         default_theme: eframe::Theme::Light,
         resizable: true,
-        
         ..Default::default()
     };
     //let native_options=eframe::NativeOptions::default();
