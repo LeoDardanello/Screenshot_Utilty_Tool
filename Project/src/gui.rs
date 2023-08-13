@@ -206,6 +206,9 @@ pub fn gui_mode3(my_self: &mut MyApp, frame: &mut eframe::Frame,
                         }
                         my_self.mode = 0;
                     }
+                    if ui.button("cattura").clicked(){
+                        screenshot::screen_area(&mut my_self.image, 0, 0, 200, 100);
+                    }
 
 }
 
