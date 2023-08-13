@@ -167,6 +167,7 @@ pub fn gui_mode3(my_self: &mut MyApp, frame: &mut eframe::Frame,
                         
                         my_self.mode = 0;
                     }
+                    let window_name=String::from(String::from("screenshot")+&(my_self.default_name.to_string()));
                     if ui.button("save").clicked() {
                         let mut format_for_dialog="";
                         let mut format="";
@@ -183,10 +184,11 @@ pub fn gui_mode3(my_self: &mut MyApp, frame: &mut eframe::Frame,
                         }
                         //leave SOME as path wrapper!!!!!!!!
                         //format without the "." in front
-                        if let Some(file_path)=FileDialog::new().add_filter(format_for_dialog,&[format]).show_save_single_file().ok().unwrap(){
+                        if let Some(file_path)=FileDialog::new().set_filename(&window_name).add_filter(format_for_dialog,&[format]).show_save_single_file().ok().unwrap(){
                             //if path_file inserted by user is valid enter here
                             screenshot::save_image(&file_path.to_string_lossy().to_string(),&mut my_self.image,&mut  my_self.output_format);
                                 println!("path:{:?}",file_path);
+                            my_self.default_name=my_self.default_name+1;
                         }
                         my_self.mode = 0;
                     }

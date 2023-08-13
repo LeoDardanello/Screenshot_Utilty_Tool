@@ -14,6 +14,7 @@ pub struct MyApp {
     output_format: String,
     mode: i32,
     image: Vec<MyScreen>,
+    default_name:i32
 }
 
 impl MyApp {
@@ -25,12 +26,13 @@ impl MyApp {
         h.push(ToString::to_string("Take Screenshot: Ctrl+K"));
         h.push(ToString::to_string("Save: Maiusc+C+U"));
         h.push(ToString::to_string("Boh: LOLOLOLOLOL JOJOOOOOO"));
-
+        let initial_default_name=String::from("screenshot0");
         MyApp {
             hotkey_conf: HotkeysConfig::new(),
             output_format: default_output_format,
             mode: 0,
             image: Vec::new(),
+            default_name:0
         }
     }
 }
