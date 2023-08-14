@@ -5,7 +5,6 @@ use egui::{ColorImage, Ui};
 use image::{self, ImageFormat};
 use screenshots::Screen;
 
-
 use crate::MyScreen;
 
 struct MyImage {
@@ -20,7 +19,7 @@ impl MyImage {
         });
         let max_size = egui::vec2(size.x - 20.0, size.y - 44.0).to_pos2();
 
-        let my_rect = egui::Rect::from_two_pos(egui::pos2(10.0, 34.0), max_size);
+        let my_rect = egui::Rect::from_two_pos(egui::pos2(10.0, 80.0), max_size);
         ui.painter().image(
             texture.id(),
             my_rect,
@@ -53,34 +52,35 @@ pub fn visualize_image(screens: &mut Vec<MyScreen>, ui: &mut Ui, size: egui::Vec
     }
 }
 
-pub fn screen_area(screens: &mut Vec<MyScreen>, x0: u32, y0: u32, width: usize, height: usize){
+pub fn screen_area(screens: &mut Vec<MyScreen>, x0: u32, y0: u32, width: u32, height: u32) {
     let mut screen_image = Vec::new();
 
     for image in &mut *screens {
-
-        let rgba_img= image::RgbaImage::from_raw(image.size.0 as u32, image.size.1 as u32, image.screens.to_vec()).expect("Errore nella conversione dell'immagine");
-        let cropped_img = image::ImageBuffer::from_fn(width as u32, height as u32, |x, y| {
+        let rgba_img = image::RgbaImage::from_raw(
+            image.size.0 as u32,
+            image.size.1 as u32,
+            image.screens.to_vec(),
+        )
+        .expect("Errore nella conversione dell'immagine");
+        let cropped_img = image::ImageBuffer::from_fn(width, height, |x, y| {
             rgba_img.get_pixel(x0 + x, y0 + y).clone()
         });
 
         let mut cropped_bytes = Vec::new();
 
-    for pixel in cropped_img.pixels() {
-
-        cropped_bytes.push(pixel[0]); // Red
-        cropped_bytes.push(pixel[1]); // Green
-        cropped_bytes.push(pixel[2]); // Blue
-        cropped_bytes.push(pixel[3]); // Alpha
+        for pixel in cropped_img.pixels() {
+            cropped_bytes.push(pixel[0]); // Red
+            cropped_bytes.push(pixel[1]); // Green
+            cropped_bytes.push(pixel[2]); // Blue
+            cropped_bytes.push(pixel[3]); // Alpha
+        }
+        let img = MyScreen {
+            screens: cropped_bytes,
+            size: (width as usize, height as usize),
+        };
+        screen_image.push(img);
     }
-    let img = MyScreen {
-        screens: cropped_bytes,
-        size: (width, height),
-    };
-    screen_image.push(img);
-        
-    }
-    *screens=screen_image;
-    
+    *screens = screen_image;
 }
 
 pub fn save_image(path: &String, screens: &mut Vec<MyScreen>, format: &mut String) {
