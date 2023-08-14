@@ -1,5 +1,4 @@
 use crate::{screenshot, MyApp};
-use tokio::runtime::Runtime;
 use native_dialog::FileDialog;
 use std::time::{Duration};
 use std::thread;

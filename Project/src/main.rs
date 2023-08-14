@@ -1,7 +1,7 @@
 use eframe::{egui, run_native};
 use hotkeys::HotkeysConfig;
 use std::time::{Instant,Duration};
-use async_trait::async_trait;
+
 mod gui;
 mod hotkeys;
 mod screenshot;
@@ -82,8 +82,8 @@ impl eframe::App for MyApp {
         }
     }
 }
-#[tokio::main]
-async fn main() {
+
+fn main() {
     //GUI(eframe) setup
 
     let native_options = eframe::NativeOptions {
