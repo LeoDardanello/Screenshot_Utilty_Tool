@@ -219,7 +219,7 @@ pub  fn gui_mode0(my_app:&mut MyApp,frame: &mut eframe::Frame,ui:&mut egui::Ui) 
                                         //modification could fail if for example I try to set an already registered hotkey
                                         my_app.hotkey_conf.set_enable(true);
                                     }
-                              
+                                }
                                 my_app.hotkey_conf.set_new_hotkey(new_mod, new_key);   
                                 }
                             });
