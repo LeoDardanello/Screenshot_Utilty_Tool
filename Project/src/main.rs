@@ -1,5 +1,6 @@
 use eframe::{egui, run_native};
 use hotkeys::HotkeysConfig;
+use gui::Paints;
 mod draw;
 mod gui;
 mod hotkeys;
@@ -19,8 +20,10 @@ pub struct MyApp {
     area: (f32, f32, f32, f32),
     delay_time:u32,
     enable_screenshot:bool,
-    default_path:String
-
+    default_path:String,
+    init_pos: Option<egui::Pos2>,
+    final_pos: Option<egui::Pos2>,
+    paint: Vec<(Paints, egui::Pos2, egui::Pos2)>
 }
 
 impl MyApp {
@@ -39,7 +42,11 @@ impl MyApp {
 
             enable_screenshot:true,
             //use backslashes to be compatible with different OS
-            default_path:String::from(".\\..\\screenshot_default")//default screenshot save location, used by save hotkey
+            default_path:String::from(".\\..\\screenshot_default"),//default screenshot save location, used by save hotkey
+
+            init_pos: None,
+            final_pos: None,
+            paint: Vec::new(),
         }
     }
 }

@@ -1,3 +1,4 @@
+use egui::Color32;
 use native_dialog::{MessageDialog,FileDialog};
 use std::time::{Duration};
 use std::thread;
@@ -5,6 +6,11 @@ use crate::{draw, screenshot, MyApp};
 use keyboard_types::{Code, Modifiers};
 use eframe::egui;
 
+#[derive(PartialEq)]
+pub enum Paints{
+    Arrow,
+    Line
+}
 
 pub  fn gui_mode0(my_app:&mut MyApp,frame: &mut eframe::Frame,ui:&mut egui::Ui) {
         ui.label(
@@ -386,36 +392,65 @@ pub fn gui_mode3(my_app: &mut MyApp, frame: &mut eframe::Frame,
                             }
                         }
                     }
+                    ui.input(|i| {
+                        if i.pointer.is_decidedly_dragging() && i.pointer.primary_down(){
+                            if my_app.init_pos.is_none(){
+                                my_app.init_pos = i.pointer.press_origin();
+                                println!("{:?}", my_app.init_pos);
+                            }
+                            else{
+                                my_app.final_pos = i.pointer.hover_pos();
+                                //ui.painter().arrow(my_app.init_pos.unwrap(), my_app.final_pos.unwrap()-my_app.init_pos.unwrap(), ui.visuals().widgets.noninteractive.bg_stroke);
+                            }
+                        }
+                        else if i.pointer.primary_released() && my_app.init_pos.is_some(){
+                            my_app.final_pos = i.pointer.hover_pos();
+                            //my_app.paint = true;
+                            println!("{:?}, {:?}", my_app.init_pos, my_app.final_pos);
+                            my_app.paint.push((Paints::Arrow, my_app.init_pos.unwrap(), my_app.final_pos.unwrap()));
+                            my_app.init_pos = None;
+                            my_app.final_pos = None;
+                        }
+                    });
+
+                    for figure in &my_app.paint{
+                        if figure.0 == Paints::Arrow{
+                            ui.painter().arrow(figure.1, figure.2-figure.1, egui::Stroke { width: 1.5, color: Color32::RED });
+                        }
+                        else if figure.0 == Paints::Line{
+                            ui.painter().line_segment([figure.1, figure.2], egui::Stroke { width: 1.5, color: Color32::RED });
+                        }
+                    }
 
 
 }
 
-pub fn gui_mode4(my_self: &mut MyApp, frame: &mut eframe::Frame, ui: &mut egui::Ui) {
+pub fn gui_mode4(my_app: &mut MyApp, frame: &mut eframe::Frame, ui: &mut egui::Ui) {
     let position = ui.input(|i| i.pointer.hover_pos());
     let info = frame.info().window_info;
     let limits = (10.0, 80.0, info.size[0] - 20.0, info.size[1] - 44.0);
-    let props=((my_self.image[0].size.0 as f32)/(limits.2-limits.0), (my_self.image[0].size.1 as f32)/(limits.3-limits.1));
+    let props=((my_app.image[0].size.0 as f32)/(limits.2-limits.0), (my_app.image[0].size.1 as f32)/(limits.3-limits.1));
 
-    draw::cut_rect(position, info, my_self, ui, limits);
+    draw::cut_rect(position, info, my_app, ui, limits);
 
     ui.horizontal(|ui| {
         if ui.button("Conferma").clicked() {
             frame.set_fullscreen(false);
-            let width = ((my_self.area.2 - my_self.area.0).abs()* props.0) as u32;
-            let height = ((my_self.area.3 - my_self.area.1).abs() *props.1) as u32;
+            let width = ((my_app.area.2 - my_app.area.0).abs()* props.0) as u32;
+            let height = ((my_app.area.3 - my_app.area.1).abs() *props.1) as u32;
             screenshot::screen_area(
-                &mut my_self.image,
-                ((my_self.area.0 - limits.0)* props.0) as u32,
-                ((my_self.area.1 - limits.1)*props.1) as u32,
+                &mut my_app.image,
+                ((my_app.area.0 - limits.0)* props.0) as u32,
+                ((my_app.area.1 - limits.1)*props.1) as u32,
                 width,
                 height,
             );
-            my_self.mode = 3;
+            my_app.mode = 3;
         }
         if ui.button("Return").clicked() {
-            my_self.mode = 3;
+            my_app.mode = 3;
             frame.set_fullscreen(false);
-            my_self.area = (0.0, 0.0, 0.0, 0.0);
+            my_app.area = (0.0, 0.0, 0.0, 0.0);
         }
     });
 }
