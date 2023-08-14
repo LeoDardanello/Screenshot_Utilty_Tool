@@ -1,5 +1,6 @@
 use eframe::{egui, run_native};
 use hotkeys::HotkeysConfig;
+mod draw;
 mod gui;
 mod hotkeys;
 mod screenshot;
@@ -14,10 +15,12 @@ pub struct MyApp {
     output_format: String,
     mode: i32,
     image: Vec<MyScreen>,
-    default_name_index:i32,
+    default_name_index: i32,
+    area: (f32, f32, f32, f32),
     delay_time:u32,
     enable_screenshot:bool,
     default_path:String
+
 }
 
 impl MyApp {
@@ -30,8 +33,10 @@ impl MyApp {
             output_format: default_output_format,
             mode: 0,
             image: Vec::new(),
+            area: (0.0, 0.0, 0.0, 0.0),
             default_name_index:0,
             delay_time:0,
+
             enable_screenshot:true,
             default_path:String::from("./../screenshot_default")//default screenshot save location, used by save hotkey
         }
@@ -75,6 +80,16 @@ impl eframe::App for MyApp {
                 "Screenshot Utility Tool", //the title in this row is used
                 |my_app: &mut Self, frame: &mut eframe::Frame, ui| {
                     gui::gui_mode3(my_app, frame, ui);
+                },
+            );
+        } else if self.mode == 4 {
+            gui::custom_window_frame(
+                self,
+                ctx,
+                frame,
+                "Screenshot Utility Tool", //the title in this row is used
+                |my_app: &mut Self, frame: &mut eframe::Frame, ui| {
+                    gui::gui_mode4(my_app, frame, ui);
                 },
             );
         }
