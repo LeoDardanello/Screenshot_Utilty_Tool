@@ -221,7 +221,7 @@ pub  fn gui_mode0(my_app:&mut MyApp,frame: &mut eframe::Frame,ui:&mut egui::Ui) 
                                     }
                               
                                 my_app.hotkey_conf.set_new_hotkey(new_mod, new_key);   
-
+                                }
                             });
                         }
                     }
@@ -327,13 +327,11 @@ pub  fn gui_mode0(my_app:&mut MyApp,frame: &mut eframe::Frame,ui:&mut egui::Ui) 
         }
     }
 }
-
-
 pub fn gui_mode3(my_app: &mut MyApp, frame: &mut eframe::Frame,
     ui: &mut egui::Ui) {
         
                     screenshot::visualize_image(&mut my_app.image, ui, frame.info().window_info.size);
-                    ui.horinzontal(|ui|{
+                    ui.horizontal(|ui|{
                     if ui.button("return").clicked() {
                         
                         my_app.mode = 0;
