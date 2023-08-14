@@ -1,27 +1,30 @@
 use crate::{draw, screenshot, MyApp};
-use eframe::egui;
-use keyboard_types::{Code, Modifiers};
 use native_dialog::FileDialog;
+use keyboard_types::{Code, Modifiers};
+use eframe::egui;
 
-pub fn gui_mode0(my_app: &mut MyApp, frame: &mut eframe::Frame, ui: &mut egui::Ui) {
-    ui.label(
-        egui::RichText::new(
-            "Welcome to the Screenshot Utility Tool, everything is ready to take a screenshot!",
-        )
-        .font(egui::FontId::proportional(17.5)),
-    );
-    ui.add_space(10.0);
-    ui.horizontal(|ui| {
-        ui.label(egui::RichText::new("Hotkey List:").font(egui::FontId::proportional(17.0)));
-        ui.add_space(250.0);
-        ui.label(egui::RichText::new("Format Selection:").font(egui::FontId::proportional(17.0)));
-    });
-    ui.add_space(10.0);
-    ui.label(
-        egui::RichText::new("Click on the shortcut to edit it")
-            .font(egui::FontId::proportional(17.0)),
-    );
-    ui.add_space(10.0);
+
+pub  fn gui_mode0(my_app:&mut MyApp,frame: &mut eframe::Frame,ui:&mut egui::Ui) {
+        ui.label(
+            egui::RichText::new(
+                "Welcome to the Screenshot Utility Tool, everything is ready to take a screenshot!",
+            )
+            .font(egui::FontId::proportional(17.5)),
+        );
+        ui.add_space(10.0);
+        ui.horizontal(|ui| {
+            ui.label(egui::RichText::new("Hotkey List:").font(egui::FontId::proportional(17.0)));
+            ui.add_space(250.0);
+            ui.label(
+                egui::RichText::new("Format Selection:").font(egui::FontId::proportional(17.0)),
+            );
+        });
+        ui.add_space(10.0);
+        ui.label(
+            egui::RichText::new("Click on the shortcut to edit it")
+                .font(egui::FontId::proportional(17.0)),
+        );
+        ui.add_space(10.0);
 
     ui.horizontal(|ui| {
         //hotkeys display
@@ -257,13 +260,25 @@ pub fn gui_mode0(my_app: &mut MyApp, frame: &mut eframe::Frame, ui: &mut egui::U
         })
     });
     ui.add_space(10.0);
+    ui.label(egui::RichText::new("Set delay:").font(egui::FontId::proportional(17.0)));
+    ui.add_space(10.0);
+    ui.add(egui::Slider::new(&mut my_app.delay_time, 0..=10).text("Delay in seconds"));
+    ui.add_space(10.0);
+    ui.add_space(10.0);
 
     ui.horizontal(|ui| {
         //to place widgets on the same row
 
-        if ui.button("Take Screenshot!").clicked() {
+        if ui.add_enabled(my_app.enable_screenshot ,egui::Button::new("Take Screenshot!")).clicked() {
+            if my_app.delay_time!=0{
+                //tokio::time::delay_for(tokio::time::Duration::new(u64::from(my_app.delay_time),0)).await;
+                my_app.enable_screenshot=false;
+            }else{
+                frame.set_visible(false);
+                my_app.mode=1;
+            }
             my_app.area = (0.0, 0.0, 0.0, 0.0);
-            frame.set_visible(false);
+            
 
             my_app.mode = 1;
         }
@@ -290,40 +305,32 @@ pub fn gui_mode3(my_self: &mut MyApp, frame: &mut eframe::Frame, ui: &mut egui::
     screenshot::visualize_image(&mut my_self.image, ui, frame.info().window_info.size);
     ui.horizontal(|ui| {
         if ui.button("return").clicked() {
+                        
             my_self.mode = 0;
+            
         }
-        let window_name =
-            String::from(String::from("screenshot") + &(my_self.default_name.to_string()));
+        let window_name=String::from(String::from("screenshot")+&(my_self.default_name_index.to_string()));
         if ui.button("save").clicked() {
-            let mut format_for_dialog = "";
-            let mut format = "";
-            if my_self.output_format == ".png" {
-                format_for_dialog = "PNG";
-                format = "png";
-            } else if my_self.output_format == ".jpg" {
-                format_for_dialog = "JPG";
-                format = "jpg";
-            } else if my_self.output_format == ".gif" {
-                format_for_dialog = "GIF";
-                format = "gif";
+            let mut format_for_dialog="";
+            let mut format="";
+            if  my_self.output_format==".png"{
+                format_for_dialog="PNG";
+                format="png";
+            }else if my_self.output_format==".jpg"{
+                format_for_dialog="JPG";
+                format="jpg";
+            }
+            else if my_self.output_format==".gif"{
+                format_for_dialog="GIF";
+                format="gif";
             }
             //leave SOME as path wrapper!!!!!!!!
             //format without the "." in front
-            if let Some(file_path) = FileDialog::new()
-                .set_filename(&window_name)
-                .add_filter(format_for_dialog, &[format])
-                .show_save_single_file()
-                .ok()
-                .unwrap()
-            {
+            if let Some(file_path)=FileDialog::new().set_filename(&window_name).add_filter(format_for_dialog,&[format]).show_save_single_file().ok().unwrap(){
                 //if path_file inserted by user is valid enter here
-                screenshot::save_image(
-                    &file_path.to_string_lossy().to_string(),
-                    &mut my_self.image,
-                    &mut my_self.output_format,
-                );
-                println!("path:{:?}", file_path);
-                my_self.default_name = my_self.default_name + 1;
+                screenshot::save_image(&file_path.to_string_lossy().to_string(),&mut my_self.image,&mut  my_self.output_format);
+                    println!("path:{:?}",file_path);
+                my_self.default_name_index=my_self.default_name_index+1;
             }
             my_self.mode = 0;
         }

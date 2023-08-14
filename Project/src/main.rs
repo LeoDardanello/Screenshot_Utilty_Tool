@@ -15,26 +15,26 @@ pub struct MyApp {
     output_format: String,
     mode: i32,
     image: Vec<MyScreen>,
-    default_name: i32,
+    default_name_index: i32,
     area: (f32, f32, f32, f32),
+    delay_time:u32,
+    enable_screenshot:bool
 }
 
 impl MyApp {
     //costructor for MyApp
     fn new() -> MyApp {
-        let mut h = Vec::new();
         let default_output_format = String::from(".jpg"); //default output format
                                                           //initial static hotkeys list
-        h.push(ToString::to_string("Take Screenshot: Ctrl+K"));
-        h.push(ToString::to_string("Save: Maiusc+C+U"));
-        h.push(ToString::to_string("Boh: LOLOLOLOLOL JOJOOOOOO"));
         MyApp {
             hotkey_conf: HotkeysConfig::new(),
             output_format: default_output_format,
             mode: 0,
             image: Vec::new(),
-            default_name: 0,
             area: (0.0, 0.0, 0.0, 0.0),
+            default_name_index:0,
+            delay_time:0,
+            enable_screenshot:true
         }
     }
 }
@@ -46,17 +46,17 @@ impl eframe::App for MyApp {
     }
 
     //mandatory function for App trait
-    fn update(&mut self, ctx: &egui::Context, frame: &mut eframe::Frame) {
+     fn update(&mut self, ctx: &egui::Context, frame: &mut eframe::Frame) {
         //custom window frame
 
         if self.mode == 0 {
-            gui::custom_window_frame(
+             gui::custom_window_frame(
                 self,
                 ctx,
                 frame,
                 "Screenshot Utility Tool", //the title in this row is used
-                |my_app: &mut Self, frame: &mut eframe::Frame, ui| {
-                    gui::gui_mode0(my_app, frame, ui);
+                 |my_app: &mut Self, frame: &mut eframe::Frame, ui| {
+                    gui::gui_mode0(my_app, frame, ui)
                 },
             );
 
