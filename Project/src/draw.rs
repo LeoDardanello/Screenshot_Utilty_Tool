@@ -40,6 +40,18 @@ pub fn cut_rect(
         if ui.input(|i| i.pointer.primary_released()) {
             my_self.area.2 = pos.x;
             my_self.area.3 = pos.y;
+
+            if my_self.area.0>pos.x{
+                my_self.area.2 = my_self.area.0;
+                my_self.area.0 = pos.x;
+
+            }
+            if my_self.area.1>pos.y{
+                my_self.area.3 = my_self.area.1;
+                my_self.area.1 = pos.y;
+
+            }
+
         }
     }
     screenshot::visualize_image(&mut my_self.image, ui, info.size);
