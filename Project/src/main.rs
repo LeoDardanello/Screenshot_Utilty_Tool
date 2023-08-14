@@ -1,7 +1,5 @@
 use eframe::{egui, run_native};
 use hotkeys::HotkeysConfig;
-use std::time::{Instant,Duration};
-
 mod gui;
 mod hotkeys;
 mod screenshot;
@@ -18,8 +16,8 @@ pub struct MyApp {
     image: Vec<MyScreen>,
     default_name_index:i32,
     delay_time:u32,
-    delay_start:Instant,
-    enable_screenshot:bool
+    enable_screenshot:bool,
+    default_path:String
 }
 
 impl MyApp {
@@ -34,8 +32,8 @@ impl MyApp {
             image: Vec::new(),
             default_name_index:0,
             delay_time:0,
-            delay_start:Instant::now(),
-            enable_screenshot:true
+            enable_screenshot:true,
+            default_path:String::from("./../screenshot_default")//default screenshot save location, used by save hotkey
         }
     }
 }

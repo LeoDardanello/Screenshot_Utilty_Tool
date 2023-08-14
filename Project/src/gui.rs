@@ -1,5 +1,5 @@
 use crate::{screenshot, MyApp};
-use native_dialog::FileDialog;
+use native_dialog::{MessageDialog,FileDialog};
 use std::time::{Duration};
 use std::thread;
 use keyboard_types::{Code, Modifiers};
@@ -97,6 +97,8 @@ pub  fn gui_mode0(my_app:&mut MyApp,frame: &mut eframe::Frame,ui:&mut egui::Ui) 
                                     }
                                 }
 
+                                
+
                                 my_app.hotkey_conf.set_new_hotkey(new_mod, new_key);   
                             });
                         }
@@ -128,59 +130,60 @@ pub  fn gui_mode0(my_app:&mut MyApp,frame: &mut eframe::Frame,ui:&mut egui::Ui) 
                 }
             })
         });
-        ui.add_space(10.0);
-        ui.label(egui::RichText::new("Set delay:").font(egui::FontId::proportional(17.0)));
-        ui.add_space(10.0);
-        ui.add(egui::Slider::new(&mut my_app.delay_time, 0..=10).text("Delay in seconds"));
-        ui.add_space(10.0);
+        ui.add_space(40.0);//space between first and second group of widget
+        ui.horizontal(|ui|{
+            ui.vertical(|ui|{
+                ui.label(egui::RichText::new("Set delay:").font(egui::FontId::proportional(17.0)));
+                ui.add_space(10.0);
+                ui.add(egui::Slider::new(&mut my_app.delay_time, 0..=10).text("Delay in seconds"));
+            });
+            //space between delay setting and default path setting
+            ui.add_space(80.0);
+            ui.vertical(|ui|{
+                ui.label(egui::RichText::new("Current default path:").font(egui::FontId::proportional(17.0)));
+                ui.add_space(10.0);
+                ui.horizontal(|ui|{
+                ui.label(egui::RichText::new(&my_app.default_path).font(egui::FontId::proportional(15.0)));
+                if ui.button("Change Default Path").clicked(){
+                  my_app.default_path=FileDialog::new().show_open_single_dir().unwrap()
+                  .expect("Errore nel cambiamento del file di default").to_string_lossy().to_string();
+                }
+                })
+            });
 
-        //to place widgets on the same row
+        });
+
+ 
 
         if ui.add_enabled(my_app.enable_screenshot ,egui::Button::new("Take Screenshot!")).clicked() {
             println!("pressed");
             if my_app.delay_time!=0 && my_app.enable_screenshot==true{
-                //tokio::time::delay_for(tokio::time::Duration::new(u64::from(my_app.delay_time),0)).await;
-                //my_app.delay_start=Instant::now();
                 my_app.enable_screenshot=false;
-                /*let mut rt=Runtime::new().unwrap();
-                let delay_duration=tokio::time::Duration::new(u64::from(my_app.delay_time),0);
-
-                rt.block_on(async move{
-                    tokio::time::delay_for(delay_duration).await;  
-                    println!("{:?}",delay_duration.as_secs());  
-                    
-                });
-            */
             thread::sleep(Duration::new(u64::from(my_app.delay_time),0));
             my_app.mode=1;
             }else{
                 frame.set_visible(false);
                 my_app.mode=1;
             }
-            
-
         }
-        /*if my_app.enable_screenshot==false && my_app.delay_start.elapsed()>=Duration::new(u64::from(my_app.delay_time),0){
-           // println!("{}",Duration::new(u64::from(my_app.delay_time),0).as_secs());
-            my_app.mode=1;
-            my_app.enable_screenshot=true;
-        }*/
-
 
     let ev = my_app.hotkey_conf.listen_to_event();
     match ev {
         None => {},
         Some(i) => {
-            if i == 0 {
-                frame.set_visible(false);    //Per ora sono uguali
+            if i == 0 {//Take Screenshot hotkey
+                frame.set_visible(false);   
 
                 my_app.mode=1;
             }
-            else if i == 1{
-                frame.set_visible(false);
-
-                my_app.mode=1;
+            if i==1{
+                MessageDialog::new()
+                .set_title("Error")
+                .set_text("Can't save before taking screenshot!")
+                .show_alert()
+                .unwrap();
             }
+            
         }
     }
 }
@@ -214,7 +217,7 @@ pub fn gui_mode3(my_app: &mut MyApp, frame: &mut eframe::Frame,
                         //format without the "." in front
                         if let Some(file_path)=FileDialog::new().set_filename(&window_name).add_filter(format_for_dialog,&[format]).show_save_single_file().ok().unwrap(){
                             //if path_file inserted by user is valid enter here
-                            screenshot::save_image(&file_path.to_string_lossy().to_string(),&mut my_app.image,&mut  my_app.output_format);
+                            screenshot::save_image(&file_path.to_string_lossy().to_string(),&mut my_app.image,&mut  my_app.output_format,false);
                                 println!("path:{:?}",file_path);
                             my_app.default_name_index=my_app.default_name_index+1;
                         }
@@ -223,7 +226,22 @@ pub fn gui_mode3(my_app: &mut MyApp, frame: &mut eframe::Frame,
                     if ui.button("cattura").clicked(){
                         screenshot::screen_area(&mut my_app.image, 0, 0, 200, 100);
                     }
+                    let ev=my_app.hotkey_conf.listen_to_event();
 
+                    match ev {
+                        None => {},
+                        Some(i) => {
+                            if i == 1{//Save Hotkey
+                                println!("salvo screen");
+                                println!("default path:{}",my_app.default_path);
+                                println!("output_format:{}",my_app.output_format);
+                                let path=String::from(String::from(&my_app.default_path)+&String::from("\\screenshot")+&(my_app.default_name_index.to_string()));
+                                screenshot::save_image(&path,&mut my_app.image,&mut my_app.output_format,true);
+                                my_app.default_name_index=my_app.default_name_index+1;
+                                my_app.mode=0;
+                            }
+                        }
+                    }
 }
 
 
