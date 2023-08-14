@@ -1,6 +1,7 @@
 use eframe::{egui, run_native};
 use hotkeys::HotkeysConfig;
 use std::time::{Instant,Duration};
+use async_trait::async_trait;
 mod gui;
 mod hotkeys;
 mod screenshot;
@@ -40,13 +41,14 @@ impl MyApp {
 }
 
 //implementing eframe::App trait for MyApp
+
 impl eframe::App for MyApp {
     fn clear_color(&self, _visuals: &egui::Visuals) -> [f32; 4] {
         egui::Rgba::TRANSPARENT.to_array() // Make sure we don't paint anything behind the rounded corners
     }
 
     //mandatory function for App trait
-     fn update(&mut self, ctx: &egui::Context, frame: &mut eframe::Frame) {
+    fn update(&mut self, ctx: &egui::Context, frame: &mut eframe::Frame) {
         //custom window frame
 
         if self.mode == 0 {
@@ -56,7 +58,7 @@ impl eframe::App for MyApp {
                 frame,
                 "Screenshot Utility Tool", //the title in this row is used
                  |my_app: &mut Self, frame: &mut eframe::Frame, ui| {
-                    gui::gui_mode0(my_app, frame, ui)
+                    gui::gui_mode0(my_app, frame, ui);
                 },
             );
 
@@ -80,8 +82,8 @@ impl eframe::App for MyApp {
         }
     }
 }
-
-fn main() {
+#[tokio::main]
+async fn main() {
     //GUI(eframe) setup
 
     let native_options = eframe::NativeOptions {

@@ -1,8 +1,11 @@
 use crate::{screenshot, MyApp};
-use std::time::{Instant,Duration};
+use tokio::runtime::Runtime;
 use native_dialog::FileDialog;
+use std::time::{Duration};
+use std::thread;
 use keyboard_types::{Code, Modifiers};
 use eframe::egui;
+
 
 pub  fn gui_mode0(my_app:&mut MyApp,frame: &mut eframe::Frame,ui:&mut egui::Ui) {
         ui.label(
@@ -136,10 +139,21 @@ pub  fn gui_mode0(my_app:&mut MyApp,frame: &mut eframe::Frame,ui:&mut egui::Ui) 
 
         if ui.add_enabled(my_app.enable_screenshot ,egui::Button::new("Take Screenshot!")).clicked() {
             println!("pressed");
-            if my_app.delay_time!=0{
+            if my_app.delay_time!=0 && my_app.enable_screenshot==true{
                 //tokio::time::delay_for(tokio::time::Duration::new(u64::from(my_app.delay_time),0)).await;
-                my_app.delay_start=Instant::now();
+                //my_app.delay_start=Instant::now();
                 my_app.enable_screenshot=false;
+                /*let mut rt=Runtime::new().unwrap();
+                let delay_duration=tokio::time::Duration::new(u64::from(my_app.delay_time),0);
+
+                rt.block_on(async move{
+                    tokio::time::delay_for(delay_duration).await;  
+                    println!("{:?}",delay_duration.as_secs());  
+                    
+                });
+            */
+            thread::sleep(Duration::new(u64::from(my_app.delay_time),0));
+            my_app.mode=1;
             }else{
                 frame.set_visible(false);
                 my_app.mode=1;
@@ -147,11 +161,11 @@ pub  fn gui_mode0(my_app:&mut MyApp,frame: &mut eframe::Frame,ui:&mut egui::Ui) 
             
 
         }
-        if my_app.enable_screenshot==false && my_app.delay_start.elapsed()>=Duration::new(u64::from(my_app.delay_time),0){
+        /*if my_app.enable_screenshot==false && my_app.delay_start.elapsed()>=Duration::new(u64::from(my_app.delay_time),0){
            // println!("{}",Duration::new(u64::from(my_app.delay_time),0).as_secs());
             my_app.mode=1;
             my_app.enable_screenshot=true;
-        }
+        }*/
 
 
     let ev = my_app.hotkey_conf.listen_to_event();
@@ -172,27 +186,28 @@ pub  fn gui_mode0(my_app:&mut MyApp,frame: &mut eframe::Frame,ui:&mut egui::Ui) 
     }
 }
 
-pub fn gui_mode3(my_self: &mut MyApp, frame: &mut eframe::Frame,
+pub fn gui_mode3(my_app: &mut MyApp, frame: &mut eframe::Frame,
     ui: &mut egui::Ui) {
         
-                    screenshot::visualize_image(&mut my_self.image, ui, frame.info().window_info.size);
+                    screenshot::visualize_image(&mut my_app.image, ui, frame.info().window_info.size);
                     if ui.button("return").clicked() {
                         
-                        my_self.mode = 0;
+                        my_app.mode = 0;
+                        my_app.enable_screenshot=true;
                         
                     }
-                    let window_name=String::from(String::from("screenshot")+&(my_self.default_name_index.to_string()));
+                    let window_name=String::from(String::from("screenshot")+&(my_app.default_name_index.to_string()));
                     if ui.button("save").clicked() {
                         let mut format_for_dialog="";
                         let mut format="";
-                        if  my_self.output_format==".png"{
+                        if  my_app.output_format==".png"{
                             format_for_dialog="PNG";
                             format="png";
-                        }else if my_self.output_format==".jpg"{
+                        }else if my_app.output_format==".jpg"{
                             format_for_dialog="JPG";
                             format="jpg";
                         }
-                        else if my_self.output_format==".gif"{
+                        else if my_app.output_format==".gif"{
                             format_for_dialog="GIF";
                             format="gif";
                         }
@@ -200,14 +215,14 @@ pub fn gui_mode3(my_self: &mut MyApp, frame: &mut eframe::Frame,
                         //format without the "." in front
                         if let Some(file_path)=FileDialog::new().set_filename(&window_name).add_filter(format_for_dialog,&[format]).show_save_single_file().ok().unwrap(){
                             //if path_file inserted by user is valid enter here
-                            screenshot::save_image(&file_path.to_string_lossy().to_string(),&mut my_self.image,&mut  my_self.output_format);
+                            screenshot::save_image(&file_path.to_string_lossy().to_string(),&mut my_app.image,&mut  my_app.output_format);
                                 println!("path:{:?}",file_path);
-                            my_self.default_name_index=my_self.default_name_index+1;
+                            my_app.default_name_index=my_app.default_name_index+1;
                         }
-                        my_self.mode = 0;
+                        my_app.mode = 0;
                     }
                     if ui.button("cattura").clicked(){
-                        screenshot::screen_area(&mut my_self.image, 0, 0, 200, 100);
+                        screenshot::screen_area(&mut my_app.image, 0, 0, 200, 100);
                     }
 
 }
