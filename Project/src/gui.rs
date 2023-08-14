@@ -1,8 +1,10 @@
 use native_dialog::{MessageDialog,FileDialog};
 use std::time::Duration;
 use std::thread;
+use std::borrow::Cow;
 use crate::{draw, screenshot, MyApp};
 use keyboard_types::{Code, Modifiers};
+use arboard;
 use eframe::egui;
 
 
@@ -364,11 +366,23 @@ pub fn gui_mode3(my_app: &mut MyApp, frame: &mut eframe::Frame,
                         }
                         my_app.mode = 0;
                     }
-                                if my_app.area.2 == 0.0 && my_app.area.3 == 0.0 {
-                                if ui.button("cattura").clicked() {
+                         if my_app.area.2 == 0.0 && my_app.area.3 == 0.0 {
+                            if ui.button("crop").clicked() {
                                    my_app.mode = 4;
                                     frame.set_fullscreen(true);
-            }
+                        }
+                        if ui.button("copy").clicked(){
+                            let mut clipboard= arboard::Clipboard::new().unwrap();
+                            for screen in &my_app.image{
+                            let image_data=arboard::ImageData{
+                                width:screen.size.0,
+                                height:screen.size.1,
+                                bytes:Cow::from(screen.screens.clone())
+                            };
+                            clipboard.set_image(image_data).expect("Errore nel copy");
+                            }
+                            
+                        }
         }
                    });
                     let ev=my_app.hotkey_conf.listen_to_event();
