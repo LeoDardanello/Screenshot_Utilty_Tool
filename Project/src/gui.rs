@@ -1,5 +1,5 @@
 use native_dialog::{MessageDialog,FileDialog};
-use std::time::{Duration};
+use std::time::Duration;
 use std::thread;
 use crate::{draw, screenshot, MyApp};
 use keyboard_types::{Code, Modifiers};
@@ -222,10 +222,11 @@ pub  fn gui_mode0(my_app:&mut MyApp,frame: &mut eframe::Frame,ui:&mut egui::Ui) 
                                 }
                                 my_app.hotkey_conf.set_new_hotkey(new_mod, new_key);   
                                 }
-                            });
+                        );
                         }
                     }
-                });
+                }
+                );
             }
         });
         ui.add_space(185.0);
