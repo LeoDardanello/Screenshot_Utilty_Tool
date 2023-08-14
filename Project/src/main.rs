@@ -38,7 +38,8 @@ impl MyApp {
             delay_time:0,
 
             enable_screenshot:true,
-            default_path:String::from("./../screenshot_default")//default screenshot save location, used by save hotkey
+            //use backslashes to be compatible with different OS
+            default_path:String::from(".\\..\\screenshot_default")//default screenshot save location, used by save hotkey
         }
     }
 }

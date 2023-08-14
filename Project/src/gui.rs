@@ -376,9 +376,9 @@ pub fn gui_mode3(my_app: &mut MyApp, frame: &mut eframe::Frame,
                         None => {},
                         Some(i) => {
                             if i == 1{//Save Hotkey
-                                println!("salvo screen");
+                                /*println!("salvo screen");
                                 println!("default path:{}",my_app.default_path);
-                                println!("output_format:{}",my_app.output_format);
+                                println!("output_format:{}",my_app.output_format);*/
                                 let path=String::from(String::from(&my_app.default_path)+&String::from("\\screenshot")+&(my_app.default_name_index.to_string()));
                                 screenshot::save_image(&path,&mut my_app.image,&mut my_app.output_format,true);
                                 my_app.default_name_index=my_app.default_name_index+1;
