@@ -83,7 +83,7 @@ pub fn screen_area(screens: &mut Vec<MyScreen>, x0: u32, y0: u32, width: u32, he
     *screens = screen_image;
 }
 
-pub fn save_image(path: &String, screens: &mut Vec<MyScreen>, format: &mut String) {
+pub fn save_image(path: &String, screens: &mut Vec<MyScreen>, format: &mut String,use_format:bool) {
     let image_format = if format == ".jpg" {
         ImageFormat::Jpeg
     } else if format == ".png" {
@@ -99,10 +99,15 @@ pub fn save_image(path: &String, screens: &mut Vec<MyScreen>, format: &mut Strin
             image.screens.to_vec(),
         )
         .expect("impossibile creare l'immagine");
-
+        if use_format==true{
+            img_buf
+            .save_with_format(path.to_string()+format, image_format)
+            .expect("impossibile salvare l'immagine");
+        }else{
         img_buf
             .save_with_format(path.to_string(), image_format)
             .expect("impossibile salvare l'immagine");
+        }
     }
 }
 

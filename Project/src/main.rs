@@ -18,7 +18,9 @@ pub struct MyApp {
     default_name_index: i32,
     area: (f32, f32, f32, f32),
     delay_time:u32,
-    enable_screenshot:bool
+    enable_screenshot:bool,
+    default_path:String
+
 }
 
 impl MyApp {
@@ -34,19 +36,22 @@ impl MyApp {
             area: (0.0, 0.0, 0.0, 0.0),
             default_name_index:0,
             delay_time:0,
-            enable_screenshot:true
+
+            enable_screenshot:true,
+            default_path:String::from("./../screenshot_default")//default screenshot save location, used by save hotkey
         }
     }
 }
 
 //implementing eframe::App trait for MyApp
+
 impl eframe::App for MyApp {
     fn clear_color(&self, _visuals: &egui::Visuals) -> [f32; 4] {
         egui::Rgba::TRANSPARENT.to_array() // Make sure we don't paint anything behind the rounded corners
     }
 
     //mandatory function for App trait
-     fn update(&mut self, ctx: &egui::Context, frame: &mut eframe::Frame) {
+    fn update(&mut self, ctx: &egui::Context, frame: &mut eframe::Frame) {
         //custom window frame
 
         if self.mode == 0 {
@@ -56,7 +61,7 @@ impl eframe::App for MyApp {
                 frame,
                 "Screenshot Utility Tool", //the title in this row is used
                  |my_app: &mut Self, frame: &mut eframe::Frame, ui| {
-                    gui::gui_mode0(my_app, frame, ui)
+                    gui::gui_mode0(my_app, frame, ui);
                 },
             );
 
