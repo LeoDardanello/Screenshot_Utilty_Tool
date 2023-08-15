@@ -385,7 +385,7 @@ pub fn gui_mode3(my_app: &mut MyApp, frame: &mut eframe::Frame,
                             let image_data=arboard::ImageData{
                                 width:screen.size.0,
                                 height:screen.size.1,
-                                bytes:Cow::from(screen.screens.clone())
+                                bytes:Cow::from(& screen.screens)
                             };
                             clipboard.set_image(image_data).expect("Errore nel copy");
                             }
