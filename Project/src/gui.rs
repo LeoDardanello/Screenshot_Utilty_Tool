@@ -420,19 +420,20 @@ pub fn gui_mode3(my_app: &mut MyApp, frame: &mut eframe::Frame, ui: &mut egui::U
                                    my_app.mode = 5;
                                     frame.set_fullscreen(true);
                         }
+                    }
                         if ui.button("copy").clicked(){
                             let mut clipboard= arboard::Clipboard::new().unwrap();
-                            for screen in &my_app.image{
+                          
                             let image_data=arboard::ImageData{
                                 width:my_app.image[my_app.n_monitor].size.0,
                                 height:my_app.image[my_app.n_monitor].size.1,
                                 bytes:Cow::from(&my_app.image[my_app.n_monitor].screens)
                             };
                             clipboard.set_image(image_data).expect("Errore nel copy");
-                            }
+                            
                             
                         }
-        }
+        
     });
     let ev = my_app.hotkey_conf.listen_to_event();
 
