@@ -1,9 +1,11 @@
 use egui::Color32;
 use native_dialog::{MessageDialog,FileDialog};
-use std::time::{Duration};
+use std::time::Duration;
 use std::thread;
+use std::borrow::Cow;
 use crate::{draw, screenshot, MyApp};
 use keyboard_types::{Code, Modifiers};
+use arboard;
 use eframe::egui;
 
 #[derive(PartialEq)]
@@ -225,13 +227,14 @@ pub  fn gui_mode0(my_app:&mut MyApp,frame: &mut eframe::Frame,ui:&mut egui::Ui) 
                                         //modification could fail if for example I try to set an already registered hotkey
                                         my_app.hotkey_conf.set_enable(true);
                                     }
-                              
+                                }
                                 my_app.hotkey_conf.set_new_hotkey(new_mod, new_key);   
                                 }
-                            });
+                        );
                         }
                     }
-                });
+                }
+                );
             }
         });
         ui.add_space(185.0);
@@ -282,8 +285,11 @@ pub  fn gui_mode0(my_app:&mut MyApp,frame: &mut eframe::Frame,ui:&mut egui::Ui) 
                 ui.horizontal(|ui|{
                 ui.label(egui::RichText::new(&my_app.default_path).font(egui::FontId::proportional(15.0)));
                 if ui.button("Change Default Path").clicked(){
-                  my_app.default_path=FileDialog::new().show_open_single_dir().unwrap()
-                  .expect("Errore nel cambiamento del file di default").to_string_lossy().to_string();
+                  let path=FileDialog::new().show_open_single_dir().unwrap();
+                  match path{
+                    Some(path_ok)=>my_app.default_path=path_ok.to_string_lossy().to_string(),
+                    None=>my_app.mode=0
+                  }
                 }
                 })
             });
@@ -361,19 +367,36 @@ pub fn gui_mode3(my_app: &mut MyApp, frame: &mut eframe::Frame,
                         }
                         //leave SOME as path wrapper!!!!!!!!
                         //format without the "." in front
-                        if let Some(file_path)=FileDialog::new().set_filename(&window_name).add_filter(format_for_dialog,&[format]).show_save_single_file().ok().unwrap(){
-                            //if path_file inserted by user is valid enter here
-                            screenshot::save_image(&file_path.to_string_lossy().to_string(),&mut my_app.image,&mut  my_app.output_format,false);
-                                println!("path:{:?}",file_path);
-                            my_app.default_name_index=my_app.default_name_index+1;
-                        }
-                        my_app.mode = 0;
+                        let file_path=FileDialog::new().set_filename(&window_name).add_filter(format_for_dialog,&[format]).show_save_single_file().ok().unwrap();
+                        match file_path{
+                            Some(file_path)=>{
+                                                screenshot::save_image(&file_path.to_string_lossy().to_string(),&mut my_app.image,&mut  my_app.output_format,false);
+                                                println!("path:{:?}",file_path);
+                                                my_app.default_name_index=my_app.default_name_index+1;
+                                                my_app.mode = 0;
+                                            },
+                            None=>my_app.mode=3//return to visualize the image
+                        
+                        }    
+                    
                     }
-                                if my_app.area.2 == 0.0 && my_app.area.3 == 0.0 {
-                                if ui.button("cattura").clicked() {
+                         if my_app.area.2 == 0.0 && my_app.area.3 == 0.0 {
+                            if ui.button("crop").clicked() {
                                    my_app.mode = 4;
                                     frame.set_fullscreen(true);
-            }
+                        }
+                        if ui.button("copy").clicked(){
+                            let mut clipboard= arboard::Clipboard::new().unwrap();
+                            for screen in &my_app.image{
+                            let image_data=arboard::ImageData{
+                                width:screen.size.0,
+                                height:screen.size.1,
+                                bytes:Cow::from(& screen.screens)
+                            };
+                            clipboard.set_image(image_data).expect("Errore nel copy");
+                            }
+                            
+                        }
         }
                    });
                     let ev=my_app.hotkey_conf.listen_to_event();
