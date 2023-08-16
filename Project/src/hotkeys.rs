@@ -16,13 +16,13 @@ pub struct HotkeysConfig{
 
 impl HotkeysConfig{
     pub fn new() -> HotkeysConfig{
-        let h:Vec<HotKey> = vec![HotKey::new(Some(Modifiers::SHIFT), Code::KeyD), HotKey::new(Some(Modifiers::SHIFT), Code::KeyA)];
-        let j:Vec<(Option<Modifiers>, Code)> = vec![(Some(Modifiers::SHIFT), Code::KeyD), (Some(Modifiers::SHIFT), Code::KeyA)];
-        let com:Vec<String> = vec!["Take screenshot".to_string(), "Save".to_string()];
+        let h:Vec<HotKey> = vec![HotKey::new(Some(Modifiers::CONTROL), Code::KeyA), HotKey::new(Some(Modifiers::CONTROL), Code::KeyS), HotKey::new(Some(Modifiers::CONTROL), Code::KeyC)];
+        let j:Vec<(Option<Modifiers>, Code)> = vec![(Some(Modifiers::CONTROL), Code::KeyA), (Some(Modifiers::CONTROL), Code::KeyS), (Some(Modifiers::CONTROL), Code::KeyC)];
+        let com:Vec<String> = vec!["Take screenshot".to_string(), "Save".to_string(), "Copy".to_string()];
         let man = GlobalHotKeyManager::new().unwrap();
         man.register_all(&h).unwrap(); //Registering default hotkeys
 
-        HotkeysConfig { hotkeys: h, hotkeys_seq: j, hotkeys_string: vec![("SHIFT".to_string(), "D".to_string()), ("SHIFT".to_string(), "A".to_string())], new_key: (Code::KeyA, "A".to_string()), new_mod: (Some(Modifiers::SHIFT), "SHIFT".to_string()), enable: true, changed_hotkey:0, commands: com, manager: man}
+        HotkeysConfig { hotkeys: h, hotkeys_seq: j, hotkeys_string: vec![("CTRL".to_string(), "A".to_string()), ("CTRL".to_string(), "S".to_string()),("CTRL".to_string(), "C".to_string())], new_key: (Code::KeyA, "A".to_string()), new_mod: (Some(Modifiers::CONTROL), "CTRL".to_string()), enable: true, changed_hotkey:0, commands: com, manager: man}
     }
 
     pub fn get_new_key(self: &Self) -> (Code, String){

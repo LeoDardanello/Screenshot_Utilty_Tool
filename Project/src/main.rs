@@ -26,7 +26,7 @@ pub struct MyApp {
     init_pos: Option<egui::Pos2>,
     final_pos: Option<egui::Pos2>,
     paint: Vec<(gui::Paints, egui::Pos2, egui::Pos2)>,
-    time: f64
+    time: f64,
 }
 
 impl MyApp {
@@ -50,7 +50,7 @@ impl MyApp {
             init_pos: None,
             final_pos: None,
             paint: Vec::new(),
-            time: 0.0
+            time: 0.0,
         }
     }
 }
@@ -73,49 +73,34 @@ impl eframe::App for MyApp {
                 frame,
                 "Screenshot Utility Tool", //the title in this row is used
                 |my_app: &mut Self, frame: &mut eframe::Frame, ui| {
-         
                     gui::gui_mode0(my_app, frame, ui);
                 },
             );
 
             //self.hotkey_conf.listen_to_event();
-        }else if self.mode==1{
+        } else if self.mode == 1 {
             gui_base::custom_window_frame(
                 self,
                 ctx,
                 frame,
                 "Screenshot Utility Tool", //the title in this row is used
                 |my_app: &mut Self, frame: &mut eframe::Frame, ui| {
-                    println!("{:?}", ui.input(|i| i.time)-my_app.time);
-                   if ui.input(|i| i.time)-my_app.time>=0.2 || frame.info().window_info.focused{
+                    println!("{:?}", ui.input(|i| i.time) - my_app.time);
+                    if ui.input(|i| i.time) - my_app.time >= 0.2 || frame.info().window_info.focused
+                    {
                         my_app.mode = 2;
-                     }
-
+                    }
                 },
             );
+        } else if self.mode == 2 {
+            self.mode = 3;
+            self.image = screenshot::full_screen();
+            let window_size = frame.info().window_info.monitor_size.unwrap();
+            frame.set_window_pos(egui::pos2(window_size.x * 0.25, window_size.y * 0.25));
 
-        }
-
-        else if self.mode == 2 {
-            gui_base::custom_window_frame(
-                self,
-                ctx,
-                frame,
-                "Screenshot Utility Tool", //the title in this row is used
-                |my_app: &mut Self, frame: &mut eframe::Frame, ui| {
-                 
-                    println!("finish{:?}", ui.input(|i| i.time)-my_app.time);
-                        my_app.mode = 3;
-                        my_app.image = screenshot::full_screen();
-                        let window_size=frame.info().window_info.monitor_size.unwrap();
-                        frame.set_window_pos(egui::pos2(window_size.x*0.25,window_size.y*0.25));
-                        
-                        if my_app.image.len() > 1 {
-                            my_app.mode = 4;
-                        }
-                     
-                },
-            );
+            if self.image.len() > 1 {
+                self.mode = 4;
+            }
         } else if self.mode == 3 {
             gui_base::custom_window_frame(
                 self,
@@ -139,7 +124,7 @@ impl eframe::App for MyApp {
         } else if self.mode == 5 {
             gui_base::custom_window_frame(
                 self,
-                ctx,    
+                ctx,
                 frame,
                 "Screenshot Utility Tool", //the title in this row is used
                 |my_app: &mut Self, frame: &mut eframe::Frame, ui| {
