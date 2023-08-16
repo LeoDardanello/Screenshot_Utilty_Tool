@@ -2,6 +2,7 @@ use eframe::{egui, run_native};
 use hotkeys::HotkeysConfig;
 mod draw;
 mod gui;
+mod gui_base;
 mod hotkeys;
 mod screenshot;
 
@@ -66,7 +67,7 @@ impl eframe::App for MyApp {
         //custom window frame
 
         if self.mode == 0 {
-            gui::custom_window_frame(
+            gui_base::custom_window_frame(
                 self,
                 ctx,
                 frame,
@@ -79,7 +80,7 @@ impl eframe::App for MyApp {
 
             //self.hotkey_conf.listen_to_event();
         }else if self.mode==1{
-            gui::custom_window_frame(
+            gui_base::custom_window_frame(
                 self,
                 ctx,
                 frame,
@@ -96,7 +97,7 @@ impl eframe::App for MyApp {
         }
 
         else if self.mode == 2 {
-            gui::custom_window_frame(
+            gui_base::custom_window_frame(
                 self,
                 ctx,
                 frame,
@@ -104,10 +105,10 @@ impl eframe::App for MyApp {
                 |my_app: &mut Self, frame: &mut eframe::Frame, ui| {
                  
                     println!("finish{:?}", ui.input(|i| i.time)-my_app.time);
-                        frame.set_minimized(false);
                         my_app.mode = 3;
                         my_app.image = screenshot::full_screen();
-                        
+                        let window_size=frame.info().window_info.monitor_size.unwrap();
+                        frame.set_window_pos(egui::pos2(window_size.x*0.25,window_size.y*0.25));
                         
                         if my_app.image.len() > 1 {
                             my_app.mode = 4;
@@ -116,7 +117,7 @@ impl eframe::App for MyApp {
                 },
             );
         } else if self.mode == 3 {
-            gui::custom_window_frame(
+            gui_base::custom_window_frame(
                 self,
                 ctx,
                 frame,
@@ -126,7 +127,7 @@ impl eframe::App for MyApp {
                 },
             );
         } else if self.mode == 4 {
-            gui::custom_window_frame(
+            gui_base::custom_window_frame(
                 self,
                 ctx,
                 frame,
@@ -136,9 +137,9 @@ impl eframe::App for MyApp {
                 },
             );
         } else if self.mode == 5 {
-            gui::custom_window_frame(
+            gui_base::custom_window_frame(
                 self,
-                ctx,
+                ctx,    
                 frame,
                 "Screenshot Utility Tool", //the title in this row is used
                 |my_app: &mut Self, frame: &mut eframe::Frame, ui| {
