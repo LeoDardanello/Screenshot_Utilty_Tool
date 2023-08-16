@@ -1,6 +1,5 @@
 use eframe::{egui, run_native};
 use hotkeys::HotkeysConfig;
-use gui::Paints;
 mod draw;
 mod gui;
 mod hotkeys;
@@ -24,7 +23,7 @@ pub struct MyApp {
     default_path:String,
     init_pos: Option<egui::Pos2>,
     final_pos: Option<egui::Pos2>,
-    paint: Vec<(Paints, egui::Pos2, egui::Pos2)>
+    paint: Vec<(gui::Paints, egui::Pos2, egui::Pos2)>
 }
 
 impl MyApp {

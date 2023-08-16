@@ -343,8 +343,7 @@ pub fn gui_mode0(my_app: &mut MyApp, frame: &mut eframe::Frame, ui: &mut egui::U
         }
     }
 }
-pub fn gui_mode3(my_app: &mut MyApp, frame: &mut eframe::Frame,
-    ui: &mut egui::Ui) {
+pub fn gui_mode3(my_app: &mut MyApp, frame: &mut eframe::Frame, ui: &mut egui::Ui) {
         
                     screenshot::visualize_image(&mut my_app.image, ui, frame.info().window_info.size);
                     ui.horizontal(|ui|{
@@ -431,6 +430,7 @@ pub fn gui_mode3(my_app: &mut MyApp, frame: &mut eframe::Frame,
                             }
                         }
                     }
+}
 
 pub fn gui_mode4(my_app: &mut MyApp, frame: &mut eframe::Frame, ui: &mut egui::Ui) {
     let position = ui.input(|i| i.pointer.hover_pos());
@@ -506,7 +506,7 @@ pub fn custom_window_frame(
             let mut content_ui = ui.child_ui(content_rect, *ui.layout());
             add_contents(my_app, frame, &mut content_ui);
         });
-}
+    }
 
 fn title_bar_ui(
     ui: &mut egui::Ui,
@@ -598,4 +598,5 @@ fn close_maximize_minimize(ui: &mut egui::Ui, frame: &mut eframe::Frame) {
     if minimized_response.clicked() {
         frame.set_minimized(true);
     }
+  
 }
