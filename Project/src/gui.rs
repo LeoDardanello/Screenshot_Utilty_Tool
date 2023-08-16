@@ -1,40 +1,38 @@
-use egui::Color32;
-use native_dialog::{MessageDialog,FileDialog};
-use std::time::Duration;
-use std::thread;
-use std::borrow::Cow;
 use crate::{draw, screenshot, MyApp};
-use keyboard_types::{Code, Modifiers};
 use arboard;
 use eframe::egui;
+use egui::Color32;
+use keyboard_types::{Code, Modifiers};
+use native_dialog::{FileDialog, MessageDialog};
+use std::borrow::Cow;
+use std::thread;
+use std::time::Duration;
 
 #[derive(PartialEq)]
-pub enum Paints{
+pub enum Paints {
     Arrow,
-    Line
+    Line,
 }
 
-pub  fn gui_mode0(my_app:&mut MyApp,frame: &mut eframe::Frame,ui:&mut egui::Ui) {
-        ui.label(
-            egui::RichText::new(
-                "Welcome to the Screenshot Utility Tool, everything is ready to take a screenshot!",
-            )
-            .font(egui::FontId::proportional(17.5)),
-        );
-        ui.add_space(10.0);
-        ui.horizontal(|ui| {
-            ui.label(egui::RichText::new("Hotkey List:").font(egui::FontId::proportional(17.0)));
-            ui.add_space(250.0);
-            ui.label(
-                egui::RichText::new("Format Selection:").font(egui::FontId::proportional(17.0)),
-            );
-        });
-        ui.add_space(10.0);
-        ui.label(
-            egui::RichText::new("Click on the shortcut to edit it")
-                .font(egui::FontId::proportional(17.0)),
-        );
-        ui.add_space(10.0);
+pub fn gui_mode0(my_app: &mut MyApp, frame: &mut eframe::Frame, ui: &mut egui::Ui) {
+    ui.label(
+        egui::RichText::new(
+            "Welcome to the Screenshot Utility Tool, everything is ready to take a screenshot!",
+        )
+        .font(egui::FontId::proportional(17.5)),
+    );
+    ui.add_space(10.0);
+    ui.horizontal(|ui| {
+        ui.label(egui::RichText::new("Hotkey List:").font(egui::FontId::proportional(17.0)));
+        ui.add_space(250.0);
+        ui.label(egui::RichText::new("Format Selection:").font(egui::FontId::proportional(17.0)));
+    });
+    ui.add_space(10.0);
+    ui.label(
+        egui::RichText::new("Click on the shortcut to edit it")
+            .font(egui::FontId::proportional(17.0)),
+    );
+    ui.add_space(10.0);
 
     ui.horizontal(|ui| {
         //hotkeys display
@@ -228,13 +226,11 @@ pub  fn gui_mode0(my_app:&mut MyApp,frame: &mut eframe::Frame,ui:&mut egui::Ui) 
                                         my_app.hotkey_conf.set_enable(true);
                                     }
                                 }
-                                my_app.hotkey_conf.set_new_hotkey(new_mod, new_key);   
-                                }
-                        );
+                                my_app.hotkey_conf.set_new_hotkey(new_mod, new_key);
+                            });
                         }
                     }
-                }
-                );
+                });
             }
         });
         ui.add_space(185.0);
@@ -270,201 +266,232 @@ pub  fn gui_mode0(my_app:&mut MyApp,frame: &mut eframe::Frame,ui:&mut egui::Ui) 
             }
         })
     });
-        ui.add_space(40.0);//space between first and second group of widget
-        ui.horizontal(|ui|{
-            ui.vertical(|ui|{
-                ui.label(egui::RichText::new("Set delay:").font(egui::FontId::proportional(17.0)));
-                ui.add_space(10.0);
-                ui.add(egui::Slider::new(&mut my_app.delay_time, 0..=10).text("Delay in seconds"));
-            });
-            //space between delay setting and default path setting
-            ui.add_space(80.0);
-            ui.vertical(|ui|{
-                ui.label(egui::RichText::new("Current default path:").font(egui::FontId::proportional(17.0)));
-                ui.add_space(10.0);
-                ui.horizontal(|ui|{
-                ui.label(egui::RichText::new(&my_app.default_path).font(egui::FontId::proportional(15.0)));
-                if ui.button("Change Default Path").clicked(){
-                  let path=FileDialog::new().show_open_single_dir().unwrap();
-                  match path{
-                    Some(path_ok)=>my_app.default_path=path_ok.to_string_lossy().to_string(),
-                    None=>my_app.mode=0
-                  }
-                }
-                })
-            });
-
+    ui.add_space(40.0); //space between first and second group of widget
+    ui.horizontal(|ui| {
+        ui.vertical(|ui| {
+            ui.label(egui::RichText::new("Set delay:").font(egui::FontId::proportional(17.0)));
+            ui.add_space(10.0);
+            ui.add(egui::Slider::new(&mut my_app.delay_time, 0..=10).text("Delay in seconds"));
         });
-      
+        //space between delay setting and default path setting
+        ui.add_space(80.0);
+        ui.vertical(|ui| {
+            ui.label(
+                egui::RichText::new("Current default path:").font(egui::FontId::proportional(17.0)),
+            );
+            ui.add_space(10.0);
+            ui.horizontal(|ui| {
+                ui.label(
+                    egui::RichText::new(&my_app.default_path)
+                        .font(egui::FontId::proportional(15.0)),
+                );
+                if ui.button("Change Default Path").clicked() {
+                    let path = FileDialog::new().show_open_single_dir().unwrap();
+                    match path {
+                        Some(path_ok) => {
+                            my_app.default_path = path_ok.to_string_lossy().to_string()
+                        }
+                        None => my_app.mode = 0,
+                    }
+                }
+            })
+        });
+    });
+
     ui.horizontal(|ui| {
         //to place widgets on the same row
 
-        if ui.add_enabled(my_app.enable_screenshot ,egui::Button::new("Take Screenshot!")).clicked() {
-            if my_app.delay_time!=0{
-                my_app.enable_screenshot=false;
-            thread::sleep(Duration::new(u64::from(my_app.delay_time),0));
-            my_app.mode=1;
-            }else{
+        if ui
+            .add_enabled(
+                my_app.enable_screenshot,
+                egui::Button::new("Take Screenshot!"),
+            )
+            .clicked()
+        {
+            if my_app.delay_time != 0 {
+                my_app.enable_screenshot = false;
+                thread::sleep(Duration::new(u64::from(my_app.delay_time), 0));
+                my_app.mode = 1;
+            } else {
                 frame.set_visible(false);
-                my_app.mode=1;
+                my_app.mode = 1;
             }
 
             my_app.area = (0.0, 0.0, 0.0, 0.0);
-            
 
             my_app.mode = 1;
         }
     });
 
-
     let ev = my_app.hotkey_conf.listen_to_event();
     match ev {
         None => {}
         Some(i) => {
+            if i == 0 {
+                //Take Screenshot hotkey
+                frame.set_visible(false);
 
-            if i == 0 {//Take Screenshot hotkey
-                frame.set_visible(false);   
-
-                my_app.mode=1;
+                my_app.mode = 1;
             }
-            if i==1{
+            if i == 1 {
                 MessageDialog::new()
-                .set_title("Error")
-                .set_text("Can't save before taking screenshot!")
-                .show_alert()
-                .unwrap();
-
+                    .set_title("Error")
+                    .set_text("Can't save before taking screenshot!")
+                    .show_alert()
+                    .unwrap();
             }
-            
         }
     }
 }
-pub fn gui_mode3(my_app: &mut MyApp, frame: &mut eframe::Frame,
-    ui: &mut egui::Ui) {
-        
-                    screenshot::visualize_image(&mut my_app.image, ui, frame.info().window_info.size);
-                    ui.horizontal(|ui|{
-                    if ui.button("return").clicked() {
-                        
-                        my_app.mode = 0;
-                        my_app.enable_screenshot=true;
-                        
-                    }
-                    let window_name=String::from(String::from("screenshot")+&(my_app.default_name_index.to_string()));
-                    if ui.button("save").clicked() {
-                        let mut format_for_dialog="";
-                        let mut format="";
-                        if  my_app.output_format==".png"{
-                            format_for_dialog="PNG";
-                            format="png";
-                        }else if my_app.output_format==".jpg"{
-                            format_for_dialog="JPG";
-                            format="jpg";
-                        }
-                        else if my_app.output_format==".gif"{
-                            format_for_dialog="GIF";
-                            format="gif";
-                        }
-                        //leave SOME as path wrapper!!!!!!!!
-                        //format without the "." in front
-                        let file_path=FileDialog::new().set_filename(&window_name).add_filter(format_for_dialog,&[format]).show_save_single_file().ok().unwrap();
-                        match file_path{
-                            Some(file_path)=>{
-                                                screenshot::save_image(&file_path.to_string_lossy().to_string(),&mut my_app.image,&mut  my_app.output_format,false);
-                                                println!("path:{:?}",file_path);
-                                                my_app.default_name_index=my_app.default_name_index+1;
-                                                my_app.mode = 0;
-                                            },
-                            None=>my_app.mode=3//return to visualize the image
-                        
-                        }    
-                    
-                    }
-                         if my_app.area.2 == 0.0 && my_app.area.3 == 0.0 {
-                            if ui.button("crop").clicked() {
-                                   my_app.mode = 4;
-                                    frame.set_fullscreen(true);
-                        }
-                        if ui.button("copy").clicked(){
-                            let mut clipboard= arboard::Clipboard::new().unwrap();
-                            for screen in &my_app.image{
-                            let image_data=arboard::ImageData{
-                                width:screen.size.0,
-                                height:screen.size.1,
-                                bytes:Cow::from(& screen.screens)
-                            };
-                            clipboard.set_image(image_data).expect("Errore nel copy");
-                            }
-                            
-                        }
+pub fn gui_mode3(my_app: &mut MyApp, frame: &mut eframe::Frame, ui: &mut egui::Ui) {
+    screenshot::visualize_image(&mut my_app.image, ui, frame.info().window_info.size);
+    ui.horizontal(|ui| {
+        if ui.button("return").clicked() {
+            my_app.mode = 0;
+            my_app.enable_screenshot = true;
         }
-                   });
-                    let ev=my_app.hotkey_conf.listen_to_event();
+        let window_name =
+            String::from(String::from("screenshot") + &(my_app.default_name_index.to_string()));
+        if ui.button("save").clicked() {
+            let mut format_for_dialog = "";
+            let mut format = "";
+            if my_app.output_format == ".png" {
+                format_for_dialog = "PNG";
+                format = "png";
+            } else if my_app.output_format == ".jpg" {
+                format_for_dialog = "JPG";
+                format = "jpg";
+            } else if my_app.output_format == ".gif" {
+                format_for_dialog = "GIF";
+                format = "gif";
+            }
+            //leave SOME as path wrapper!!!!!!!!
+            //format without the "." in front
+            let file_path = FileDialog::new()
+                .set_filename(&window_name)
+                .add_filter(format_for_dialog, &[format])
+                .show_save_single_file()
+                .ok()
+                .unwrap();
+            match file_path {
+                Some(file_path) => {
+                    screenshot::save_image(
+                        &file_path.to_string_lossy().to_string(),
+                        &mut my_app.image,
+                        &mut my_app.output_format,
+                        false,
+                    );
+                    println!("path:{:?}", file_path);
+                    my_app.default_name_index = my_app.default_name_index + 1;
+                    my_app.mode = 0;
+                }
+                None => my_app.mode = 3, //return to visualize the image
+            }
+        }
+        if my_app.area.2 == 0.0 && my_app.area.3 == 0.0 {
+            if ui.button("crop").clicked() {
+                my_app.mode = 4;
+                frame.set_fullscreen(true);
+            }
+        }
+        if ui.button("copy").clicked() {
+            let mut clipboard = arboard::Clipboard::new().unwrap();
+            for screen in &my_app.image {
+                let image_data = arboard::ImageData {
+                    width: screen.size.0,
+                    height: screen.size.1,
+                    bytes: Cow::from(&screen.screens),
+                };
+                clipboard.set_image(image_data).expect("Errore nel copy");
+            }
+        }
+    });
+    let ev = my_app.hotkey_conf.listen_to_event();
 
-                    match ev {
-                        None => {},
-                        Some(i) => {
-                            if i == 1{//Save Hotkey
-                                /*println!("salvo screen");
-                                println!("default path:{}",my_app.default_path);
-                                println!("output_format:{}",my_app.output_format);*/
-                                let path=String::from(String::from(&my_app.default_path)+&String::from("\\screenshot")+&(my_app.default_name_index.to_string()));
-                                screenshot::save_image(&path,&mut my_app.image,&mut my_app.output_format,true);
-                                my_app.default_name_index=my_app.default_name_index+1;
-                                my_app.mode=0;
-                            }
-                        }
-                    }
-                    ui.input(|i| {
-                        if i.pointer.is_decidedly_dragging() && i.pointer.primary_down(){
-                            if my_app.init_pos.is_none(){
-                                my_app.init_pos = i.pointer.press_origin();
-                                println!("{:?}", my_app.init_pos);
-                            }
-                            else{
-                                my_app.final_pos = i.pointer.hover_pos();
-                                //ui.painter().arrow(my_app.init_pos.unwrap(), my_app.final_pos.unwrap()-my_app.init_pos.unwrap(), ui.visuals().widgets.noninteractive.bg_stroke);
-                            }
-                        }
-                        else if i.pointer.primary_released() && my_app.init_pos.is_some(){
-                            my_app.final_pos = i.pointer.hover_pos();
-                            //my_app.paint = true;
-                            println!("{:?}, {:?}", my_app.init_pos, my_app.final_pos);
-                            my_app.paint.push((Paints::Arrow, my_app.init_pos.unwrap(), my_app.final_pos.unwrap()));
-                            my_app.init_pos = None;
-                            my_app.final_pos = None;
-                        }
-                    });
+    match ev {
+        None => {}
+        Some(i) => {
+            if i == 1 {
+                //Save Hotkey
+                /*println!("salvo screen");
+                println!("default path:{}",my_app.default_path);
+                println!("output_format:{}",my_app.output_format);*/
+                let path = String::from(
+                    String::from(&my_app.default_path)
+                        + &String::from("\\screenshot")
+                        + &(my_app.default_name_index.to_string()),
+                );
+                screenshot::save_image(&path, &mut my_app.image, &mut my_app.output_format, true);
+                my_app.default_name_index = my_app.default_name_index + 1;
+                my_app.mode = 0;
+            }
+        }
+    }
+    ui.input(|i| {
+        if i.pointer.is_decidedly_dragging() && i.pointer.primary_down() {
+            if my_app.init_pos.is_none() {
+                my_app.init_pos = i.pointer.press_origin();
+                println!("{:?}", my_app.init_pos);
+            } else {
+                my_app.final_pos = i.pointer.hover_pos();
+                //ui.painter().arrow(my_app.init_pos.unwrap(), my_app.final_pos.unwrap()-my_app.init_pos.unwrap(), ui.visuals().widgets.noninteractive.bg_stroke);
+            }
+        } else if i.pointer.primary_released() && my_app.init_pos.is_some() {
+            my_app.final_pos = i.pointer.hover_pos();
+            //my_app.paint = true;
+            println!("{:?}, {:?}", my_app.init_pos, my_app.final_pos);
+            my_app.paint.push((
+                Paints::Arrow,
+                my_app.init_pos.unwrap(),
+                my_app.final_pos.unwrap(),
+            ));
+            my_app.init_pos = None;
+            my_app.final_pos = None;
+        }
+    });
 
-                    for figure in &my_app.paint{
-                        if figure.0 == Paints::Arrow{
-                            ui.painter().arrow(figure.1, figure.2-figure.1, egui::Stroke { width: 1.5, color: Color32::RED });
-                        }
-                        else if figure.0 == Paints::Line{
-                            ui.painter().line_segment([figure.1, figure.2], egui::Stroke { width: 1.5, color: Color32::RED });
-                        }
-                    }
-
-
+    for figure in &my_app.paint {
+        if figure.0 == Paints::Arrow {
+            ui.painter().arrow(
+                figure.1,
+                figure.2 - figure.1,
+                egui::Stroke {
+                    width: 1.5,
+                    color: Color32::RED,
+                },
+            );
+        } else if figure.0 == Paints::Line {
+            ui.painter().line_segment(
+                [figure.1, figure.2],
+                egui::Stroke {
+                    width: 1.5,
+                    color: Color32::RED,
+                },
+            );
+        }
+    }
 }
 
 pub fn gui_mode4(my_app: &mut MyApp, frame: &mut eframe::Frame, ui: &mut egui::Ui) {
     let position = ui.input(|i| i.pointer.hover_pos());
     let info = frame.info().window_info;
     let limits = (10.0, 80.0, info.size[0] - 20.0, info.size[1] - 44.0);
-    let props=((my_app.image[0].size.0 as f32)/(limits.2-limits.0), (my_app.image[0].size.1 as f32)/(limits.3-limits.1));
+    let props = (
+        (my_app.image[0].size.0 as f32) / (limits.2 - limits.0),
+        (my_app.image[0].size.1 as f32) / (limits.3 - limits.1),
+    );
 
     draw::cut_rect(position, info, my_app, ui, limits);
 
     ui.horizontal(|ui| {
         if ui.button("Conferma").clicked() {
             frame.set_fullscreen(false);
-            let width = ((my_app.area.2 - my_app.area.0).abs()* props.0) as u32;
-            let height = ((my_app.area.3 - my_app.area.1).abs() *props.1) as u32;
+            let width = ((my_app.area.2 - my_app.area.0).abs() * props.0) as u32;
+            let height = ((my_app.area.3 - my_app.area.1).abs() * props.1) as u32;
             screenshot::screen_area(
                 &mut my_app.image,
-                ((my_app.area.0 - limits.0)* props.0) as u32,
-                ((my_app.area.1 - limits.1)*props.1) as u32,
+                ((my_app.area.0 - limits.0) * props.0) as u32,
+                ((my_app.area.1 - limits.1) * props.1) as u32,
                 width,
                 height,
             );
