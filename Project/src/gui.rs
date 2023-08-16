@@ -297,16 +297,15 @@ pub  fn gui_mode0(my_app:&mut MyApp,frame: &mut eframe::Frame,ui:&mut egui::Ui) 
             if my_app.delay_time!=0{
                 my_app.enable_screenshot=false;
             thread::sleep(Duration::new(u64::from(my_app.delay_time),0));
+            my_app.area = (0.0, 0.0, 0.0, 0.0);
             my_app.mode=1;
             }else{
                 frame.set_visible(false);
+                my_app.area = (0.0, 0.0, 0.0, 0.0);
                 my_app.mode=1;
             }
 
-            my_app.area = (0.0, 0.0, 0.0, 0.0);
-            
 
-            my_app.mode = 1;
         }
     });
 
@@ -364,7 +363,13 @@ pub fn gui_mode3(my_app: &mut MyApp, frame: &mut eframe::Frame,
                         let file_path=FileDialog::new().set_filename(&window_name).add_filter(format_for_dialog,&[format]).show_save_single_file().ok().unwrap();
                         match file_path{
                             Some(file_path)=>{
-                                                screenshot::save_image(&file_path.to_string_lossy().to_string(),&mut my_app.image,&mut  my_app.output_format,false);
+                                                let path_for_thread:String=file_path.to_string_lossy().to_string();
+                                                let image_for_thread=my_app.image.clone();
+                                                let output_format_for_thread=my_app.output_format.clone();
+                                                thread::spawn(move ||{
+                                                screenshot::save_image(&path_for_thread,&image_for_thread,&output_format_for_thread,false);
+                                                println!("ho finito di salvare");
+                                                });
                                                 println!("path:{:?}",file_path);
                                                 my_app.default_name_index=my_app.default_name_index+1;
                                                 my_app.mode = 0;
@@ -402,8 +407,14 @@ pub fn gui_mode3(my_app: &mut MyApp, frame: &mut eframe::Frame,
                                 println!("salvo screen");
                                 println!("default path:{}",my_app.default_path);
                                 println!("output_format:{}",my_app.output_format);
-                                let path=String::from(String::from(&my_app.default_path)+&String::from("\\screenshot")+&(my_app.default_name_index.to_string()));
-                                screenshot::save_image(&path,&mut my_app.image,&mut my_app.output_format,true);
+                                let path_for_thread=String::from(String::from(&my_app.default_path)+&String::from("\\screenshot")+&(my_app.default_name_index.to_string()));
+                                let image_for_thread=my_app.image.clone();
+                                let output_format_for_thread=my_app.output_format.clone();
+                                
+                                thread::spawn(move ||{
+                                        screenshot::save_image(&path_for_thread,&image_for_thread,&output_format_for_thread,true);
+                                        println!("ho finito di salvare");
+                                                });
                                 my_app.default_name_index=my_app.default_name_index+1;
                                 my_app.mode=0;
                             }

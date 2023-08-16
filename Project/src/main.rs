@@ -5,6 +5,7 @@ mod gui;
 mod hotkeys;
 mod screenshot;
 
+#[derive(Clone)]
 pub struct MyScreen {
     screens: Vec<u8>,
     size: (usize, usize),
