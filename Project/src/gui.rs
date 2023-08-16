@@ -330,7 +330,6 @@ pub fn gui_mode0(my_app: &mut MyApp, frame: &mut eframe::Frame, ui: &mut egui::U
             if i == 0 {
                 //Take Screenshot hotkey
                 frame.set_visible(false);
-
                 my_app.mode = 1;
             }
             if i == 1 {
@@ -343,9 +342,36 @@ pub fn gui_mode0(my_app: &mut MyApp, frame: &mut eframe::Frame, ui: &mut egui::U
         }
     }
 }
+
+pub fn gui_mode4(my_app: &mut MyApp, ui: &mut egui::Ui){
+    ui.label(
+        egui::RichText::new(
+            "There are multiple monitors\nChoose which monitor screen",
+        )
+        .font(egui::FontId::proportional(17.5)));
+    ui.vertical(|ui| {
+        for i in 0..my_app.image.len(){
+
+        
+        if ui
+            .add(egui::RadioButton::new(
+                my_app.n_monitor == i,
+                (i+1).to_string(),
+            ))
+            .clicked()
+        {
+            my_app.n_monitor = i;
+        }
+    }
+    if ui.button("Conferma").clicked(){
+        my_app.mode=3;
+    }
+    });
+
+}
 pub fn gui_mode3(my_app: &mut MyApp, frame: &mut eframe::Frame, ui: &mut egui::Ui) {
         
-                    screenshot::visualize_image(&mut my_app.image, ui, frame.info().window_info.size);
+                    screenshot::visualize_image(&mut my_app.image[my_app.n_monitor], ui, frame.info().window_info.size);
                     ui.horizontal(|ui|{
                     if ui.button("return").clicked() {
                         
@@ -374,7 +400,7 @@ pub fn gui_mode3(my_app: &mut MyApp, frame: &mut eframe::Frame, ui: &mut egui::U
                         match file_path{
                             Some(file_path)=>{
                                                 let path_for_thread:String=file_path.to_string_lossy().to_string();
-                                                let image_for_thread=my_app.image.clone();
+                                                let image_for_thread=my_app.image[my_app.n_monitor].clone();
                                                 let output_format_for_thread=my_app.output_format.clone();
                                                 thread::spawn(move ||{
                                                 screenshot::save_image(&path_for_thread,&image_for_thread,&output_format_for_thread,false);
@@ -391,16 +417,16 @@ pub fn gui_mode3(my_app: &mut MyApp, frame: &mut eframe::Frame, ui: &mut egui::U
                     }
                          if my_app.area.2 == 0.0 && my_app.area.3 == 0.0 {
                             if ui.button("crop").clicked() {
-                                   my_app.mode = 4;
+                                   my_app.mode = 5;
                                     frame.set_fullscreen(true);
                         }
                         if ui.button("copy").clicked(){
                             let mut clipboard= arboard::Clipboard::new().unwrap();
                             for screen in &my_app.image{
                             let image_data=arboard::ImageData{
-                                width:screen.size.0,
-                                height:screen.size.1,
-                                bytes:Cow::from(& screen.screens)
+                                width:my_app.image[my_app.n_monitor].size.0,
+                                height:my_app.image[my_app.n_monitor].size.1,
+                                bytes:Cow::from(&my_app.image[my_app.n_monitor].screens)
                             };
                             clipboard.set_image(image_data).expect("Errore nel copy");
                             }
@@ -410,35 +436,80 @@ pub fn gui_mode3(my_app: &mut MyApp, frame: &mut eframe::Frame, ui: &mut egui::U
     });
     let ev = my_app.hotkey_conf.listen_to_event();
 
-                    match ev {
-                        None => {},
-                        Some(i) => {
-                            if i == 1{//Save Hotkey
-                                println!("salvo screen");
-                                println!("default path:{}",my_app.default_path);
-                                println!("output_format:{}",my_app.output_format);
-                                let path_for_thread=String::from(String::from(&my_app.default_path)+&String::from("\\screenshot")+&(my_app.default_name_index.to_string()));
-                                let image_for_thread=my_app.image.clone();
-                                let output_format_for_thread=my_app.output_format.clone();
-                                
-                                thread::spawn(move ||{
-                                        screenshot::save_image(&path_for_thread,&image_for_thread,&output_format_for_thread,true);
-                                        println!("ho finito di salvare");
-                                                });
-                                my_app.default_name_index=my_app.default_name_index+1;
-                                my_app.mode=0;
-                            }
-                        }
-                    }
+    match ev {
+        None => {}
+        Some(i) => {
+            if i == 1 {
+                //Save Hotkey
+                /*println!("salvo screen");
+                println!("default path:{}",my_app.default_path);
+                println!("output_format:{}",my_app.output_format);*/
+
+                let path_for_thread=String::from(String::from(&my_app.default_path)+&String::from("\\screenshot")+&(my_app.default_name_index.to_string()));
+                let image_for_thread=my_app.image[my_app.n_monitor].clone();
+                let output_format_for_thread=my_app.output_format.clone();
+                thread::spawn(move ||{
+                    screenshot::save_image(&path_for_thread,&image_for_thread,&output_format_for_thread,true);
+                    println!("ho finito di salvare");
+                            });
+                
+                my_app.default_name_index = my_app.default_name_index + 1;
+                my_app.mode = 0;
+            }
+        }
+    }
+    ui.input(|i| {
+        if i.pointer.is_decidedly_dragging() && i.pointer.primary_down() {
+            if my_app.init_pos.is_none() {
+                my_app.init_pos = i.pointer.press_origin();
+                println!("{:?}", my_app.init_pos);
+            } else {
+                my_app.final_pos = i.pointer.hover_pos();
+                //ui.painter().arrow(my_app.init_pos.unwrap(), my_app.final_pos.unwrap()-my_app.init_pos.unwrap(), ui.visuals().widgets.noninteractive.bg_stroke);
+            }
+        } else if i.pointer.primary_released() && my_app.init_pos.is_some() {
+            my_app.final_pos = i.pointer.hover_pos();
+            //my_app.paint = true;
+            println!("{:?}, {:?}", my_app.init_pos, my_app.final_pos);
+            my_app.paint.push((
+                Paints::Arrow,
+                my_app.init_pos.unwrap(),
+                my_app.final_pos.unwrap(),
+            ));
+            my_app.init_pos = None;
+            my_app.final_pos = None;
+        }
+    });
+
+    for figure in &my_app.paint {
+        if figure.0 == Paints::Arrow {
+            ui.painter().arrow(
+                figure.1,
+                figure.2 - figure.1,
+                egui::Stroke {
+                    width: 1.5,
+                    color: Color32::RED,
+                },
+            );
+        } else if figure.0 == Paints::Line {
+            ui.painter().line_segment(
+                [figure.1, figure.2],
+                egui::Stroke {
+                    width: 1.5,
+                    color: Color32::RED,
+                },
+            );
+        }
+    }
 }
 
-pub fn gui_mode4(my_app: &mut MyApp, frame: &mut eframe::Frame, ui: &mut egui::Ui) {
+pub fn gui_mode5(my_app: &mut MyApp, frame: &mut eframe::Frame, ui: &mut egui::Ui) {
     let position = ui.input(|i| i.pointer.hover_pos());
     let info = frame.info().window_info;
     let limits = (10.0, 80.0, info.size[0] - 20.0, info.size[1] - 44.0);
     let props = (
-        (my_app.image[0].size.0 as f32) / (limits.2 - limits.0),
-        (my_app.image[0].size.1 as f32) / (limits.3 - limits.1),
+        (my_app.image[my_app.n_monitor].size.0 as f32) / (limits.2 - limits.0),
+        (my_app.image[my_app.n_monitor].size.1 as f32) / (limits.3 - limits.1),
     );
 
     draw::cut_rect(position, info, my_app, ui, limits);
@@ -448,8 +519,8 @@ pub fn gui_mode4(my_app: &mut MyApp, frame: &mut eframe::Frame, ui: &mut egui::U
             frame.set_fullscreen(false);
             let width = ((my_app.area.2 - my_app.area.0).abs() * props.0) as u32;
             let height = ((my_app.area.3 - my_app.area.1).abs() * props.1) as u32;
-            screenshot::screen_area(
-                &mut my_app.image,
+            my_app.image[my_app.n_monitor]=screenshot::screen_area(
+                &mut my_app.image[my_app.n_monitor],
                 ((my_app.area.0 - limits.0) * props.0) as u32,
                 ((my_app.area.1 - limits.1) * props.1) as u32,
                 width,

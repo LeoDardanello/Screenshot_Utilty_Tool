@@ -43,19 +43,18 @@ pub fn full_screen() -> Vec<MyScreen> {
     screen_image
 }
 
-pub fn visualize_image(screens: &mut Vec<MyScreen>, ui: &mut Ui, size: egui::Vec2) {
-    for image in screens {
+pub fn visualize_image(image: &mut MyScreen, ui: &mut Ui, size: egui::Vec2) {
+
         let mut my_image = MyImage { texture: None };
         let im =
             egui::ColorImage::from_rgba_unmultiplied([image.size.0, image.size.1], &image.screens);
         my_image.ui(ui, im, size);
-    }
+    
 }
 
-pub fn screen_area(screens: &mut Vec<MyScreen>, x0: u32, y0: u32, width: u32, height: u32) {
-    let mut screen_image = Vec::new();
-
-    for image in &mut *screens {
+pub fn screen_area(image: &mut MyScreen, x0: u32, y0: u32, width: u32, height: u32)->MyScreen {
+        println!("{:?} {} {} {} {}",image.size, x0,y0,width,height);
+   
         let rgba_img = image::RgbaImage::from_raw(
             image.size.0 as u32,
             image.size.1 as u32,
@@ -78,12 +77,12 @@ pub fn screen_area(screens: &mut Vec<MyScreen>, x0: u32, y0: u32, width: u32, he
             screens: cropped_bytes,
             size: (width as usize, height as usize),
         };
-        screen_image.push(img);
-    }
-    *screens = screen_image;
+
+    
+    img
 }
 
-pub fn save_image(path: &String, screens: &Vec<MyScreen>, format: &String,use_format:bool) {
+pub fn save_image(path: &String, image: &MyScreen, format: &String,use_format:bool) {
     let image_format = if format == ".jpg" {
         ImageFormat::Jpeg
     } else if format == ".png" {
@@ -92,7 +91,6 @@ pub fn save_image(path: &String, screens: &Vec<MyScreen>, format: &String,use_fo
         ImageFormat::Gif
     };
 
-    for image in screens {
         let img_buf = image::ImageBuffer::<image::Rgba<u8>, _>::from_vec(
             image.size.0 as u32,
             image.size.1 as u32,
@@ -108,7 +106,7 @@ pub fn save_image(path: &String, screens: &Vec<MyScreen>, format: &String,use_fo
             .save_with_format(path.to_string(), image_format)
             .expect("impossibile salvare l'immagine");
         }
-    }
+    
 }
 
 // fn save_images_as_gif2(image: screenshots::Image){

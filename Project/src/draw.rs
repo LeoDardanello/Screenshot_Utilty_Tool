@@ -54,7 +54,7 @@ pub fn cut_rect(
 
         }
     }
-    screenshot::visualize_image(&mut my_self.image, ui, info.size);
+    screenshot::visualize_image(&mut my_self.image[my_self.n_monitor], ui, info.size);
     if my_self.area.0 != 0.0 || my_self.area.1 != 0.0 {
         let mut my_stroke = egui::Stroke::default();
         my_stroke.color = egui::Color32::WHITE;
