@@ -1,9 +1,11 @@
 use eframe::{egui, run_native};
 use hotkeys::HotkeysConfig;
+mod draw;
 mod gui;
 mod hotkeys;
 mod screenshot;
 
+#[derive(Clone)]
 pub struct MyScreen {
     screens: Vec<u8>,
     size: (usize, usize),
@@ -14,29 +16,44 @@ pub struct MyApp {
     output_format: String,
     mode: i32,
     image: Vec<MyScreen>,
-    default_name:i32
+    default_name_index: i32,
+    area: (f32, f32, f32, f32),
+    delay_time:u32,
+    n_monitor: usize,
+    enable_screenshot:bool,
+    default_path:String,
+    init_pos: Option<egui::Pos2>,
+    final_pos: Option<egui::Pos2>,
+    paint: Vec<(gui::Paints, egui::Pos2, egui::Pos2)>
 }
 
 impl MyApp {
     //costructor for MyApp
     fn new() -> MyApp {
-        let mut h = Vec::new();
         let default_output_format = String::from(".jpg"); //default output format
                                                           //initial static hotkeys list
-        h.push(ToString::to_string("Take Screenshot: Ctrl+K"));
-        h.push(ToString::to_string("Save: Maiusc+C+U"));
-        h.push(ToString::to_string("Boh: LOLOLOLOLOL JOJOOOOOO"));
         MyApp {
             hotkey_conf: HotkeysConfig::new(),
             output_format: default_output_format,
             mode: 0,
             image: Vec::new(),
-            default_name:0
+            area: (0.0, 0.0, 0.0, 0.0),
+            default_name_index:0,
+            delay_time:0,
+            n_monitor: 0,
+            enable_screenshot:true,
+            //use backslashes to be compatible with different OS
+            default_path:String::from(".\\..\\screenshot_default"),//default screenshot save location, used by save hotkey
+
+            init_pos: None,
+            final_pos: None,
+            paint: Vec::new(),
         }
     }
 }
 
 //implementing eframe::App trait for MyApp
+
 impl eframe::App for MyApp {
     fn clear_color(&self, _visuals: &egui::Visuals) -> [f32; 4] {
         egui::Rgba::TRANSPARENT.to_array() // Make sure we don't paint anything behind the rounded corners
@@ -47,12 +64,12 @@ impl eframe::App for MyApp {
         //custom window frame
 
         if self.mode == 0 {
-            gui::custom_window_frame(
+             gui::custom_window_frame(
                 self,
                 ctx,
                 frame,
                 "Screenshot Utility Tool", //the title in this row is used
-                |my_app: &mut Self, frame: &mut eframe::Frame, ui| {
+                 |my_app: &mut Self, frame: &mut eframe::Frame, ui| {
                     gui::gui_mode0(my_app, frame, ui);
                 },
             );
@@ -61,9 +78,13 @@ impl eframe::App for MyApp {
         } else if self.mode == 1 {
             self.mode = 2;
         } else if self.mode == 2 {
-            self.mode = 3;
+            self.mode=3;
             self.image = screenshot::full_screen();
             frame.set_visible(true);
+            if self.image.len()>1{
+                self.mode=4;
+            }
+            
         } else if self.mode == 3 {
             gui::custom_window_frame(
                 self,
@@ -72,6 +93,29 @@ impl eframe::App for MyApp {
                 "Screenshot Utility Tool", //the title in this row is used
                 |my_app: &mut Self, frame: &mut eframe::Frame, ui| {
                     gui::gui_mode3(my_app, frame, ui);
+                },
+            );
+        }
+        else if self.mode==4{
+            gui::custom_window_frame(
+                self,
+                ctx,
+                frame,
+                "Screenshot Utility Tool", //the title in this row is used
+                |my_app: &mut Self, _frame: &mut eframe::Frame, ui| {
+                    gui::gui_mode4(my_app,ui);
+                },
+            );
+
+        }
+        else if self.mode == 5 {
+            gui::custom_window_frame(
+                self,
+                ctx,
+                frame,
+                "Screenshot Utility Tool", //the title in this row is used
+                |my_app: &mut Self, frame: &mut eframe::Frame, ui| {
+                    gui::gui_mode5(my_app, frame, ui);
                 },
             );
         }

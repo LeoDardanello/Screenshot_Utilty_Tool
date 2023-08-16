@@ -5,7 +5,6 @@ use egui::{ColorImage, Ui};
 use image::{self, ImageFormat};
 use screenshots::Screen;
 
-
 use crate::MyScreen;
 
 struct MyImage {
@@ -18,10 +17,9 @@ impl MyImage {
             // Load the texture only once.
             ui.ctx().load_texture("my-image", im, Default::default())
         });
-
         let max_size = egui::vec2(size.x - 20.0, size.y - 44.0).to_pos2();
 
-        let my_rect = egui::Rect::from_two_pos(egui::pos2(10.0, 34.0), max_size);
+        let my_rect = egui::Rect::from_two_pos(egui::pos2(10.0, 80.0), max_size);
         ui.painter().image(
             texture.id(),
             my_rect,
@@ -45,26 +43,46 @@ pub fn full_screen() -> Vec<MyScreen> {
     screen_image
 }
 
-pub fn visualize_image(screens: &mut Vec<MyScreen>, ui: &mut Ui, size: egui::Vec2) {
-    for image in screens {
+pub fn visualize_image(image: &mut MyScreen, ui: &mut Ui, size: egui::Vec2) {
+
         let mut my_image = MyImage { texture: None };
         let im =
             egui::ColorImage::from_rgba_unmultiplied([image.size.0, image.size.1], &image.screens);
         my_image.ui(ui, im, size);
-    }
+    
 }
 
-// pub fn screen_area(screens: &mut Vec<MyScreen>, x: u32, y: u32, width: usize, height: usize) {
-    // for image in screens {
-    //     let rgba_img = image::ImageBuffer::from_raw(width as u32, height as u32, image.screens)
-    //         .expect("Errore nella conversione dell'immagine");
-    //     let cropped_img = image::ImageBuffer::from_fn(width as u32, height as u32, |x, y| {
-    //         rgba_img.get_pixel(x, y).clone()
-    //     });
-    // }
-// }
+pub fn screen_area(image: &mut MyScreen, x0: u32, y0: u32, width: u32, height: u32)->MyScreen {
+        println!("{:?} {} {} {} {}",image.size, x0,y0,width,height);
+   
+        let rgba_img = image::RgbaImage::from_raw(
+            image.size.0 as u32,
+            image.size.1 as u32,
+            image.screens.to_vec(),
+        )
+        .expect("Errore nella conversione dell'immagine");
+        let cropped_img = image::ImageBuffer::from_fn(width, height, |x, y| {
+            rgba_img.get_pixel(x0 + x, y0 + y).clone()
+        });
 
-pub fn save_image(path: &String, screens: &mut Vec<MyScreen>, format: &mut String) {
+        let mut cropped_bytes = Vec::new();
+
+        for pixel in cropped_img.pixels() {
+            cropped_bytes.push(pixel[0]); // Red
+            cropped_bytes.push(pixel[1]); // Green
+            cropped_bytes.push(pixel[2]); // Blue
+            cropped_bytes.push(pixel[3]); // Alpha
+        }
+        let img = MyScreen {
+            screens: cropped_bytes,
+            size: (width as usize, height as usize),
+        };
+
+    
+    img
+}
+
+pub fn save_image(path: &String, image: &MyScreen, format: &String,use_format:bool) {
     let image_format = if format == ".jpg" {
         ImageFormat::Jpeg
     } else if format == ".png" {
@@ -73,18 +91,22 @@ pub fn save_image(path: &String, screens: &mut Vec<MyScreen>, format: &mut Strin
         ImageFormat::Gif
     };
 
-    for image in screens {
         let img_buf = image::ImageBuffer::<image::Rgba<u8>, _>::from_vec(
             image.size.0 as u32,
             image.size.1 as u32,
             image.screens.to_vec(),
         )
         .expect("impossibile creare l'immagine");
-
+        if use_format==true{
+            img_buf
+            .save_with_format(path.to_string()+format, image_format)
+            .expect("impossibile salvare l'immagine");
+        }else{
         img_buf
             .save_with_format(path.to_string(), image_format)
             .expect("impossibile salvare l'immagine");
-    }
+        }
+    
 }
 
 // fn save_images_as_gif2(image: screenshots::Image){
