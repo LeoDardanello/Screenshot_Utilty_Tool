@@ -18,13 +18,14 @@ pub struct MyApp {
     image: Vec<MyScreen>,
     default_name_index: i32,
     area: (f32, f32, f32, f32),
-    delay_time:u32,
+    delay_time: u32,
     n_monitor: usize,
-    enable_screenshot:bool,
-    default_path:String,
+    enable_screenshot: bool,
+    default_path: String,
     init_pos: Option<egui::Pos2>,
     final_pos: Option<egui::Pos2>,
-    paint: Vec<(gui::Paints, egui::Pos2, egui::Pos2)>
+    paint: Vec<(gui::Paints, egui::Pos2, egui::Pos2)>,
+    time: f64
 }
 
 impl MyApp {
@@ -38,16 +39,17 @@ impl MyApp {
             mode: 0,
             image: Vec::new(),
             area: (0.0, 0.0, 0.0, 0.0),
-            default_name_index:0,
-            delay_time:0,
+            default_name_index: 0,
+            delay_time: 0,
             n_monitor: 0,
-            enable_screenshot:true,
+            enable_screenshot: true,
             //use backslashes to be compatible with different OS
-            default_path:String::from(".\\..\\screenshot_default"),//default screenshot save location, used by save hotkey
+            default_path: String::from(".\\..\\screenshot_default"), //default screenshot save location, used by save hotkey
 
             init_pos: None,
             final_pos: None,
             paint: Vec::new(),
+            time: 0.0
         }
     }
 }
@@ -64,27 +66,55 @@ impl eframe::App for MyApp {
         //custom window frame
 
         if self.mode == 0 {
-             gui::custom_window_frame(
+            gui::custom_window_frame(
                 self,
                 ctx,
                 frame,
                 "Screenshot Utility Tool", //the title in this row is used
-                 |my_app: &mut Self, frame: &mut eframe::Frame, ui| {
+                |my_app: &mut Self, frame: &mut eframe::Frame, ui| {
+         
                     gui::gui_mode0(my_app, frame, ui);
                 },
             );
 
             //self.hotkey_conf.listen_to_event();
-        } else if self.mode == 1 {
-            self.mode = 2;
-        } else if self.mode == 2 {
-            self.mode=3;
-            self.image = screenshot::full_screen();
-            frame.set_visible(true);
-            if self.image.len()>1{
-                self.mode=4;
-            }
-            
+        }else if self.mode==1{
+            gui::custom_window_frame(
+                self,
+                ctx,
+                frame,
+                "Screenshot Utility Tool", //the title in this row is used
+                |my_app: &mut Self, frame: &mut eframe::Frame, ui| {
+                    println!("{:?}", ui.input(|i| i.time)-my_app.time);
+                   if ui.input(|i| i.time)-my_app.time>=0.2 || frame.info().window_info.focused{
+                        my_app.mode = 2;
+                     }
+
+                },
+            );
+
+        }
+
+        else if self.mode == 2 {
+            gui::custom_window_frame(
+                self,
+                ctx,
+                frame,
+                "Screenshot Utility Tool", //the title in this row is used
+                |my_app: &mut Self, frame: &mut eframe::Frame, ui| {
+                 
+                    println!("finish{:?}", ui.input(|i| i.time)-my_app.time);
+                        frame.set_minimized(false);
+                        my_app.mode = 3;
+                        my_app.image = screenshot::full_screen();
+                        
+                        
+                        if my_app.image.len() > 1 {
+                            my_app.mode = 4;
+                        }
+                     
+                },
+            );
         } else if self.mode == 3 {
             gui::custom_window_frame(
                 self,
@@ -95,20 +125,17 @@ impl eframe::App for MyApp {
                     gui::gui_mode3(my_app, frame, ui);
                 },
             );
-        }
-        else if self.mode==4{
+        } else if self.mode == 4 {
             gui::custom_window_frame(
                 self,
                 ctx,
                 frame,
                 "Screenshot Utility Tool", //the title in this row is used
                 |my_app: &mut Self, _frame: &mut eframe::Frame, ui| {
-                    gui::gui_mode4(my_app,ui);
+                    gui::gui_mode4(my_app, ui);
                 },
             );
-
-        }
-        else if self.mode == 5 {
+        } else if self.mode == 5 {
             gui::custom_window_frame(
                 self,
                 ctx,

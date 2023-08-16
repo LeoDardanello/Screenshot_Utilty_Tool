@@ -74,15 +74,15 @@ pub fn gui_mode0(my_app: &mut MyApp, frame: &mut eframe::Frame, ui: &mut egui::U
             if my_app.delay_time != 0 {
                 my_app.enable_screenshot = false;
                 thread::sleep(Duration::new(u64::from(my_app.delay_time), 0));
-                my_app.mode = 1;
-            } else {
-                frame.set_visible(false);
-                my_app.mode = 1;
-            }
 
+            } else {
+                frame.set_minimized(true);
+            }
+            my_app.time= ui.input(|i| i.time);
             my_app.area = (0.0, 0.0, 0.0, 0.0);
 
             my_app.mode = 1;
+           
         }
     });
 
@@ -93,7 +93,7 @@ pub fn gui_mode0(my_app: &mut MyApp, frame: &mut eframe::Frame, ui: &mut egui::U
             if i == 0 {
                 //Take Screenshot hotkey
                 frame.set_visible(false);
-                my_app.mode = 1;
+                my_app.mode = 2;
             }
             if i == 1 {
                 MessageDialog::new()
