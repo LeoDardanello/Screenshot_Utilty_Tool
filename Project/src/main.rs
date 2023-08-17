@@ -152,18 +152,18 @@ impl eframe::App for MyApp {
     fn post_rendering(& mut self , _window_size: [u32; 2], frame: &eframe::Frame) {
   
         if let Some(screenshot) = frame.screenshot() {
-            let limits = (10.0, 80.0, screenshot.size[0] - 20, screenshot.size[1] - 44);
-            let pixels_per_point = Some((screenshot.pixels.len()/(screenshot.size[0]*screenshot.size[1]) )as f32);
+            let frame=frame.info().window_info.size;
+            let limits = (10.0, 80.0, frame[0] - 20.0, frame[1] - 44.0);
+            let pixels_per_point = Some((screenshot.pixels.len()/((_window_size[0]*_window_size[1]) as usize) )as f32);
     
     
                 let region = egui::Rect::from_two_pos(
-                    egui::pos2(limits.0 , limits.1),
-                    egui::pos2(limits.2 as f32, limits.3 as f32)
+                    egui::pos2(limits.0*_window_size[0] as f32/frame[0], limits.1*_window_size[0] as f32/frame[0]),
+                    egui::pos2((limits.2*_window_size[1] as f32)/frame[1], (limits.3*_window_size[1] as f32)/frame[1])
                 );
                 let my_screenshot=screenshot.region(&region, pixels_per_point);
                 self.edit_image.screens = my_screenshot.as_raw().to_vec();
-                self.edit_image.size= ((limits.2 -limits.0 as usize), (limits.3-limits.1 as usize));
-                println!("hello world");
+                self.edit_image.size= ((my_screenshot.size[0]), my_screenshot.size[1]);
                 
         }
     }
