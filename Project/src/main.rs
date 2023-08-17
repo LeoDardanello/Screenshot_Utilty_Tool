@@ -24,6 +24,7 @@ pub struct MyApp {
     enable_screenshot: bool,
     default_path: String,
     paint: Vec<(gui::Paints, Option<egui::Pos2>, Option<egui::Pos2>, Option<egui::Color32>)>,
+    def_paint: Vec<(gui::Paints, Option<egui::Pos2>, Option<egui::Pos2>, Option<egui::Color32>)>,
     edit_color:egui::Color32,
     time: f64,
     edit_image: MyScreen
@@ -47,6 +48,7 @@ impl MyApp {
             //use backslashes to be compatible with different OS
             default_path: String::from(".\\..\\screenshot_default"), //default screenshot save location, used by save hotkey
             paint: Vec::new(),
+            def_paint: Vec::new(),
             edit_color:egui::Color32::BLACK,
             time: 0.0,
             edit_image: MyScreen{
@@ -160,7 +162,7 @@ impl eframe::App for MyApp {
                 );
                 let my_screenshot=screenshot.region(&region, pixels_per_point);
                 self.edit_image.screens = my_screenshot.as_raw().to_vec();
-                self.edit_image.size= (my_screenshot.size[0], my_screenshot.size[1]);
+                self.edit_image.size= ((limits.2 -limits.0 as usize), (limits.3-limits.1 as usize));
                 println!("hello world");
                 
         }
