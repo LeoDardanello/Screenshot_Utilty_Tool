@@ -25,7 +25,9 @@ pub struct MyApp {
     default_path: String,
     init_pos: Option<egui::Pos2>,
     final_pos: Option<egui::Pos2>,
-    paint: Vec<(gui::Paints, egui::Pos2, egui::Pos2)>,
+    paint: Vec<(gui::Paints, Option<egui::Pos2>, Option<egui::Pos2>, Vec<u8>, egui::Color32)>,
+    current_pic: Option<gui::Paints>,
+    edit_color:egui::Color32,
     time: f64,
 }
 
@@ -49,7 +51,9 @@ impl MyApp {
 
             init_pos: None,
             final_pos: None,
+            current_pic: None,
             paint: Vec::new(),
+            edit_color:egui::Color32::BLACK,
             time: 0.0,
         }
     }
@@ -131,6 +135,32 @@ impl eframe::App for MyApp {
                     gui::gui_mode5(my_app, frame, ui);
                 },
             );
+        }
+        else if self.mode==6{
+            gui_base::custom_window_frame(
+                self,
+                ctx,
+                frame,
+                "Screenshot Utility Tool", //the title in this row is used
+                |my_app: &mut Self, frame: &mut eframe::Frame, ui| {
+                    gui::gui_mode6(my_app, frame, ui);
+                },
+            );
+
+        }
+    }
+
+    fn post_rendering(&mut self, _window_size: [u32; 2], frame: &eframe::Frame) {
+        if let Some(screenshot) = frame.screenshot() {
+            let u = self.paint.len();
+            let pixels_per_point = frame.info().native_pixels_per_point;
+            if self.paint[u - 1].1.is_some() && self.paint[u - 1].2.is_some(){
+                let region = egui::Rect::from_two_pos(
+                    self.paint[u - 1].1.unwrap(),
+                    self.paint[u - 1].2.unwrap(),
+                );
+                self.paint[u-1].3 = screenshot.region(&region, pixels_per_point).as_raw().to_vec();
+            }
         }
     }
 }

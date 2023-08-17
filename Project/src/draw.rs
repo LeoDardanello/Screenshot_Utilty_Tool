@@ -1,4 +1,4 @@
-use crate::{screenshot, MyApp};
+use crate::{screenshot, MyApp, gui::Paints};
 use eframe::egui;
 
 pub fn cut_rect(
@@ -80,4 +80,40 @@ pub fn cut_rect(
             );
         }
     }
+}
+
+
+pub fn draw_shape(ui: &mut egui::Ui, my_app:&mut MyApp, frame: &mut eframe::Frame){
+     ui.input(|i| {
+        //println!("start");
+        let u = my_app.paint.len();
+        //println!("prima{:?}", u);
+        if i.pointer.is_decidedly_dragging() && i.pointer.primary_down() {
+            if my_app.paint[u-1].1.is_none(){
+                my_app.paint[u-1].4= my_app.edit_color;
+                my_app.paint[u-1].1=  i.pointer.press_origin();
+                //println!("prima{:?}", my_app.paint[u-1].1);
+            } else {
+                my_app.paint[u-1].2 = i.pointer.hover_pos();
+                //println!("dopo1{:?}", my_app.paint[u-1].2);
+                //ui.painter().arrow(my_app.init_pos.unwrap(), my_app.final_pos.unwrap()-my_app.init_pos.unwrap(), ui.visuals().widgets.noninteractive.bg_stroke);
+            }
+        } else if i.pointer.primary_released() && my_app.paint[u-1].1.is_some() {
+            frame.request_screenshot();
+            //println!("dopo2{:?}", my_app.paint[u-1].1);
+           my_app.paint.push((
+                my_app.paint[u-1].0,
+                None,
+                None,
+                Vec::new(),
+                my_app.edit_color
+            ));
+            
+            my_app.paint[u-1].2=i.pointer.hover_pos();
+            //my_app.paint = true;
+            //println!("{:?} {:?}", my_app.paint[u-1].1, my_app.paint[u-1].2);
+
+        }
+    });
+
 }
