@@ -299,7 +299,10 @@ pub fn gui_mode3(my_app: &mut MyApp, frame: &mut eframe::Frame, ui: &mut egui::U
 pub fn gui_mode5(my_app: &mut MyApp, frame: &mut eframe::Frame, ui: &mut egui::Ui) {
     let position = ui.input(|i| i.pointer.hover_pos());
     let info = frame.info().window_info;
-    let limits = (10.0, 80.0, info.size[0] - 20.0, info.size[1] - 44.0);
+    let mut limits = (10.0, 80.0, info.size[0] - 10.0, ((info.size[0] - 20.0)*my_app.image[my_app.n_monitor].size.1 as f32)/my_app.image[my_app.n_monitor].size.0 as f32);
+    if limits.3>=info.size[1]{
+        limits.3=info.size[1]-10.0;
+    }
     let props = (
         (my_app.image[my_app.n_monitor].size.0 as f32) / (limits.2 - limits.0),
         (my_app.image[my_app.n_monitor].size.1 as f32) / (limits.3 - limits.1),
@@ -333,7 +336,10 @@ pub fn gui_mode5(my_app: &mut MyApp, frame: &mut eframe::Frame, ui: &mut egui::U
 pub fn gui_mode6(my_app: &mut MyApp, frame: &mut eframe::Frame, ui: &mut egui::Ui){
     screenshot::visualize_image(&mut my_app.image[my_app.n_monitor], ui, frame.info().window_info.size);
     let info = frame.info().window_info;
-    let limits = (10.0, 80.0, info.size[0] - 20.0, info.size[1] - 44.0);
+    let mut limits = (10.0, 80.0, info.size[0] - 10.0, ((info.size[0] - 20.0)*my_app.image[my_app.n_monitor].size.1 as f32)/my_app.image[my_app.n_monitor].size.0 as f32);
+    if limits.3>=info.size[1]{
+        limits.3=info.size[1]-10.0;
+    }
     if my_app.def_paint.len()>0 && my_app.paint.len()==0{
         my_app.paint.clear();
         my_app.paint.append(&mut my_app.def_paint);

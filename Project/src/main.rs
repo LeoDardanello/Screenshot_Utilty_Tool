@@ -153,7 +153,10 @@ impl eframe::App for MyApp {
   
         if let Some(screenshot) = frame.screenshot() {
             let frame=frame.info().window_info.size;
-            let limits = (10.0, 80.0, frame[0] - 20.0, frame[1] - 44.0);
+            let mut limits = (10.0, 80.0, frame[0] - 10.0, ((frame[0] - 20.0)*self.image[self.n_monitor].size.1 as f32)/self.image[self.n_monitor].size.0 as f32);
+            if limits.3>=frame.y{
+                limits.3=frame.y-10.0;
+            }
             let pixels_per_point = Some((screenshot.pixels.len()/((_window_size[0]*_window_size[1]) as usize) )as f32);
     
     
