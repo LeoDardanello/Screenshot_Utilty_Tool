@@ -407,6 +407,9 @@ pub fn gui_mode6(my_app: &mut MyApp, frame: &mut eframe::Frame, ui: &mut egui::U
             }
             
         }
+        if my_app.paint.last().is_some() && my_app.paint.last().unwrap().draw==Paints::Text{
+            draw::write_text(ui, my_app)
+        }
      
     let painter= ui.painter().with_clip_rect(my_rect);
     for figure in &my_app.paint {
@@ -438,10 +441,13 @@ pub fn gui_mode6(my_app: &mut MyApp, frame: &mut eframe::Frame, ui: &mut egui::U
                 });
         }
         else if figure.draw==Paints::Highlighter{
-            let mut points= figure.points.clone().unwrap();
+            let points= figure.points.clone().unwrap();
             let stroke=egui::Stroke::new(points.width as f32, egui::Color32::from_rgba_unmultiplied(figure.color.unwrap().r(), figure.color.unwrap().g(), figure.color.unwrap().b(),50));
             let line=egui::Shape::line(points.line, stroke);
             painter.add(line);
+        }
+        else if figure.draw==Paints::Text{
+            // painter.text(figure.start.unwrap(), egui::Align2::LEFT_CENTER, figure.text.clone(), egui::FontId::default(),figure.color.unwrap());
         }
     
     }

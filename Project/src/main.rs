@@ -33,7 +33,8 @@ pub struct MyDraw{
     start: Option<egui::Pos2>,
     end: Option<egui::Pos2>,
     color: Option<egui::Color32>,
-    points: Option<HighlighterLine>
+    points: Option<HighlighterLine>,
+    text: String
 }
 
 impl MyDraw {
@@ -43,7 +44,8 @@ impl MyDraw {
                 start: None,
                 end: None,
                 color: Some(color),
-                points: if draw==gui::Paints::Highlighter{ Some(HighlighterLine::new())}else{None}
+                points: if draw==gui::Paints::Highlighter{ Some(HighlighterLine::new())}else{None},
+                text: String::from("")
             }
     
     }

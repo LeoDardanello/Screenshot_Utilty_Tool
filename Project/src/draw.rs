@@ -113,6 +113,43 @@ pub fn draw_shape(ui: &mut egui::Ui, my_app:&mut MyApp, _frame: &mut eframe::Fra
 
 }
 
+pub fn write_text(ui: &mut egui::Ui, my_app:&mut MyApp){
+
+    ui.input(|i| {
+  let u = my_app.paint.len() - 1;
+  if i.pointer.is_decidedly_dragging() && i.pointer.primary_down() {
+    if my_app.paint[u].start.is_none(){
+        my_app.paint[u].start=  i.pointer.press_origin();
+
+    } else {
+        my_app.paint[u].end = i.pointer.hover_pos();
+
+    }
+}
+        
+
+        
+    });
+    let u = my_app.paint.len() - 1;
+    if my_app.paint[u].start.is_some(){
+        // ui.allocate_rect(egui::Rect, sense)
+
+        ui.cursor().min=my_app.paint[u].start.unwrap();
+        ui.cursor().max=my_app.paint[u].end.unwrap();
+    let str_ref: &mut String = &mut my_app.paint[u].text;
+        println!("{:?}", str_ref);
+            let widget= egui::TextEdit::multiline(str_ref).text_color(my_app.edit_color);
+            
+    
+            ui.add(widget);
+    }
+    
+    
+
+
+}
+
+
 pub fn highlight( current_line:&mut HighlighterLine,ui:&mut egui::Ui, rect: egui::Rect)->HighlighterLine{
     //println!("{:?}",ui.available_size_before_wrap());
 
