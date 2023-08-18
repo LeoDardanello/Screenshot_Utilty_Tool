@@ -1,6 +1,6 @@
 use crate::{screenshot, MyApp};
 use eframe::egui;
-
+use crate::gui::HighlighterLine;
 
 pub fn cut_rect(
     position: Option<egui::Pos2>,
@@ -105,7 +105,8 @@ pub fn draw_shape(ui: &mut egui::Ui, my_app:&mut MyApp, _frame: &mut eframe::Fra
                 my_app.paint[u-1].0,
                 None,
                 None,
-                Some(my_app.edit_color)
+                Some(my_app.edit_color),
+                None
             ));
             
             my_app.paint[u-1].2=i.pointer.hover_pos();
@@ -117,3 +118,41 @@ pub fn draw_shape(ui: &mut egui::Ui, my_app:&mut MyApp, _frame: &mut eframe::Fra
 
 }
 
+pub fn highlight( current_line:&mut HighlighterLine,ui:&mut egui::Ui)->HighlighterLine{
+    //println!("{:?}",ui.available_size_before_wrap());
+
+let (mut response, painter) =
+    ui.allocate_painter(egui::Vec2::new(1500.0,800.0), egui::Sense::drag());
+
+let to_screen = egui::emath::RectTransform::from_to(
+    egui::Rect::from_min_size(egui::Pos2::ZERO, response.rect.square_proportions()),
+    response.rect,
+);
+let from_screen = to_screen.inverse();
+
+println!("pointer-pos:{:?}",response.interact_pointer_pos());
+if let Some(pointer_pos) = response.interact_pointer_pos() {//if the mouse is being clicked or dragged
+    let canvas_pos = from_screen * pointer_pos;
+    println!("canvas pos:{:?}", canvas_pos);
+    if current_line.line.last() != Some(&canvas_pos) {
+        println!("entro dentro:");
+        println!("prima del push:{:?}",current_line.line);
+        current_line.line.push(canvas_pos);
+        println!("dopo del push:{:?}",current_line.line);
+        response.mark_changed();
+    }
+} 
+let points = current_line
+    .line
+    .iter()//itero sui punti
+    //.filter(|line| *line.len() >= 2)
+    .map(|p| to_screen * *p).collect();
+
+    let line=egui::Shape::line(points, current_line.stroke);
+    println!("{:?}",line);
+    painter.add(line);
+    println!("response:{:?}",response);
+    let mut l= Vec::new();
+    l.append(&mut current_line.line);
+    return HighlighterLine { line: l, stroke: current_line.stroke }
+}

@@ -1,5 +1,6 @@
 use eframe::{egui, run_native};
 use hotkeys::HotkeysConfig;
+use crate::gui::{HighlighterLine,Paints};
 mod draw;
 mod gui;
 mod gui_base;
@@ -23,17 +24,24 @@ pub struct MyApp {
     n_monitor: usize,
     enable_screenshot: bool,
     default_path: String,
-    paint: Vec<(gui::Paints, Option<egui::Pos2>, Option<egui::Pos2>, Option<egui::Color32>)>,
+    paint: Vec<(gui::Paints, Option<egui::Pos2>, Option<egui::Pos2>, Option<egui::Color32>,Option<HighlighterLine>)>,
     edit_color:egui::Color32,
     time: f64,
-    edit_image: MyScreen
+    edit_image: MyScreen,
+    highlighting:bool
 }
 
 impl MyApp {
+
+    fn find_last_highliter_line(&self)->&Option<HighlighterLine>{
+        println!("{:?}", self.paint.last().unwrap().4);
+        return &self.paint.last().unwrap().4;
+    }
+
     //costructor for MyApp
     fn new() -> MyApp {
         let default_output_format = String::from(".jpg"); //default output format
-                                                          //initial static hotkeys list
+                                                      //initial static hotkeys list
         MyApp {
             hotkey_conf: HotkeysConfig::new(),
             output_format: default_output_format,
@@ -52,7 +60,8 @@ impl MyApp {
             edit_image: MyScreen{
                 screens: Vec::new(),
                 size: (0,0)
-            }
+            },
+            highlighting:false
         }
     }
 }

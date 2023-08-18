@@ -12,6 +12,23 @@ pub enum Paints {
     Text,
     Square,
     Circle,
+    Highlighter,
+}
+
+
+#[derive(Clone,Debug)]
+pub struct HighlighterLine{
+    pub line: Vec<egui::Pos2>,//Vec containing points of the highliter
+    pub stroke:egui::Stroke
+}
+
+impl HighlighterLine {
+    fn new() -> Self {
+        Self {
+            line: Vec::new(),
+            stroke: egui::Stroke::new(1.0, egui::Color32::from_rgb(25, 200, 100)),
+        }
+    }
 
 }
 
@@ -312,7 +329,17 @@ pub fn gui_mode6(my_app: &mut MyApp, frame: &mut eframe::Frame, ui: &mut egui::U
     screenshot::visualize_image(&mut my_app.image[my_app.n_monitor], ui, frame.info().window_info.size);
     
      ui.horizontal(|ui| {
-         if ui.button("Return").clicked() {
+
+        if my_app.paint.last().is_some() && my_app.paint.last().unwrap().0==Paints::Highlighter{
+            let hight=my_app.find_last_highliter_line().clone();
+            if hight.is_some(){
+                let mut line_struct=hight.unwrap();
+                let u=my_app.paint.len();
+            my_app.paint[u-1].4=Some(draw::highlight(&mut line_struct,ui));
+            }
+            
+        }
+        if ui.button("Return").clicked() {
             my_app.mode = 3;
             frame.set_fullscreen(false);
         }
@@ -324,7 +351,8 @@ pub fn gui_mode6(my_app: &mut MyApp, frame: &mut eframe::Frame, ui: &mut egui::U
                 Paints::Square,
                 None,
                 None,
-                Some(my_app.edit_color)
+                Some(my_app.edit_color),
+                None
             ));
                 
         }
@@ -336,7 +364,8 @@ pub fn gui_mode6(my_app: &mut MyApp, frame: &mut eframe::Frame, ui: &mut egui::U
                 Paints::Circle,
                 None,
                 None,
-                Some(my_app.edit_color)
+                Some(my_app.edit_color),
+                None
             ));
         }
         if ui.add(egui::Button::new(egui::RichText::new("↗"))).clicked() {
@@ -348,7 +377,8 @@ pub fn gui_mode6(my_app: &mut MyApp, frame: &mut eframe::Frame, ui: &mut egui::U
                 Paints::Arrow,
                 None,
                 None,
-                Some(my_app.edit_color)
+                Some(my_app.edit_color),
+                None
             )); 
  
         }
@@ -357,8 +387,21 @@ pub fn gui_mode6(my_app: &mut MyApp, frame: &mut eframe::Frame, ui: &mut egui::U
                 Paints::Text,
                 None,
                 None,
-                Some(my_app.edit_color)
+                Some(my_app.edit_color),
+                None
             ));
+        }
+
+        if ui.add(egui::Button::new(egui::RichText::new("Highliter"))).clicked() {
+            let new_line:HighlighterLine=HighlighterLine::new();
+             my_app.paint.push((
+                Paints::Highlighter,
+                None,
+                None,
+                Some(my_app.edit_color),
+                Some(new_line)
+            ));
+            my_app.highlighting=true;
         }
   
         let f=ui.color_edit_button_srgba(&mut my_app.edit_color);
