@@ -9,15 +9,15 @@ mod screenshot;
 #[derive(Clone,Debug)]
 pub struct HighlighterLine{
     pub line: Vec<egui::Pos2>,//Vec containing points of the highliter
-    pub stroke:egui::Stroke
+    pub width: u32,
 }
 
 impl HighlighterLine {
     fn new() -> Self {
         Self {
             line: Vec::new(),
-            stroke: egui::Stroke::new(1.0, egui::Color32::from_rgb(25, 200, 100)),
-        }
+            width: 20,
+ }
     }
 
 }
@@ -65,13 +65,13 @@ pub struct MyApp {
     def_paint: Vec<MyDraw>,
     edit_color:egui::Color32,
     time: f64,
-    edit_image: MyScreen,
+    edit_image: MyScreen,  
 }
 
 impl MyApp {
 
     fn find_last_highliter_line(&self)->&Option<HighlighterLine>{
-        println!("{:?}", self.paint.last().unwrap().points);
+        //println!("{:?}", self.paint.last().unwrap().points);
         return &self.paint.last().unwrap().points;
     }
 

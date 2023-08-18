@@ -116,42 +116,33 @@ pub fn draw_shape(ui: &mut egui::Ui, my_app:&mut MyApp, _frame: &mut eframe::Fra
 pub fn highlight( current_line:&mut HighlighterLine,ui:&mut egui::Ui, rect: egui::Rect)->HighlighterLine{
     //println!("{:?}",ui.available_size_before_wrap());
 
-let (mut response, painter) =
-    ui.allocate_painter(rect.size(), egui::Sense::drag());
-
+let mut response=ui.allocate_rect(rect,egui::Sense::drag() );
 
 let to_screen = egui::emath::RectTransform::from_to(
-    rect,
-    egui::Rect::from_min_size(egui::Pos2::ZERO, ui.available_size()),
- 
-);
+            egui::Rect::from_min_size(egui::Pos2::ZERO, response.rect.square_proportions()),
+            response.rect,
+        );
 let from_screen = to_screen.inverse();
 
-println!("pointer-pos:{:?}",response.interact_pointer_pos());
+//println!("pointer-pos:{:?}",response.interact_pointer_pos());
 if let Some(pointer_pos) = response.interact_pointer_pos() {//if the mouse is being clicked or dragged
     let canvas_pos = from_screen * pointer_pos;
-    println!("canvas pos:{:?}", canvas_pos);
+    //println!("canvas pos:{:?}", canvas_pos);
     if current_line.line.last() != Some(&canvas_pos) {
-        println!("entro dentro:");
-        println!("prima del push:{:?}",current_line.line);
-        current_line.line.push(canvas_pos);
-        println!("dopo del push:{:?}",current_line.line);
+        // println!("entro dentro:");
+        // println!("prima del push:{:?}",current_line.line);
+        current_line.line.push(to_screen * canvas_pos);
+        // println!("dopo del push:{:?}",current_line.line);
         response.mark_changed();
     }
 } 
-let points = current_line
-    .line
-    .iter()//itero sui punti
-    //.filter(|line| *line.len() >= 2)
-    .map(|p| to_screen * *p).collect();
-
-    let line=egui::Shape::line(points, current_line.stroke);
-    println!("{:?}",line);
-    painter.add(line);
-    println!("response:{:?}",response);
+//     let line=egui::Shape::line(points, current_line.stroke);
+//     println!("{:?}",line);
+//     painter.add(line);
+//     println!("response:{:?}",response);
     let mut l= Vec::new();
     l.append(&mut current_line.line);
-    return HighlighterLine { line: l, stroke: current_line.stroke }
+    return HighlighterLine{line:l , width: current_line.width};
 }
 
 pub fn draw_button(paint: Paints,ui:&mut egui::Ui, el:&mut Vec<MyDraw>, color: egui::Color32){

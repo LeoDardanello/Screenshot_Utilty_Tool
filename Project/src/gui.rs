@@ -348,18 +348,8 @@ pub fn gui_mode6(my_app: &mut MyApp, frame: &mut eframe::Frame, ui: &mut egui::U
         my_app.paint.append(&mut my_app.def_paint);
     }
 
-    
-     ui.horizontal(|ui| {
+    ui.horizontal(|ui| {
 
-        if my_app.paint.last().is_some() && my_app.paint.last().unwrap().draw==Paints::Highlighter{
-            let hight=my_app.find_last_highliter_line().clone();
-            if hight.is_some(){
-                let mut line_struct=hight.unwrap();
-                let u=my_app.paint.len();
-            my_app.paint[u-1].points=Some(draw::highlight(&mut line_struct,ui, my_rect));
-            }
-            
-        }
         if ui.button("Return").clicked() {
             my_app.mode = 3;
             frame.set_fullscreen(false);
@@ -371,9 +361,14 @@ pub fn gui_mode6(my_app: &mut MyApp, frame: &mut eframe::Frame, ui: &mut egui::U
         draw::draw_button(Paints::Text,ui, &mut my_app.paint, my_app.edit_color);
         draw::draw_button(Paints::Highlighter,ui, &mut my_app.paint, my_app.edit_color);
 
+        /*if my_app.paint.len()>0{
+        ui.add_enabled(my_app.paint.last().unwrap().draw==Paints::Highlighter ,{
+            egui::Slider::new(&mut my_app.paint.last().unwrap().points.unwrap().width, 10..=30).text("Change Width")
+        });
+        }*/
 
         let f=ui.color_edit_button_srgba(&mut my_app.edit_color);
-       if f.clicked(){
+        if f.clicked(){
             if my_app.paint.len()>0 {
                 let u= my_app.paint.len()-1;
                 if my_app.paint[u].color.is_some(){
@@ -382,7 +377,6 @@ pub fn gui_mode6(my_app: &mut MyApp, frame: &mut eframe::Frame, ui: &mut egui::U
                 else{
                     my_app.paint[u].color=Some(my_app.edit_color);
                 }
-                
             }
        }
        if f.clicked_elsewhere(){
@@ -393,20 +387,26 @@ pub fn gui_mode6(my_app: &mut MyApp, frame: &mut eframe::Frame, ui: &mut egui::U
 
        }
     
-
         if ui.button("Conferma").clicked() {
             frame.request_screenshot();
             my_app.def_paint.append(&mut my_app.paint.clone());
 
             my_app.mode = 3;
             
-
-
         }
         if my_app.paint.len()>0  && my_app.paint.last().unwrap().color.is_some(){
         draw::draw_shape(ui, my_app, frame); 
         }
      });
+     if my_app.paint.last().is_some() && my_app.paint.last().unwrap().draw==Paints::Highlighter{
+            let hight=my_app.find_last_highliter_line().clone();
+            if hight.is_some(){
+                let mut line_struct=hight.unwrap();
+                let u=my_app.paint.len();
+            my_app.paint[u-1].points=Some(draw::highlight(&mut line_struct,ui, my_rect));
+            }
+            
+        }
      
     let painter= ui.painter().with_clip_rect(my_rect);
     for figure in &my_app.paint {
@@ -436,7 +436,15 @@ pub fn gui_mode6(my_app: &mut MyApp, frame: &mut eframe::Frame, ui: &mut egui::U
                     width: 1.5,
                     color: figure.color.unwrap(),//color selected with the color picker
                 });
-        }}
+        }
+        else if figure.draw==Paints::Highlighter{
+            let mut points= figure.points.clone().unwrap();
+            let stroke=egui::Stroke::new(points.width as f32, egui::Color32::from_rgba_unmultiplied(figure.color.unwrap().r(), figure.color.unwrap().g(), figure.color.unwrap().b(),50));
+            let line=egui::Shape::line(points.line, stroke);
+            painter.add(line);
+        }
+    
+    }
     }
 }
 
