@@ -68,6 +68,7 @@ pub struct MyApp {
     edit_color:egui::Color32,
     time: f64,
     edit_image: MyScreen,  
+    eraser: bool
 }
 
 impl MyApp {
@@ -101,6 +102,7 @@ impl MyApp {
                 screens: Vec::new(),
                 size: (0,0)
             },
+            eraser: false,
         }
     }
 }

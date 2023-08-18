@@ -160,7 +160,7 @@ pub fn highlight(
     };
 }
 
-pub fn draw_button(paint: Paints, ui: &mut egui::Ui, el: &mut Vec<MyDraw>, color: egui::Color32) {
+pub fn draw_button(paint: Paints, ui: &mut egui::Ui, el: &mut Vec<MyDraw>, color: egui::Color32, eraser: &mut bool) {
     let mut icon: &str = "";
     if paint == Paints::Square {
         icon = "⬜";
@@ -181,6 +181,7 @@ pub fn draw_button(paint: Paints, ui: &mut egui::Ui, el: &mut Vec<MyDraw>, color
     }
 
     if ui.add(button).clicked() {
+        *eraser=false;
         if last.is_some() && last.unwrap().start.is_none() {
             el.pop();
         }
