@@ -1,16 +1,53 @@
 use eframe::{egui, run_native};
 use hotkeys::HotkeysConfig;
-use crate::gui::{HighlighterLine,Paints};
 mod draw;
 mod gui;
 mod gui_base;
 mod hotkeys;
 mod screenshot;
 
+#[derive(Clone,Debug)]
+pub struct HighlighterLine{
+    pub line: Vec<egui::Pos2>,//Vec containing points of the highliter
+    pub stroke:egui::Stroke
+}
+
+impl HighlighterLine {
+    fn new() -> Self {
+        Self {
+            line: Vec::new(),
+            stroke: egui::Stroke::new(1.0, egui::Color32::from_rgb(25, 200, 100)),
+        }
+    }
+
+}
+
 #[derive(Clone)]
 pub struct MyScreen {
     screens: Vec<u8>,
     size: (usize, usize),
+}
+#[derive(Clone)]
+pub struct MyDraw{
+    draw: gui::Paints,
+    start: Option<egui::Pos2>,
+    end: Option<egui::Pos2>,
+    color: Option<egui::Color32>,
+    points: Option<HighlighterLine>
+}
+
+impl MyDraw {
+    fn new(draw: gui::Paints, color: egui::Color32) -> Self {
+        Self {
+                draw: draw,
+                start: None,
+                end: None,
+                color: Some(color),
+                points: if draw==gui::Paints::Highlighter{ Some(HighlighterLine::new())}else{None}
+            }
+    
+    }
+
 }
 
 pub struct MyApp {
@@ -24,19 +61,18 @@ pub struct MyApp {
     n_monitor: usize,
     enable_screenshot: bool,
     default_path: String,
-    paint: Vec<(gui::Paints, Option<egui::Pos2>, Option<egui::Pos2>, Option<egui::Color32>,Option<HighlighterLine>)>,
-    def_paint: Vec<(gui::Paints, Option<egui::Pos2>, Option<egui::Pos2>, Option<egui::Color32>,Option<HighlighterLine>)>,
+    paint: Vec<MyDraw>,
+    def_paint: Vec<MyDraw>,
     edit_color:egui::Color32,
     time: f64,
     edit_image: MyScreen,
-    highlighting:bool
 }
 
 impl MyApp {
 
     fn find_last_highliter_line(&self)->&Option<HighlighterLine>{
-        println!("{:?}", self.paint.last().unwrap().4);
-        return &self.paint.last().unwrap().4;
+        println!("{:?}", self.paint.last().unwrap().points);
+        return &self.paint.last().unwrap().points;
     }
 
     //costructor for MyApp
@@ -63,7 +99,6 @@ impl MyApp {
                 screens: Vec::new(),
                 size: (0,0)
             },
-            highlighting:false
         }
     }
 }

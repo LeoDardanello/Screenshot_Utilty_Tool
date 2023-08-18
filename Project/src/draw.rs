@@ -1,7 +1,5 @@
-use crate::{screenshot, MyApp, gui::Paints};
+use crate::{screenshot, MyApp, gui::Paints, MyDraw, HighlighterLine};
 use eframe::egui;
-use crate::gui::HighlighterLine;
-use egui::Response;
 
 
 pub fn cut_rect(
@@ -92,26 +90,21 @@ pub fn draw_shape(ui: &mut egui::Ui, my_app:&mut MyApp, _frame: &mut eframe::Fra
         let u = my_app.paint.len();
         //println!("prima{:?}", u);
         if i.pointer.is_decidedly_dragging() && i.pointer.primary_down() {
-            if my_app.paint[u-1].1.is_none(){
-                my_app.paint[u-1].1=  i.pointer.press_origin();
+            if my_app.paint[u-1].start.is_none(){
+                my_app.paint[u-1].start=  i.pointer.press_origin();
                 //println!("prima{:?}", my_app.paint[u-1].1);
             } else {
-                my_app.paint[u-1].2 = i.pointer.hover_pos();
+                my_app.paint[u-1].end = i.pointer.hover_pos();
                 //println!("dopo1{:?}", my_app.paint[u-1].2);
                 //ui.painter().arrow(my_app.init_pos.unwrap(), my_app.final_pos.unwrap()-my_app.init_pos.unwrap(), ui.visuals().widgets.noninteractive.bg_stroke);
             }
-        } else if i.pointer.primary_released() && my_app.paint[u-1].1.is_some() {
-            
+        } else if i.pointer.primary_released() && my_app.paint[u-1].start.is_some() {
+            my_app.paint[u-1].end=i.pointer.hover_pos();
             //println!("dopo2{:?}", my_app.paint[u-1].1);
-           my_app.paint.push((
-                my_app.paint[u-1].0,
-                None,
-                None,
-                Some(my_app.edit_color),
-                None
-            ));
+           my_app.paint.push(
+            MyDraw::new(my_app.paint[u-1].draw, my_app.edit_color) );
             
-            my_app.paint[u-1].2=i.pointer.hover_pos();
+            
             //my_app.paint = true;
             //println!("{:?} {:?}", my_app.paint[u-1].1, my_app.paint[u-1].2);
 
@@ -120,15 +113,17 @@ pub fn draw_shape(ui: &mut egui::Ui, my_app:&mut MyApp, _frame: &mut eframe::Fra
 
 }
 
-pub fn highlight( current_line:&mut HighlighterLine,ui:&mut egui::Ui)->HighlighterLine{
+pub fn highlight( current_line:&mut HighlighterLine,ui:&mut egui::Ui, rect: egui::Rect)->HighlighterLine{
     //println!("{:?}",ui.available_size_before_wrap());
 
 let (mut response, painter) =
-    ui.allocate_painter(egui::Vec2::new(1500.0,800.0), egui::Sense::drag());
+    ui.allocate_painter(rect.size(), egui::Sense::drag());
+
 
 let to_screen = egui::emath::RectTransform::from_to(
-    egui::Rect::from_min_size(egui::Pos2::ZERO, response.rect.square_proportions()),
-    response.rect,
+    rect,
+    egui::Rect::from_min_size(egui::Pos2::ZERO, ui.available_size()),
+ 
 );
 let from_screen = to_screen.inverse();
 
@@ -159,7 +154,7 @@ let points = current_line
     return HighlighterLine { line: l, stroke: current_line.stroke }
 }
 
-pub fn draw_button(paint: Paints,ui:&mut egui::Ui, el: Option<&(Paints, Option<egui::Pos2>, Option<egui::Pos2>, Option<egui::Color32>,Option<HighlighterLine>)>)->Response{
+pub fn draw_button(paint: Paints,ui:&mut egui::Ui, el:&mut Vec<MyDraw>, color: egui::Color32){
     let mut icon: &str="";
     if paint==Paints::Square{
         icon="⬜";
@@ -173,11 +168,22 @@ pub fn draw_button(paint: Paints,ui:&mut egui::Ui, el: Option<&(Paints, Option<e
     else if paint==Paints::Text{
         icon="Text";
     }
-    if el.is_some() && el.unwrap().0==paint{
-        ui.add(egui::Button::new(egui::RichText::new(icon).underline()))
+    else if paint==Paints::Highlighter{
+        icon="Highlighter";
     }
-    else{
-        ui.add(egui::Button::new(egui::RichText::new(icon)))
+    
+    let mut button=egui::Button::new(egui::RichText::new(icon));
+    let last=el.last(); 
+    if last.is_some() && last.unwrap().draw==paint{
+       button= egui::Button::new(egui::RichText::new(icon).underline());
+    }
+
+    if ui.add(button).clicked(){
+        if last.is_some() && last.unwrap().start.is_none(){
+            el.pop();
+        }
+        el.push( MyDraw::new(
+            paint,color));
     }
 
 } 

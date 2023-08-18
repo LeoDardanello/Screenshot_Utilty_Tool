@@ -15,23 +15,6 @@ pub enum Paints {
     Highlighter,
 }
 
-
-#[derive(Clone,Debug)]
-pub struct HighlighterLine{
-    pub line: Vec<egui::Pos2>,//Vec containing points of the highliter
-    pub stroke:egui::Stroke
-}
-
-impl HighlighterLine {
-    fn new() -> Self {
-        Self {
-            line: Vec::new(),
-            stroke: egui::Stroke::new(1.0, egui::Color32::from_rgb(25, 200, 100)),
-        }
-    }
-
-}
-
 pub fn gui_mode0(my_app: &mut MyApp, frame: &mut eframe::Frame, ui: &mut egui::Ui) {
     ui.label(
         egui::RichText::new(
@@ -355,6 +338,8 @@ pub fn gui_mode6(my_app: &mut MyApp, frame: &mut eframe::Frame, ui: &mut egui::U
     screenshot::visualize_image(&mut my_app.image[my_app.n_monitor], ui, frame.info().window_info.size);
     let info = frame.info().window_info;
     let mut limits = (10.0, 80.0, info.size[0] - 10.0, ((info.size[0] - 20.0)*my_app.image[my_app.n_monitor].size.1 as f32)/my_app.image[my_app.n_monitor].size.0 as f32);
+    let my_rect=egui::Rect::from_two_pos(egui::pos2(limits.0, limits.1), egui::pos2(limits.2, limits.3));
+    
     if limits.3>=info.size[1]{
         limits.3=info.size[1]-10.0;
     }
@@ -366,12 +351,12 @@ pub fn gui_mode6(my_app: &mut MyApp, frame: &mut eframe::Frame, ui: &mut egui::U
     
      ui.horizontal(|ui| {
 
-        if my_app.paint.last().is_some() && my_app.paint.last().unwrap().0==Paints::Highlighter{
+        if my_app.paint.last().is_some() && my_app.paint.last().unwrap().draw==Paints::Highlighter{
             let hight=my_app.find_last_highliter_line().clone();
             if hight.is_some(){
                 let mut line_struct=hight.unwrap();
                 let u=my_app.paint.len();
-            my_app.paint[u-1].4=Some(draw::highlight(&mut line_struct,ui));
+            my_app.paint[u-1].points=Some(draw::highlight(&mut line_struct,ui, my_rect));
             }
             
         }
@@ -380,85 +365,30 @@ pub fn gui_mode6(my_app: &mut MyApp, frame: &mut eframe::Frame, ui: &mut egui::U
             frame.set_fullscreen(false);
             my_app.paint.clear();
         }
+        draw::draw_button(Paints::Square,ui, &mut my_app.paint, my_app.edit_color);
+        draw::draw_button(Paints::Circle,ui, &mut my_app.paint, my_app.edit_color);
+        draw::draw_button(Paints::Arrow,ui, &mut my_app.paint, my_app.edit_color);
+        draw::draw_button(Paints::Text,ui, &mut my_app.paint, my_app.edit_color);
+        draw::draw_button(Paints::Highlighter,ui, &mut my_app.paint, my_app.edit_color);
 
-        if draw::draw_button(Paints::Square,ui, my_app.paint.last()).clicked() {  
-            if my_app.paint.len()>0 && my_app.paint[my_app.paint.len()-1].1.is_none(){
-                my_app.paint.pop();
-            }
-            my_app.paint.push((
-                Paints::Square,
-                None,
-                None,
-                Some(my_app.edit_color),
-                None
-            ));
-                
-        }
-        if draw::draw_button(Paints::Circle,ui, my_app.paint.last()).clicked() {
-            if my_app.paint.len()>0 && my_app.paint[my_app.paint.len()-1].1.is_none(){
-                my_app.paint.pop();
-            }
-            my_app.paint.push((
-                Paints::Circle,
-                None,
-                None,
-                Some(my_app.edit_color),
-                None
-            ));
-        }
-        if draw::draw_button(Paints::Arrow,ui, my_app.paint.last()).clicked() {
 
-            if my_app.paint.len()>0 && my_app.paint[my_app.paint.len()-1].1.is_none(){
-                my_app.paint.pop();
-            }
-            my_app.paint.push((
-                Paints::Arrow,
-                None,
-                None,
-                Some(my_app.edit_color),
-                None
-            )); 
- 
-        }
-        if draw::draw_button(Paints::Text,ui, my_app.paint.last()).clicked() {
-            my_app.paint.push((
-                Paints::Text,
-                None,
-                None,
-                Some(my_app.edit_color),
-                None
-            ));
-        }
-
-        if ui.add(egui::Button::new(egui::RichText::new("Highliter"))).clicked() {
-            let new_line:HighlighterLine=HighlighterLine::new();
-             my_app.paint.push((
-                Paints::Highlighter,
-                None,
-                None,
-                Some(my_app.edit_color),
-                Some(new_line)
-            ));
-            my_app.highlighting=true;
-        }
-  
         let f=ui.color_edit_button_srgba(&mut my_app.edit_color);
        if f.clicked(){
-        let u= my_app.paint.len();
-            if u>0 {
-                if my_app.paint[u-1].3.is_some(){
-                    my_app.paint[u-1].3=None;
+            if my_app.paint.len()>0 {
+                let u= my_app.paint.len()-1;
+                if my_app.paint[u].color.is_some(){
+                    my_app.paint[u].color=None;
                 }
                 else{
-                    my_app.paint[u-1].3=Some(my_app.edit_color);
+                    my_app.paint[u].color=Some(my_app.edit_color);
                 }
                 
             }
        }
        if f.clicked_elsewhere(){
-        let u= my_app.paint.len();
+        let u=my_app.paint.len();
             if u>0{
-                my_app.paint[u-1].3=Some(my_app.edit_color);
+                my_app.paint[u-1].color=Some(my_app.edit_color);
             }
 
        }
@@ -473,39 +403,38 @@ pub fn gui_mode6(my_app: &mut MyApp, frame: &mut eframe::Frame, ui: &mut egui::U
 
 
         }
-        if my_app.paint.len()>0  && my_app.paint[my_app.paint.len()-1].3.is_some(){
+        if my_app.paint.len()>0  && my_app.paint.last().unwrap().color.is_some(){
         draw::draw_shape(ui, my_app, frame); 
         }
      });
      
-    let my_rect=egui::Rect::from_two_pos(egui::pos2(limits.0, limits.1), egui::pos2(limits.2, limits.3));
     let painter= ui.painter().with_clip_rect(my_rect);
     for figure in &my_app.paint {
-        if figure.1.is_some() && figure.2.is_some(){
+        if figure.start.is_some() && figure.end.is_some(){
             
-        if figure.0 == Paints::Arrow {
+        if figure.draw == Paints::Arrow {
             painter.arrow(
-                figure.1.unwrap(),
-                figure.2.unwrap() - figure.1.unwrap(),
+                figure.start.unwrap(),
+                figure.end.unwrap() - figure.start.unwrap(),
                 egui::Stroke {
                     width: 1.5,
-                    color: figure.3.unwrap(),
+                    color: figure.color.unwrap(),
                 },
             );
-        } else if figure.0 == Paints::Square {
+        } else if figure.draw == Paints::Square {
             painter.rect(
-                egui::Rect::from_two_pos(figure.1.unwrap(), figure.2.unwrap()),
+                egui::Rect::from_two_pos(figure.start.unwrap(), figure.end.unwrap()),
                 egui::Rounding::none(),
                 egui::Color32::TRANSPARENT,
                 egui::Stroke {
                     width: 1.5,
-                    color: figure.3.unwrap(),//color selected with the color picker
+                    color: figure.color.unwrap(),//color selected with the color picker
                 },
             );
-        } else if figure.0==Paints::Circle{
-            painter.circle(figure.1.unwrap(), figure.1.unwrap().distance(figure.2.unwrap()), egui::Color32::TRANSPARENT, egui::Stroke {
+        } else if figure.draw==Paints::Circle{
+            painter.circle(figure.start.unwrap(), figure.start.unwrap().distance(figure.end.unwrap()), egui::Color32::TRANSPARENT, egui::Stroke {
                     width: 1.5,
-                    color: figure.3.unwrap(),//color selected with the color picker
+                    color: figure.color.unwrap(),//color selected with the color picker
                 });
         }}
     }
