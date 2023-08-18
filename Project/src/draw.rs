@@ -118,7 +118,7 @@ pub fn draw_shape(ui: &mut egui::Ui, my_app:&mut MyApp, _frame: &mut eframe::Fra
 
 }
 
-pub fn draw_button(paint: Paints,ui:&mut egui::Ui, el: Option<&(Paints, Option<egui::Pos2>, Option<egui::Pos2>, Option<egui::Color32>)>, color: egui::Color32)->Response{
+pub fn draw_button(paint: Paints,ui:&mut egui::Ui, el: Option<&(Paints, Option<egui::Pos2>, Option<egui::Pos2>, Option<egui::Color32>)>)->Response{
     let mut icon: &str="";
     if paint==Paints::Square{
         icon="⬜";
@@ -133,7 +133,7 @@ pub fn draw_button(paint: Paints,ui:&mut egui::Ui, el: Option<&(Paints, Option<e
         icon="Text";
     }
     if el.is_some() && el.unwrap().0==paint{
-        ui.add(egui::Button::new(egui::RichText::new(icon).color(color).underline()))
+        ui.add(egui::Button::new(egui::RichText::new(icon).underline()))
     }
     else{
         ui.add(egui::Button::new(egui::RichText::new(icon)))

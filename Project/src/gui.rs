@@ -77,7 +77,8 @@ pub fn gui_mode0(my_app: &mut MyApp, frame: &mut eframe::Frame, ui: &mut egui::U
                 my_app.enable_screenshot = false;
                 thread::sleep(Duration::new(u64::from(my_app.delay_time), 0));
             }
-            frame.set_window_pos(egui::pos2(-500.0, -500.0));
+            frame.set_window_size(egui::Vec2 { x: 0.0, y: 0.0 });
+            
 
             my_app.time = ui.input(|i| i.time);
             my_app.area = (0.0, 0.0, 0.0, 0.0);
@@ -94,7 +95,7 @@ pub fn gui_mode0(my_app: &mut MyApp, frame: &mut eframe::Frame, ui: &mut egui::U
         None => {}
         Some(i) => {
             if i == 0 {
-                frame.set_window_pos(egui::pos2(-500.0, -500.0));
+                frame.set_window_size(egui::Vec2 { x: 0.0, y: 0.0 });
 
                 my_app.time = ui.input(|i| i.time);
                 my_app.area = (0.0, 0.0, 0.0, 0.0);
@@ -353,7 +354,7 @@ pub fn gui_mode6(my_app: &mut MyApp, frame: &mut eframe::Frame, ui: &mut egui::U
             my_app.paint.clear();
         }
 
-        if draw::draw_button(Paints::Square,ui, my_app.paint.last(), my_app.edit_color).clicked() {  
+        if draw::draw_button(Paints::Square,ui, my_app.paint.last()).clicked() {  
             if my_app.paint.len()>0 && my_app.paint[my_app.paint.len()-1].1.is_none(){
                 my_app.paint.pop();
             }
@@ -365,7 +366,7 @@ pub fn gui_mode6(my_app: &mut MyApp, frame: &mut eframe::Frame, ui: &mut egui::U
             ));
                 
         }
-        if draw::draw_button(Paints::Circle,ui, my_app.paint.last(), my_app.edit_color).clicked() {
+        if draw::draw_button(Paints::Circle,ui, my_app.paint.last()).clicked() {
             if my_app.paint.len()>0 && my_app.paint[my_app.paint.len()-1].1.is_none(){
                 my_app.paint.pop();
             }
@@ -376,7 +377,7 @@ pub fn gui_mode6(my_app: &mut MyApp, frame: &mut eframe::Frame, ui: &mut egui::U
                 Some(my_app.edit_color)
             ));
         }
-        if draw::draw_button(Paints::Arrow,ui, my_app.paint.last(), my_app.edit_color).clicked() {
+        if draw::draw_button(Paints::Arrow,ui, my_app.paint.last()).clicked() {
 
             if my_app.paint.len()>0 && my_app.paint[my_app.paint.len()-1].1.is_none(){
                 my_app.paint.pop();
@@ -389,7 +390,7 @@ pub fn gui_mode6(my_app: &mut MyApp, frame: &mut eframe::Frame, ui: &mut egui::U
             )); 
  
         }
-        if draw::draw_button(Paints::Text,ui, my_app.paint.last(), my_app.edit_color).clicked() {
+        if draw::draw_button(Paints::Text,ui, my_app.paint.last()).clicked() {
             my_app.paint.push((
                 Paints::Text,
                 None,
@@ -466,3 +467,4 @@ pub fn gui_mode6(my_app: &mut MyApp, frame: &mut eframe::Frame, ui: &mut egui::U
         }}
     }
 }
+
