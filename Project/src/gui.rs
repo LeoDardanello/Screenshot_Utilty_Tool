@@ -394,9 +394,16 @@ pub fn gui_mode6(my_app: &mut MyApp, frame: &mut eframe::Frame, ui: &mut egui::U
             my_app.mode = 3;
             
         }
-        if my_app.paint.len()>0  && my_app.paint.last().unwrap().color.is_some(){
+        if my_app.paint.len()>0{
+            if my_app.paint.last().unwrap().draw==Paints::Text{
+                draw::write_text(ui, my_app, frame);
+            }
+            if my_app.paint.last().unwrap().color.is_some(){
         draw::draw_shape(ui, my_app, frame); 
         }
+
+        }
+
      });
      if my_app.paint.last().is_some() && my_app.paint.last().unwrap().draw==Paints::Highlighter{
             let hight=my_app.find_last_highliter_line().clone();
@@ -407,9 +414,7 @@ pub fn gui_mode6(my_app: &mut MyApp, frame: &mut eframe::Frame, ui: &mut egui::U
             }
             
         }
-        if my_app.paint.last().is_some() && my_app.paint.last().unwrap().draw==Paints::Text{
-            draw::write_text(ui, my_app)
-        }
+        
      
     let painter= ui.painter().with_clip_rect(my_rect);
     for figure in &my_app.paint {
@@ -447,7 +452,7 @@ pub fn gui_mode6(my_app: &mut MyApp, frame: &mut eframe::Frame, ui: &mut egui::U
             painter.add(line);
         }
         else if figure.draw==Paints::Text{
-            // painter.text(figure.start.unwrap(), egui::Align2::LEFT_CENTER, figure.text.clone(), egui::FontId::default(),figure.color.unwrap());
+             painter.text(figure.start.unwrap(), egui::Align2::LEFT_CENTER, figure.text.clone(), egui::FontId::default(),figure.color.unwrap());
         }
     
     }
