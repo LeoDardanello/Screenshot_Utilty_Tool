@@ -25,6 +25,7 @@ pub struct MyApp {
     enable_screenshot: bool,
     default_path: String,
     paint: Vec<(gui::Paints, Option<egui::Pos2>, Option<egui::Pos2>, Option<egui::Color32>,Option<HighlighterLine>)>,
+    def_paint: Vec<(gui::Paints, Option<egui::Pos2>, Option<egui::Pos2>, Option<egui::Color32>,Option<HighlighterLine>)>,
     edit_color:egui::Color32,
     time: f64,
     edit_image: MyScreen,
@@ -55,6 +56,7 @@ impl MyApp {
             //use backslashes to be compatible with different OS
             default_path: String::from(".\\..\\screenshot_default"), //default screenshot save location, used by save hotkey
             paint: Vec::new(),
+            def_paint: Vec::new(),
             edit_color:egui::Color32::BLACK,
             time: 0.0,
             edit_image: MyScreen{
@@ -106,8 +108,7 @@ impl eframe::App for MyApp {
         } else if self.mode == 2 {
             self.mode = 3;
             self.image = screenshot::full_screen();
-            let window_size = frame.info().window_info.monitor_size.unwrap();
-            frame.set_window_pos(egui::pos2(window_size.x * 0.25, window_size.y * 0.25));
+            frame.set_window_size(egui::Vec2 { x: 640.0, y: 480.0 });
 
             if self.image.len() > 1 {
                 self.mode = 4;
@@ -156,25 +157,33 @@ impl eframe::App for MyApp {
 
         }
     }
+   
+    
+
     fn post_rendering(& mut self , _window_size: [u32; 2], frame: &eframe::Frame) {
   
         if let Some(screenshot) = frame.screenshot() {
-            let limits = (10.0, 80.0, screenshot.size[0] - 20, screenshot.size[1] - 44);
-            let pixels_per_point = Some((screenshot.pixels.len()/(screenshot.size[0]*screenshot.size[1]) )as f32);
+            let frame=frame.info().window_info.size;
+            let mut limits = (10.0, 80.0, frame[0] - 10.0, ((frame[0] - 20.0)*self.image[self.n_monitor].size.1 as f32)/self.image[self.n_monitor].size.0 as f32);
+            
+            if limits.3>=frame.y{
+                limits.3=frame.y-10.0;
+            }
+            println!("{:?}", limits);
+            println!("{:?}", _window_size);
+            let pixels_per_point = Some((screenshot.pixels.len()/((_window_size[0]*_window_size[1]) as usize) )as f32);
     
-    
-                let region = egui::Rect::from_two_pos(
-                    egui::pos2(limits.0 , limits.1),
-                    egui::pos2(limits.2 as f32, limits.3 as f32)
+                let region = egui::Rect::from_min_max(
+                    egui::pos2(limits.0*_window_size[0] as f32/frame[0], limits.1*_window_size[0] as f32/frame[0]),
+                    egui::pos2((limits.2*_window_size[1] as f32)/frame[1], (limits.3*_window_size[1] as f32)/frame[1])
                 );
                 let my_screenshot=screenshot.region(&region, pixels_per_point);
+                println!("{:?}", my_screenshot.size);
                 self.edit_image.screens = my_screenshot.as_raw().to_vec();
-                self.edit_image.size= (my_screenshot.size[0], my_screenshot.size[1]);
-                println!("hello world");
+                self.edit_image.size= ((my_screenshot.size[0]), my_screenshot.size[1]);
                 
         }
     }
-
     
 }
 

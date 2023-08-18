@@ -12,12 +12,15 @@ struct MyImage {
 }
 
 impl MyImage {
-    fn ui(&mut self, ui: &mut egui::Ui, im: ColorImage, size: egui::Vec2) {
+    fn ui(&mut self, ui: &mut egui::Ui, im: ColorImage, size: egui::Vec2, im_size: (usize, usize)) {
         let texture: &egui::TextureHandle = self.texture.get_or_insert_with(|| {
             // Load the texture only once.
             ui.ctx().load_texture("my-image", im, Default::default())
         });
-        let max_size = egui::vec2(size.x - 20.0, size.y - 44.0).to_pos2();
+        let mut max_size = egui::vec2(size.x - 10.0, ((size.x-20.0)*im_size.1 as f32)/im_size.0 as f32 ).to_pos2();
+        if max_size.y>=size.y{
+            max_size.y=size.y-10.0;
+        }
 
         let my_rect = egui::Rect::from_two_pos(egui::pos2(10.0, 80.0), max_size);
         ui.painter().image(
@@ -48,7 +51,7 @@ pub fn visualize_image(image: &mut MyScreen, ui: &mut Ui, size: egui::Vec2) {
         let mut my_image = MyImage { texture: None };
         let im =
             egui::ColorImage::from_rgba_unmultiplied([image.size.0, image.size.1], &image.screens);
-        my_image.ui(ui, im, size);
+        my_image.ui(ui, im, size, image.size);
     
 }
 

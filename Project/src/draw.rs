@@ -1,6 +1,8 @@
-use crate::{screenshot, MyApp};
+use crate::{screenshot, MyApp, gui::Paints};
 use eframe::egui;
 use crate::gui::HighlighterLine;
+use egui::Response;
+
 
 pub fn cut_rect(
     position: Option<egui::Pos2>,
@@ -156,3 +158,26 @@ let points = current_line
     l.append(&mut current_line.line);
     return HighlighterLine { line: l, stroke: current_line.stroke }
 }
+
+pub fn draw_button(paint: Paints,ui:&mut egui::Ui, el: Option<&(Paints, Option<egui::Pos2>, Option<egui::Pos2>, Option<egui::Color32>,Option<HighlighterLine>)>)->Response{
+    let mut icon: &str="";
+    if paint==Paints::Square{
+        icon="⬜";
+    }
+    else if paint==Paints::Circle{
+        icon="⭕";
+    }
+    else if paint==Paints::Arrow{
+        icon="↗";
+    }
+    else if paint==Paints::Text{
+        icon="Text";
+    }
+    if el.is_some() && el.unwrap().0==paint{
+        ui.add(egui::Button::new(egui::RichText::new(icon).underline()))
+    }
+    else{
+        ui.add(egui::Button::new(egui::RichText::new(icon)))
+    }
+
+} 
