@@ -407,8 +407,8 @@ pub fn gui_mode6(my_app: &mut MyApp, frame: &mut eframe::Frame, ui: &mut egui::U
                 draw::write_text(ui, my_app, frame);
             }
             if my_app.paint.last().unwrap().color.is_some(){
-        draw::draw_shape(ui, my_app, frame); 
-        }
+            draw::draw_shape(ui, my_app, frame); 
+            }
 
         }
 
@@ -440,6 +440,23 @@ pub fn gui_mode6(my_app: &mut MyApp, frame: &mut eframe::Frame, ui: &mut egui::U
                                 else{
                                     return true;
                                 }
+                            }
+                            else if x.draw == Paints::Highlighter{
+                                if let Some(a) = &x.points{
+                                    for i in 0..a.line.len()-1{
+                                        let p1 = a.line[i];
+                                        let p2 = a.line[i+1];
+                                        if pos.x as usize>=cmp::min(p1.x as usize, p2.x as usize)-10 && pos.x as usize<=cmp::max(p1.x as usize, p2.x as usize)+10
+                                        && pos.y as usize>=cmp::min(p1.y as usize, p2.y as usize)-10 && pos.y as usize<=cmp::max(p1.y as usize, p2.y as usize)+10{
+                                            return false;
+                                        }
+                                    }
+                                    return true;
+                                }
+                                else{
+                                    return true;
+                                }
+
                             }
                             else{
                                 let p1 = x.start.unwrap();
@@ -571,7 +588,7 @@ pub fn gui_mode6(my_app: &mut MyApp, frame: &mut eframe::Frame, ui: &mut egui::U
             painter.add(line);
         }
         else if figure.draw==Paints::Text{
-             painter.text(figure.start.unwrap(), egui::Align2::LEFT_CENTER, figure.text.clone(), egui::FontId::default(),figure.color.unwrap());
+            painter.text(figure.start.unwrap(), egui::Align2::LEFT_CENTER, figure.text.clone(), egui::FontId::default(),figure.color.unwrap());
         }
     
     }
