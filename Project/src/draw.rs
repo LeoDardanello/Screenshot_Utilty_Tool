@@ -119,6 +119,7 @@ pub fn write_text(ui: &mut egui::Ui, my_app: &mut MyApp, _frame: &mut eframe::Fr
     ui.add(egui::TextEdit::singleline(str_ref).text_color(my_app.edit_color));
 }
 
+
 pub fn highlight(
     current_line: &mut HighlighterLine,
     ui: &mut egui::Ui,
