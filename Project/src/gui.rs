@@ -152,6 +152,7 @@ pub fn gui_mode3(my_app: &mut MyApp, frame: &mut eframe::Frame, ui: &mut egui::U
             &mut my_app.edit_image,
             ui,
             frame.info().window_info.size,
+            Some(my_app.image[my_app.n_monitor].size),
         );
     }
     else{
@@ -159,6 +160,7 @@ pub fn gui_mode3(my_app: &mut MyApp, frame: &mut eframe::Frame, ui: &mut egui::U
         &mut my_app.image[my_app.n_monitor],
         ui,
         frame.info().window_info.size,
+        None
     );
     }
     
@@ -314,7 +316,6 @@ pub fn gui_mode5(my_app: &mut MyApp, frame: &mut eframe::Frame, ui: &mut egui::U
 
     ui.horizontal(|ui| {
         if ui.button("Conferma").clicked() {
-            frame.set_fullscreen(false);
             let width = ((my_app.area.2 - my_app.area.0).abs() * props.0) as u32;
             let height = ((my_app.area.3 - my_app.area.1).abs() * props.1) as u32;
             my_app.image[my_app.n_monitor] = screenshot::screen_area(
@@ -328,7 +329,6 @@ pub fn gui_mode5(my_app: &mut MyApp, frame: &mut eframe::Frame, ui: &mut egui::U
         }
         if ui.button("Return").clicked() {
             my_app.mode = 3;
-            frame.set_fullscreen(false);
             my_app.area = (0.0, 0.0, 0.0, 0.0);
         }
     });
@@ -336,7 +336,7 @@ pub fn gui_mode5(my_app: &mut MyApp, frame: &mut eframe::Frame, ui: &mut egui::U
 
 //Annotation Tool 
 pub fn gui_mode6(my_app: &mut MyApp, frame: &mut eframe::Frame, ui: &mut egui::Ui){
-    screenshot::visualize_image(&mut my_app.image[my_app.n_monitor], ui, frame.info().window_info.size);
+    screenshot::visualize_image(&mut my_app.image[my_app.n_monitor], ui, frame.info().window_info.size, None);
     let info = frame.info().window_info;
     let mut limits = (10.0, 80.0, info.size[0] - 10.0, ((info.size[0] - 20.0)*my_app.image[my_app.n_monitor].size.1 as f32)/my_app.image[my_app.n_monitor].size.0 as f32);
     let my_rect=egui::Rect::from_two_pos(egui::pos2(limits.0, limits.1), egui::pos2(limits.2, limits.3));
@@ -353,15 +353,19 @@ pub fn gui_mode6(my_app: &mut MyApp, frame: &mut eframe::Frame, ui: &mut egui::U
 
         if ui.button("Return").clicked() {
             my_app.mode = 3;
-            frame.set_fullscreen(false);
             my_app.paint.clear();
+            my_app.eraser=false;
         }
         draw::draw_button(Paints::Square,ui, &mut my_app.paint, my_app.edit_color, &mut my_app.eraser);
         draw::draw_button(Paints::Circle,ui, &mut my_app.paint, my_app.edit_color, &mut my_app.eraser);
         draw::draw_button(Paints::Arrow,ui, &mut my_app.paint, my_app.edit_color, &mut my_app.eraser);
         draw::draw_button(Paints::Text,ui, &mut my_app.paint, my_app.edit_color, &mut my_app.eraser);
         draw::draw_button(Paints::Highlighter,ui, &mut my_app.paint, my_app.edit_color, &mut my_app.eraser);
-        if ui.button("eraser").clicked(){
+        let mut  eraser=egui::Button::new(egui::RichText::new("Eraser"));
+        if my_app.eraser{
+            eraser=egui::Button::new(egui::RichText::new("Eraser").underline())
+        }
+        if ui.add(eraser).clicked(){
             my_app.eraser=true;
             let u = my_app.paint.len();
             if u>0{
@@ -398,7 +402,7 @@ pub fn gui_mode6(my_app: &mut MyApp, frame: &mut eframe::Frame, ui: &mut egui::U
         if ui.button("Conferma").clicked() {
             frame.request_screenshot();
             my_app.def_paint.append(&mut my_app.paint.clone());
-
+            my_app.eraser=false;
             my_app.mode = 3;
             
         }
@@ -616,3 +620,4 @@ pub fn gui_mode6(my_app: &mut MyApp, frame: &mut eframe::Frame, ui: &mut egui::U
     }
     }
 }
+
