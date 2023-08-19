@@ -115,7 +115,6 @@ pub fn write_text(ui: &mut egui::Ui, my_app: &mut MyApp, _frame: &mut eframe::Fr
     });
 
     let str_ref: &mut String = &mut my_app.paint[u].text;
-    println!("{:?}", str_ref);
 
     ui.add(egui::TextEdit::singleline(str_ref).text_color(my_app.edit_color));
 }
@@ -128,22 +127,24 @@ pub fn highlight(
     //println!("{:?}",ui.available_size_before_wrap());
 
     let mut response = ui.allocate_rect(rect, egui::Sense::drag());
+    let mut l = Vec::new();
+    l.append(&mut current_line.line);
 
-    let to_screen = egui::emath::RectTransform::from_to(
-        egui::Rect::from_min_size(egui::Pos2::ZERO, response.rect.square_proportions()),
-        response.rect,
-    );
-    let from_screen = to_screen.inverse();
+    // let to_screen = egui::emath::RectTransform::from_to(
+    //     egui::Rect::from_min_size(egui::Pos2::ZERO, response.rect.square_proportions()),
+    //     response.rect,
+    // );
+    // let from_screen = to_screen.inverse();
 
     //println!("pointer-pos:{:?}",response.interact_pointer_pos());
     if let Some(pointer_pos) = response.interact_pointer_pos() {
         //if the mouse is being clicked or dragged
-        let canvas_pos = from_screen * pointer_pos;
+        // let canvas_pos = from_screen * pointer_pos;
         //println!("canvas pos:{:?}", canvas_pos);
-        if current_line.line.last() != Some(&canvas_pos) {
+        if l.last() != Some(/*&canvas_pos*/&pointer_pos) {
             // println!("entro dentro:");
             // println!("prima del push:{:?}",current_line.line);
-            current_line.line.push(to_screen * canvas_pos);
+            l.push(/*to_screen * canvas_pos*/ pointer_pos);
             // println!("dopo del push:{:?}",current_line.line);
             response.mark_changed();
         }
@@ -152,8 +153,7 @@ pub fn highlight(
     //     println!("{:?}",line);
     //     painter.add(line);
     //     println!("response:{:?}",response);
-    let mut l = Vec::new();
-    l.append(&mut current_line.line);
+    
     return HighlighterLine {
         line: l,
         width: current_line.width,
