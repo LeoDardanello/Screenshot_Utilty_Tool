@@ -221,7 +221,7 @@ pub fn gui_mode3(my_app: &mut MyApp, frame: &mut eframe::Frame, ui: &mut egui::U
                 None => my_app.mode = 3, //return to visualize the image
             }
         }
-        if my_app.area.2 == 0.0 && my_app.area.3 == 0.0 {
+        if my_app.area.2 == 0.0 && my_app.area.3 == 0.0 && my_app.edit_image.screens.len()==0{
             if ui.button("crop").clicked() {
                 my_app.mode = 5;
                 frame.set_fullscreen(true);
