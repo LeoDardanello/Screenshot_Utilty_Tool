@@ -17,9 +17,8 @@ impl HighlighterLine {
         Self {
             line: Vec::new(),
             width: 20,
- }
+        }
     }
-
 }
 
 #[derive(Clone)]
@@ -93,7 +92,7 @@ impl MyApp {
             n_monitor: 0,
             enable_screenshot: true,
             //use backslashes to be compatible with different OS
-            default_path: String::from(".\\..\\screenshot_default"), //default screenshot save location, used by save hotkey
+            default_path: String::from(".\\screenshot_default"), //default screenshot save location, used by save hotkey
             paint: Vec::new(),
             def_paint: Vec::new(),
             edit_color:egui::Color32::BLACK,

@@ -29,7 +29,7 @@ pub fn custom_window_frame(
                 rect
             };
 
-            title_bar_ui(ui, frame, title_bar_rect, title);
+            title_bar_ui(my_app,ui, frame, title_bar_rect, title);
 
             // Add the contents:
             let content_rect = {
@@ -44,6 +44,7 @@ pub fn custom_window_frame(
     }
 
 fn title_bar_ui(
+    my_app:&MyApp,
     ui: &mut egui::Ui,
     frame: &mut eframe::Frame,
     title_bar_rect: eframe::epaint::Rect,
@@ -87,13 +88,13 @@ fn title_bar_ui(
             ui.spacing_mut().item_spacing.x = 0.0;
             ui.visuals_mut().button_frame = false;
             ui.add_space(8.0);
-            close_maximize_minimize(ui, frame);
+            close_maximize_minimize(my_app,ui, frame);
         });
     });
 }
 
 //function to show the close/minimize/expand icon on the frame window
-fn close_maximize_minimize(ui: &mut egui::Ui, frame: &mut eframe::Frame) {
+fn close_maximize_minimize(my_app:&MyApp,ui: &mut egui::Ui, frame: &mut eframe::Frame) {
     let button_height = 12.0;
 
     let close_response = ui
@@ -105,6 +106,7 @@ fn close_maximize_minimize(ui: &mut egui::Ui, frame: &mut eframe::Frame) {
         frame.close();
     }
 
+    if my_app.mode!=3{
     if frame.info().window_info.maximized {
         let maximized_response = ui
             .add(egui::Button::new(
@@ -124,7 +126,7 @@ fn close_maximize_minimize(ui: &mut egui::Ui, frame: &mut eframe::Frame) {
             frame.set_maximized(true);
         }
     }
-
+}
     let minimized_response = ui
         .add(egui::Button::new(
             egui::RichText::new("🗕").size(button_height),
