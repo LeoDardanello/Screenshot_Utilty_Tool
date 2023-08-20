@@ -428,6 +428,41 @@ pub fn gui_mode6(my_app: &mut MyApp, frame: &mut eframe::Frame, ui: &mut egui::U
         }
     
     if my_app.eraser{
+        egui::ComboBox::from_label("Set new modifier")
+        .selected_text(format!("{:?}", my_app.erased_draw.1))
+        .show_ui(ui, |ui| {
+            ui.selectable_value(
+                &mut my_app.erased_draw,
+                (Paints::NoFigure, "None".to_string()),
+                "None",
+            );
+            ui.selectable_value(
+                &mut my_app.erased_draw,
+                (Paints::Arrow, "Arrow".to_string()),
+                "Arrow",
+            );
+            ui.selectable_value(
+                &mut my_app.erased_draw,
+                (Paints::Square, "Square".to_string()),
+                "Square",
+            );
+            ui.selectable_value(
+                &mut my_app.erased_draw,
+                (Paints::Circle, "Circle".to_string()),
+                "Circle",
+            );
+            ui.selectable_value(
+                &mut my_app.erased_draw,
+                (Paints::Text, "Text".to_string()),
+                "Text",
+            );
+            ui.selectable_value(
+                &mut my_app.erased_draw,
+                (Paints::Highlighter, "Highlighter".to_string()),
+                "Highlighter"
+            );
+        });
+
         ui.input(|i|{
             let p=i.pointer.hover_pos();
             if p.is_some() && i.pointer.primary_clicked(){
@@ -435,43 +470,48 @@ pub fn gui_mode6(my_app: &mut MyApp, frame: &mut eframe::Frame, ui: &mut egui::U
                 if pos.x >= limits.0 && pos.y >= limits.1 && pos.x <= limits.2 && pos.y <= limits.3{
                     my_app.paint.retain(|x|{
                         if x.start.is_some() && x.end.is_some(){
-                            if x.draw == Paints::Circle{
-                                let c = x.start.unwrap();
-                                let r = c.distance(x.end.unwrap());
-                                if pos.x as usize>=(c.x-r) as usize && pos.x as usize<=(c.x+r) as usize && pos.y as usize>=(c.y-r) as usize && pos.y as usize<=(c.y+r) as usize{
-                                    return false;
-                                }
-                                else{
-                                    return true;
-                                }
-                            }
-                            else if x.draw == Paints::Highlighter{
-                                if let Some(a) = &x.points{
-                                    for i in 0..a.line.len()-1{
-                                        let p1 = a.line[i];
-                                        let p2 = a.line[i+1];
-                                        if pos.x as usize>=cmp::min(p1.x as usize, p2.x as usize)-10 && pos.x as usize<=cmp::max(p1.x as usize, p2.x as usize)+10
-                                        && pos.y as usize>=cmp::min(p1.y as usize, p2.y as usize)-10 && pos.y as usize<=cmp::max(p1.y as usize, p2.y as usize)+10{
-                                            return false;
-                                        }
+                            if x.draw == my_app.erased_draw.0{   //Cancel only the figures you have selected 
+                                if x.draw == Paints::Circle{
+                                    let c = x.start.unwrap();
+                                    let r = c.distance(x.end.unwrap());
+                                    if pos.x as usize>=(c.x-r) as usize && pos.x as usize<=(c.x+r) as usize && pos.y as usize>=(c.y-r) as usize && pos.y as usize<=(c.y+r) as usize{
+                                        return false;
                                     }
-                                    return true;
+                                    else{
+                                        return true;
+                                    }
+                                }
+                                else if x.draw == Paints::Highlighter{
+                                    if let Some(a) = &x.points{
+                                        for i in 0..a.line.len()-1{
+                                            let p1 = a.line[i];
+                                            let p2 = a.line[i+1];
+                                            if pos.x as usize>=cmp::min(p1.x as usize, p2.x as usize)-10 && pos.x as usize<=cmp::max(p1.x as usize, p2.x as usize)+10
+                                            && pos.y as usize>=cmp::min(p1.y as usize, p2.y as usize)-10 && pos.y as usize<=cmp::max(p1.y as usize, p2.y as usize)+10{
+                                                return false;
+                                            }
+                                        }
+                                        return true;
+                                    }
+                                    else{
+                                        return true;
+                                    }
+    
                                 }
                                 else{
-                                    return true;
+                                    let p1 = x.start.unwrap();
+                                    let p2 = x.end.unwrap();
+                                    if pos.x as usize>=cmp::min(p1.x as usize, p2.x as usize) && pos.x as usize<=cmp::max(p1.x as usize, p2.x as usize)
+                                    && pos.y as usize>=cmp::min(p1.y as usize, p2.y as usize) && pos.y as usize<=cmp::max(p1.y as usize, p2.y as usize){
+                                        return false;
+                                    }
+                                    else{
+                                        return true;
+                                    }
                                 }
-
                             }
                             else{
-                                let p1 = x.start.unwrap();
-                                let p2 = x.end.unwrap();
-                                if pos.x as usize>=cmp::min(p1.x as usize, p2.x as usize) && pos.x as usize<=cmp::max(p1.x as usize, p2.x as usize)
-                                && pos.y as usize>=cmp::min(p1.y as usize, p2.y as usize) && pos.y as usize<=cmp::max(p1.y as usize, p2.y as usize){
-                                    return false;
-                                }
-                                else{
-                                    return true;
-                                }
+                                return true;
                             }
                         }
                         else{
@@ -570,8 +610,48 @@ pub fn gui_mode6(my_app: &mut MyApp, frame: &mut eframe::Frame, ui: &mut egui::U
                 let c = figure.start.unwrap();
                 let r = c.distance(figure.end.unwrap());
 
+                let mut p1=egui::Pos2::new(c.x-r, c.y-r);
+                let mut p2=egui::Pos2::new(c.x+r, c.y+r);
+
+                if p1.x > p2.x {
+                    p2.x = p1.x;
+                    p1.x = figure.end.unwrap().x;
+                }
+                if p1.y > p2.y {
+                    p2.y = p1.y;
+                    p1.y = figure.end.unwrap().y;
+                }
+
+                if p1.x<limits.0{
+                    p1.x=limits.0;
+                }
+                else if p1.x>limits.2{
+                    p1.x=limits.2;
+                }
+
+                if p1.y<limits.1{
+                    p1.y=limits.1;
+                }
+                else if p1.y>limits.3{
+                    p1.y=limits.3;
+                }
+
+                if p2.x<limits.0{
+                    p2.x=limits.0;
+                }
+                else if p2.x>limits.2{
+                    p2.x=limits.2;
+                }
+                
+                if p2.y<limits.1{
+                    p2.y=limits.1;
+                }
+                else if p2.y>limits.3{
+                    p2.y=limits.3;
+                }
+
                 ui.painter().rect(
-                    egui::Rect::from_two_pos(egui::Pos2 { x: c.x-r , y: c.y-r }, egui::Pos2 { x: c.x+r , y: c.y+r }),
+                    egui::Rect::from_two_pos(egui::Pos2 { x: p1.x , y: p1.y }, egui::Pos2 { x: p2.x , y: p2.y }),
                     egui::Rounding::none(),
                     egui::Color32::TRANSPARENT,
                     egui::Stroke {
