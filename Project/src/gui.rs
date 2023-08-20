@@ -373,6 +373,8 @@ pub fn gui_mode6(my_app: &mut MyApp, frame: &mut eframe::Frame, ui: &mut egui::U
             }
         }
 
+        
+
         /*if my_app.paint.len()>0{
         ui.add_enabled(my_app.paint.last().unwrap().draw==Paints::Highlighter ,{
             egui::Slider::new(&mut my_app.paint.last().unwrap().points.unwrap().width, 10..=30).text("Change Width")
@@ -398,37 +400,9 @@ pub fn gui_mode6(my_app: &mut MyApp, frame: &mut eframe::Frame, ui: &mut egui::U
             }
 
        }
-    
-        if ui.button("Conferma").clicked() {
-            frame.request_screenshot();
-            my_app.def_paint.append(&mut my_app.paint.clone());
-            my_app.eraser=false;
-            my_app.mode = 3;
-            
-        }
-        if my_app.paint.len()>0{
-            if my_app.paint.last().unwrap().draw==Paints::Text{
-                draw::write_text(ui, my_app, frame);
-            }
-            if my_app.paint.last().unwrap().color.is_some(){
-            draw::draw_shape(ui, my_app, frame); 
-            }
 
-        }
-
-     });
-     if my_app.paint.last().is_some() && my_app.paint.last().unwrap().draw==Paints::Highlighter{
-            let hight=my_app.find_last_highliter_line().clone();
-            if hight.is_some(){
-                let mut line_struct=hight.unwrap();
-                let u=my_app.paint.len();
-            my_app.paint[u-1].points=Some(draw::highlight(&mut line_struct,ui, my_rect));
-            }
-            
-        }
-    
-    if my_app.eraser{
-        egui::ComboBox::from_label("Set new modifier")
+       if my_app.eraser{
+        egui::ComboBox::from_label("Figures to eliminate")
         .selected_text(format!("{:?}", my_app.erased_draw.1))
         .show_ui(ui, |ui| {
             ui.selectable_value(
@@ -523,13 +497,41 @@ pub fn gui_mode6(my_app: &mut MyApp, frame: &mut eframe::Frame, ui: &mut egui::U
             }
         });
     }
+    
+        if ui.button("Conferma").clicked() {
+            frame.request_screenshot();
+            my_app.def_paint.append(&mut my_app.paint.clone());
+            my_app.eraser=false;
+            my_app.mode = 3;
+            
+        }
+        if my_app.paint.len()>0{
+            if my_app.paint.last().unwrap().draw==Paints::Text{
+                draw::write_text(ui, my_app, frame);
+            }
+            if my_app.paint.last().unwrap().color.is_some(){
+            draw::draw_shape(ui, my_app, frame); 
+            }
+
+        }
+
+     });
+     if my_app.paint.last().is_some() && my_app.paint.last().unwrap().draw==Paints::Highlighter{
+            let hight=my_app.find_last_highliter_line().clone();
+            if hight.is_some(){
+                let mut line_struct=hight.unwrap();
+                let u=my_app.paint.len();
+            my_app.paint[u-1].points=Some(draw::highlight(&mut line_struct,ui, my_rect));
+            }
+            
+        }
      
     let painter= ui.painter().with_clip_rect(my_rect);
     for figure in my_app.paint.iter_mut() {
         if figure.start.is_some() && figure.end.is_some(){
             
         if figure.draw == Paints::Arrow {
-            if my_app.eraser{
+            if my_app.eraser && figure.draw==my_app.erased_draw.0{
                 let mut p1=figure.start.unwrap();
                 let mut p2=figure.end.unwrap();
 
@@ -589,24 +591,27 @@ pub fn gui_mode6(my_app: &mut MyApp, frame: &mut eframe::Frame, ui: &mut egui::U
                 },
             );
         } else if figure.draw == Paints::Square {
-            let col;
-            if my_app.eraser{
-                col = egui::Color32::RED;
+            let start = figure.start.unwrap();
+            let end = figure.end.unwrap();
+            if my_app.eraser && figure.draw==my_app.erased_draw.0{
+                painter.line_segment([start, end], egui::Stroke { width: 1.5, color: egui::Color32::RED});
+                painter.line_segment([egui::pos2(start.x, end.y), egui::pos2(end.x, start.y)], egui::Stroke { width: 1.5, color: egui::Color32::RED});
             }
-            else{
-                col = figure.color.unwrap();
-            }
+            // else{
+            //     col = figure.color.unwrap();
+            // }
             painter.rect(
                 egui::Rect::from_two_pos(figure.start.unwrap(), figure.end.unwrap()),
                 egui::Rounding::none(),
                 egui::Color32::TRANSPARENT,
                 egui::Stroke {
                     width: 1.5,
-                    color: col,
+                    color: figure.color.unwrap(),
                 },
             );
+
         } else if figure.draw==Paints::Circle{
-            if my_app.eraser{
+            if my_app.eraser && figure.draw==my_app.erased_draw.0{
                 let c = figure.start.unwrap();
                 let r = c.distance(figure.end.unwrap());
 
@@ -673,7 +678,7 @@ pub fn gui_mode6(my_app: &mut MyApp, frame: &mut eframe::Frame, ui: &mut egui::U
         }
         else if figure.draw==Paints::Text{
             if figure.text.trim() != "" {
-                if my_app.eraser {
+                if my_app.eraser && figure.draw==my_app.erased_draw.0{
                     painter.rect(
                         egui::Rect::from_two_pos(figure.start.unwrap(), figure.end.unwrap()),
                         egui::Rounding::none(),
