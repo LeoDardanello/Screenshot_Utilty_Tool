@@ -3,7 +3,7 @@ use arboard;
 use eframe::egui;
 use native_dialog::{FileDialog, MessageDialog};
 use std::borrow::Cow;
-use std::{thread, cmp};
+use std::{thread};
 use std::time::Duration;
 
 #[derive(PartialEq,Clone,Copy)]
@@ -363,17 +363,21 @@ pub fn gui_mode6(my_app: &mut MyApp, frame: &mut eframe::Frame, ui: &mut egui::U
         draw::draw_button(Paints::Highlighter,ui, &mut my_app.paint, my_app.edit_color, &mut my_app.eraser);
         let mut  eraser=egui::Button::new(egui::RichText::new("Eraser"));
         if my_app.eraser{
-            eraser=egui::Button::new(egui::RichText::new("Eraser").underline())
+            eraser=egui::Button::new(egui::RichText::new("Eraser").underline());
+            draw::eraser(ui, &mut my_app.erased_draw, my_rect, &mut my_app.paint);
         }
         if ui.add(eraser).clicked(){
+            if my_app.eraser{
+                my_app.eraser=false;
+            }
+            else{
             my_app.eraser=true;
             let u = my_app.paint.len();
             if u>0{
                 my_app.paint[u-1].draw=Paints::NoFigure;
             }
         }
-
-        
+        }
 
         /*if my_app.paint.len()>0{
         ui.add_enabled(my_app.paint.last().unwrap().draw==Paints::Highlighter ,{
@@ -401,102 +405,7 @@ pub fn gui_mode6(my_app: &mut MyApp, frame: &mut eframe::Frame, ui: &mut egui::U
 
        }
 
-       if my_app.eraser{
-        egui::ComboBox::from_label("Figures to eliminate")
-        .selected_text(format!("{:?}", my_app.erased_draw.1))
-        .show_ui(ui, |ui| {
-            ui.selectable_value(
-                &mut my_app.erased_draw,
-                (Paints::NoFigure, "None".to_string()),
-                "None",
-            );
-            ui.selectable_value(
-                &mut my_app.erased_draw,
-                (Paints::Arrow, "Arrow".to_string()),
-                "Arrow",
-            );
-            ui.selectable_value(
-                &mut my_app.erased_draw,
-                (Paints::Square, "Square".to_string()),
-                "Square",
-            );
-            ui.selectable_value(
-                &mut my_app.erased_draw,
-                (Paints::Circle, "Circle".to_string()),
-                "Circle",
-            );
-            ui.selectable_value(
-                &mut my_app.erased_draw,
-                (Paints::Text, "Text".to_string()),
-                "Text",
-            );
-            ui.selectable_value(
-                &mut my_app.erased_draw,
-                (Paints::Highlighter, "Highlighter".to_string()),
-                "Highlighter"
-            );
-        });
-
-        ui.input(|i|{
-            let p=i.pointer.hover_pos();
-            if p.is_some() && i.pointer.primary_clicked(){
-                let pos=p.unwrap();
-                if pos.x >= limits.0 && pos.y >= limits.1 && pos.x <= limits.2 && pos.y <= limits.3{
-                    my_app.paint.retain(|x|{
-                        if x.start.is_some() && x.end.is_some(){
-                            if x.draw == my_app.erased_draw.0{   //Cancel only the figures you have selected 
-                                if x.draw == Paints::Circle{
-                                    let c = x.start.unwrap();
-                                    let r = c.distance(x.end.unwrap());
-                                    if pos.x as usize>=(c.x-r) as usize && pos.x as usize<=(c.x+r) as usize && pos.y as usize>=(c.y-r) as usize && pos.y as usize<=(c.y+r) as usize{
-                                        return false;
-                                    }
-                                    else{
-                                        return true;
-                                    }
-                                }
-                                else if x.draw == Paints::Highlighter{
-                                    if let Some(a) = &x.points{
-                                        for i in 0..a.line.len()-1{
-                                            let p1 = a.line[i];
-                                            let p2 = a.line[i+1];
-                                            if pos.x as usize>=cmp::min(p1.x as usize, p2.x as usize)-10 && pos.x as usize<=cmp::max(p1.x as usize, p2.x as usize)+10
-                                            && pos.y as usize>=cmp::min(p1.y as usize, p2.y as usize)-10 && pos.y as usize<=cmp::max(p1.y as usize, p2.y as usize)+10{
-                                                return false;
-                                            }
-                                        }
-                                        return true;
-                                    }
-                                    else{
-                                        return true;
-                                    }
-    
-                                }
-                                else{
-                                    let p1 = x.start.unwrap();
-                                    let p2 = x.end.unwrap();
-                                    if pos.x as usize>=cmp::min(p1.x as usize, p2.x as usize) && pos.x as usize<=cmp::max(p1.x as usize, p2.x as usize)
-                                    && pos.y as usize>=cmp::min(p1.y as usize, p2.y as usize) && pos.y as usize<=cmp::max(p1.y as usize, p2.y as usize){
-                                        return false;
-                                    }
-                                    else{
-                                        return true;
-                                    }
-                                }
-                            }
-                            else{
-                                return true;
-                            }
-                        }
-                        else{
-                            return true;
-                        }
-                    });
-                }
-                
-            }
-        });
-    }
+     
     
         if ui.button("Conferma").clicked() {
             frame.request_screenshot();
@@ -506,17 +415,24 @@ pub fn gui_mode6(my_app: &mut MyApp, frame: &mut eframe::Frame, ui: &mut egui::U
             
         }
         if my_app.paint.len()>0{
+            
             if my_app.paint.last().unwrap().draw==Paints::Text{
-                draw::write_text(ui, my_app, frame);
-            }
-            if my_app.paint.last().unwrap().color.is_some(){
-            draw::draw_shape(ui, my_app, frame); 
+                if ui.rect_contains_pointer(my_rect) && my_app.paint.last().unwrap().text.trim()!=""{
+                    ui.ctx().set_cursor_icon(egui::CursorIcon::PointingHand);
+                }
+                draw::write_text(ui, my_app, my_rect);
+            }else if my_app.paint.last().unwrap().color.is_some() {
+                if ui.rect_contains_pointer(my_rect) && !my_app.eraser{
+                    ui.ctx().set_cursor_icon(egui::CursorIcon::PointingHand);
+                }
+            draw::draw_shape(ui, my_app, my_rect); 
             }
 
         }
 
      });
      if my_app.paint.last().is_some() && my_app.paint.last().unwrap().draw==Paints::Highlighter{
+
             let hight=my_app.find_last_highliter_line().clone();
             if hight.is_some(){
                 let mut line_struct=hight.unwrap();
@@ -532,55 +448,7 @@ pub fn gui_mode6(my_app: &mut MyApp, frame: &mut eframe::Frame, ui: &mut egui::U
             
         if figure.draw == Paints::Arrow {
             if my_app.eraser && figure.draw==my_app.erased_draw.0{
-                let mut p1=figure.start.unwrap();
-                let mut p2=figure.end.unwrap();
-
-                if p1.x > p2.x {
-                    p2.x = p1.x;
-                    p1.x = figure.end.unwrap().x;
-                }
-                if p1.y > p2.y {
-                    p2.y = p1.y;
-                    p1.y = figure.end.unwrap().y;
-                }
-
-                if p1.x<limits.0{
-                    p1.x=limits.0;
-                }
-                else if p1.x>limits.2{
-                    p1.x=limits.2;
-                }
-
-                if p1.y<limits.1{
-                    p1.y=limits.1;
-                }
-                else if p1.y>limits.3{
-                    p1.y=limits.3;
-                }
-
-                if p2.x<limits.0{
-                    p2.x=limits.0;
-                }
-                else if p2.x>limits.2{
-                    p2.x=limits.2;
-                }
-                
-                if p2.y<limits.1{
-                    p2.y=limits.1;
-                }
-                else if p2.y>limits.3{
-                    p2.y=limits.3;
-                }
-
-                ui.painter().rect(
-                    egui::Rect::from_two_pos(p1, p2),
-                    egui::Rounding::none(),
-                    egui::Color32::TRANSPARENT,
-                    egui::Stroke {
-                        width: 1.5,
-                        color: egui::Color32::RED,
-                    },
-                );
+                draw::eraser_square(figure.start.unwrap(), figure.end.unwrap(), limits, ui);
             }
             painter.arrow(
                 figure.start.unwrap(),
@@ -614,56 +482,9 @@ pub fn gui_mode6(my_app: &mut MyApp, frame: &mut eframe::Frame, ui: &mut egui::U
             if my_app.eraser && figure.draw==my_app.erased_draw.0{
                 let c = figure.start.unwrap();
                 let r = c.distance(figure.end.unwrap());
+                draw::eraser_square(egui::Pos2::new(c.x-r, c.y-r), egui::Pos2::new(c.x+r, c.y+r), limits, ui);
 
-                let mut p1=egui::Pos2::new(c.x-r, c.y-r);
-                let mut p2=egui::Pos2::new(c.x+r, c.y+r);
-
-                if p1.x > p2.x {
-                    p2.x = p1.x;
-                    p1.x = figure.end.unwrap().x;
-                }
-                if p1.y > p2.y {
-                    p2.y = p1.y;
-                    p1.y = figure.end.unwrap().y;
-                }
-
-                if p1.x<limits.0{
-                    p1.x=limits.0;
-                }
-                else if p1.x>limits.2{
-                    p1.x=limits.2;
-                }
-
-                if p1.y<limits.1{
-                    p1.y=limits.1;
-                }
-                else if p1.y>limits.3{
-                    p1.y=limits.3;
-                }
-
-                if p2.x<limits.0{
-                    p2.x=limits.0;
-                }
-                else if p2.x>limits.2{
-                    p2.x=limits.2;
-                }
-                
-                if p2.y<limits.1{
-                    p2.y=limits.1;
-                }
-                else if p2.y>limits.3{
-                    p2.y=limits.3;
-                }
-
-                ui.painter().rect(
-                    egui::Rect::from_two_pos(egui::Pos2 { x: p1.x , y: p1.y }, egui::Pos2 { x: p2.x , y: p2.y }),
-                    egui::Rounding::none(),
-                    egui::Color32::TRANSPARENT,
-                    egui::Stroke {
-                        width: 1.5,
-                        color: egui::Color32::RED,
-                    },
-                );
+              
             }
             painter.circle(figure.start.unwrap(), figure.start.unwrap().distance(figure.end.unwrap()), egui::Color32::TRANSPARENT, egui::Stroke {
                     width: 1.5,
@@ -679,21 +500,13 @@ pub fn gui_mode6(my_app: &mut MyApp, frame: &mut eframe::Frame, ui: &mut egui::U
         else if figure.draw==Paints::Text{
             if figure.text.trim() != "" {
                 if my_app.eraser && figure.draw==my_app.erased_draw.0{
-                    painter.rect(
-                        egui::Rect::from_two_pos(figure.start.unwrap(), figure.end.unwrap()),
-                        egui::Rounding::none(),
-                        egui::Color32::TRANSPARENT,
-                        egui::Stroke {
-                            width: 1.5,
-                            color: egui::Color32::RED,
-                        },
-                    );
+                    draw::eraser_square(figure.start.unwrap(), figure.end.unwrap(), limits, ui);
                 }
                 let rect = painter.text(
                     figure.start.unwrap(),
                     egui::Align2::LEFT_TOP,
                     figure.text.clone(),
-                    egui::FontId::default(),
+                    egui::FontId::proportional(20.0),
                     figure.color.unwrap(),
                 );
                 if figure.end.is_none() || figure.end.unwrap() != rect.max {
