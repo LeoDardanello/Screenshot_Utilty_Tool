@@ -1,10 +1,11 @@
-use crate::{draw, hotkeys, screenshot, MyApp, MyScreen};
+use crate::{draw, hotkeys, screenshot,hotkey_handlers, MyApp, MyScreen};
 use arboard;
 use eframe::egui;
-use native_dialog::{FileDialog, MessageDialog};
+use native_dialog::FileDialog;
 use std::borrow::Cow;
 use std::{thread};
 use std::time::Duration;
+
 
 #[derive(PartialEq,Clone,Copy)]
 pub enum Paints {
@@ -92,38 +93,10 @@ pub fn gui_mode0(my_app: &mut MyApp, frame: &mut eframe::Frame, ui: &mut egui::U
     
 
     let ev = my_app.hotkey_conf.listen_to_event();
-    match ev {
-        None => {}
-        Some(i) => {
-            if i == 0 {
-                frame.set_window_size(egui::Vec2 { x: 0.0, y: 0.0 });
-
-                my_app.time = ui.input(|i| i.time);
-                my_app.area = (0.0, 0.0, 0.0, 0.0);
-                my_app.def_paint.clear();
-                my_app.paint.clear();
-                my_app.edit_image=MyScreen{screens:Vec::new(), size:(0,0)};
-                my_app.mode = 1;
-            }
-            if i == 1 {
-                MessageDialog::new()
-                    .set_title("Error")
-                    .set_text("Can't save before taking screenshot!")
-                    .show_alert()
-                    .unwrap();
-            }
-            if i == 2 {
-                MessageDialog::new()
-                    .set_title("Error")
-                    .set_text("Can't copy before taking screenshot!")
-                    .show_alert()
-                    .unwrap();
-            }
-        }
-    }
+    hotkey_handlers::hotkey_handler_mode0(ev,my_app,ui,frame);
 }
 
-pub fn gui_mode4(my_app: &mut MyApp, ui: &mut egui::Ui) {
+pub fn gui_mode3(my_app: &mut MyApp, ui: &mut egui::Ui) {
     //Multiple screen support
     ui.label(
         egui::RichText::new("Multiple monitors detected\nChoose the monitor to acquire")
@@ -142,11 +115,13 @@ pub fn gui_mode4(my_app: &mut MyApp, ui: &mut egui::Ui) {
             }
         }
         if ui.button("Conferma").clicked() {
-            my_app.mode = 3;
+            my_app.mode = 4;//go to image selection mode
         }
     });
 }
-pub fn gui_mode3(my_app: &mut MyApp, frame: &mut eframe::Frame, ui: &mut egui::Ui) {
+
+//Visualization mode
+pub fn gui_mode4(my_app: &mut MyApp, frame: &mut eframe::Frame, ui: &mut egui::Ui) {
     if my_app.edit_image.screens.len()>0{
         screenshot::visualize_image(
             &mut my_app.edit_image,
@@ -165,7 +140,7 @@ pub fn gui_mode3(my_app: &mut MyApp, frame: &mut eframe::Frame, ui: &mut egui::U
     }
     
     ui.horizontal(|ui| {
-        if ui.button("return").clicked() {
+        if ui.button("Return").clicked() {
             frame.set_fullscreen(false);
             my_app.mode = 0;
             
@@ -174,7 +149,7 @@ pub fn gui_mode3(my_app: &mut MyApp, frame: &mut eframe::Frame, ui: &mut egui::U
 
         let window_name =
             String::from(String::from("screenshot") + &(my_app.default_name_index.to_string()));
-        if ui.button("save").clicked() {
+        if ui.button("Save").clicked() {
             let mut format_for_dialog = "";
             let mut format = "";
             if my_app.output_format == ".png" {
@@ -218,16 +193,16 @@ pub fn gui_mode3(my_app: &mut MyApp, frame: &mut eframe::Frame, ui: &mut egui::U
                     my_app.default_name_index = my_app.default_name_index + 1;
                     my_app.mode = 0;
                 }
-                None => my_app.mode = 3, //return to visualize the image
+                None => my_app.mode = 4, //return to visualize the image
             }
         }
         if my_app.area.2 == 0.0 && my_app.area.3 == 0.0 && my_app.edit_image.screens.len()==0{
-            if ui.button("crop").clicked() {
+            if ui.button("Crop").clicked() {
                 my_app.mode = 5;
                 frame.set_fullscreen(true);
             }
         }
-        if ui.button("copy").clicked() {
+        if ui.button("Copy").clicked() {
             let mut clipboard = arboard::Clipboard::new().unwrap();
             let mut image=& my_app.image[my_app.n_monitor];
             if my_app.edit_image.screens.len()>0{
@@ -240,7 +215,7 @@ pub fn gui_mode3(my_app: &mut MyApp, frame: &mut eframe::Frame, ui: &mut egui::U
             };
             clipboard.set_image(image_data).expect("Errore nel copy");
         }
-        if ui.button("edit").clicked(){
+        if ui.button("Edit").clicked(){
             frame.set_fullscreen(true);
             my_app.mode=6;
 
@@ -248,55 +223,7 @@ pub fn gui_mode3(my_app: &mut MyApp, frame: &mut eframe::Frame, ui: &mut egui::U
     });
     let ev = my_app.hotkey_conf.listen_to_event();
 
-    match ev {
-        None => {}
-        Some(i) => {
-            if i == 1 {
-                //Save Hotkey
-                /*println!("salvo screen");
-                println!("default path:{}",my_app.default_path);
-                println!("output_format:{}",my_app.output_format);*/
-
-                let path_for_thread = String::from(
-                    String::from(&my_app.default_path)
-                        + &String::from("\\screenshot")
-                        + &(my_app.default_name_index.to_string()),
-                );
-                let mut image=& my_app.image[my_app.n_monitor];
-                if my_app.edit_image.screens.len()>0{
-                    image=&my_app.edit_image;
-                }
-                let image_for_thread = image.clone();
-                let output_format_for_thread = my_app.output_format.clone();
-                thread::spawn(move || {
-                    screenshot::save_image(
-                        &path_for_thread,
-                        &image_for_thread,
-                        &output_format_for_thread,
-                        true,
-                    );
-                    println!("ho finito di salvare");
-                });
-                frame.set_fullscreen(false);
-                my_app.default_name_index = my_app.default_name_index + 1;
-                my_app.mode = 0;
-            }
-            if i == 2 {
-                //copy hotkey
-                let mut clipboard = arboard::Clipboard::new().unwrap();
-                let mut image=& my_app.image[my_app.n_monitor];
-                if my_app.edit_image.screens.len()>0{
-                    image=&my_app.edit_image;
-                }
-                let image_data = arboard::ImageData {
-                    width: image.size.0,
-                    height: image.size.1,
-                    bytes: Cow::from(&image.screens),
-                };
-                clipboard.set_image(image_data).expect("Errore nel copy");
-            }
-        }
-    }
+    hotkey_handlers::hotkey_handler_mode4(ev,my_app,frame);
    
 }
 
@@ -315,7 +242,7 @@ pub fn gui_mode5(my_app: &mut MyApp, frame: &mut eframe::Frame, ui: &mut egui::U
     draw::cut_rect(position, info, my_app, ui, limits);
 
     ui.horizontal(|ui| {
-        if ui.button("Conferma").clicked() {
+        if ui.button("Confirm").clicked() {
             let width = ((my_app.area.2 - my_app.area.0).abs() * props.0) as u32;
             let height = ((my_app.area.3 - my_app.area.1).abs() * props.1) as u32;
             my_app.image[my_app.n_monitor] = screenshot::screen_area(
@@ -325,10 +252,10 @@ pub fn gui_mode5(my_app: &mut MyApp, frame: &mut eframe::Frame, ui: &mut egui::U
                 width,
                 height,
             );
-            my_app.mode = 3;
+            my_app.mode = 4; //go back to visualization mode but with the cropped image
         }
         if ui.button("Return").clicked() {
-            my_app.mode = 3;
+            my_app.mode = 4;//go back to full image visualization
             my_app.area = (0.0, 0.0, 0.0, 0.0);
         }
     });
@@ -352,7 +279,7 @@ pub fn gui_mode6(my_app: &mut MyApp, frame: &mut eframe::Frame, ui: &mut egui::U
     ui.horizontal(|ui| {
 
         if ui.button("Return").clicked() {
-            my_app.mode = 3;
+            my_app.mode = 4;// go to visualization mode
             my_app.paint.clear();
             my_app.eraser=false;
         }
@@ -404,14 +331,11 @@ pub fn gui_mode6(my_app: &mut MyApp, frame: &mut eframe::Frame, ui: &mut egui::U
             }
 
        }
-
-     
-    
-        if ui.button("Conferma").clicked() {
+        if ui.button("Confirm Changes").clicked() {
             frame.request_screenshot();
             my_app.def_paint.append(&mut my_app.paint.clone());
             my_app.eraser=false;
-            my_app.mode = 3;
+            my_app.mode = 4;// go back to visualization mode, but can't crop anymore
             
         }
         if my_app.paint.len()>0{

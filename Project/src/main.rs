@@ -5,6 +5,7 @@ mod gui;
 mod gui_base;
 mod hotkeys;
 mod screenshot;
+mod hotkey_handlers;
 
 #[derive(Clone,Debug)]
 pub struct HighlighterLine{
@@ -146,32 +147,35 @@ impl eframe::App for MyApp {
                 },
             );
         } else if self.mode == 2 {
-            self.mode = 3;
+            self.mode = 4; //go to editing mode
             self.image = screenshot::full_screen();
             frame.set_window_size(egui::Vec2 { x: 640.0, y: 480.0 });
             frame.set_fullscreen(true);
 
             if self.image.len() > 1 {
-                self.mode = 4;
+                self.mode = 3;// go to screen selection mode
             }
         } else if self.mode == 3 {
-            gui_base::custom_window_frame(
-                self,
-                ctx,
-                frame,
-                "Screenshot Utility Tool", //the title in this row is used
-                |my_app: &mut Self, frame: &mut eframe::Frame, ui| {
-                    gui::gui_mode3(my_app, frame, ui);
-                },
-            );
-        } else if self.mode == 4 {
+            //check for multiple monitors
             gui_base::custom_window_frame(
                 self,
                 ctx,
                 frame,
                 "Screenshot Utility Tool", //the title in this row is used
                 |my_app: &mut Self, _frame: &mut eframe::Frame, ui| {
-                    gui::gui_mode4(my_app, ui);
+                    gui::gui_mode3(my_app, ui);
+                },
+            );
+            
+        } else if self.mode == 4 {
+
+            gui_base::custom_window_frame(
+                self,
+                ctx,
+                frame,
+                "Screenshot Utility Tool", //the title in this row is used
+                |my_app: &mut Self, frame: &mut eframe::Frame, ui| {
+                    gui::gui_mode4(my_app, frame, ui);
                 },
             );
         } else if self.mode == 5 {
