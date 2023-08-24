@@ -51,7 +51,7 @@ match ev {
             
             let path_for_thread = String::from(
                 String::from(&my_app.default_path)
-                    + &String::from("\\screenshot")
+                    + &String::from("/screenshot")
                     + &(my_app.default_name_index.to_string()),
             );
             let mut image=& my_app.image[my_app.n_monitor];
