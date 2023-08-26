@@ -18,6 +18,9 @@ pub enum Paints {
 }
 
 pub fn gui_mode0(my_app: &mut MyApp, frame: &mut eframe::Frame, ui: &mut egui::Ui) {
+    if !frame.info().window_info.fullscreen{
+        frame.set_window_size(egui::Vec2 { x: 640.0, y: 480.0 });
+    }
     ui.label(
         egui::RichText::new(
             "Welcome to the Screenshot Utility Tool, everything is ready to take a screenshot!",
@@ -140,8 +143,10 @@ pub fn gui_mode4(my_app: &mut MyApp, frame: &mut eframe::Frame, ui: &mut egui::U
     }
     
     ui.horizontal(|ui| {
-        if ui.button("Return").clicked() {
+        if ui.button("Return").clicked() {    
             frame.set_fullscreen(false);
+            
+            
             my_app.mode = 0;
             
             my_app.enable_screenshot = true;
@@ -190,8 +195,11 @@ pub fn gui_mode4(my_app: &mut MyApp, frame: &mut eframe::Frame, ui: &mut egui::U
                     });
                     println!("path:{:?}", file_path);
                     frame.set_fullscreen(false);
+                    
+                    
                     my_app.default_name_index = my_app.default_name_index + 1;
                     my_app.mode = 0;
+             
                 }
                 None => my_app.mode = 4, //return to visualize the image
             }
@@ -242,6 +250,10 @@ pub fn gui_mode5(my_app: &mut MyApp, frame: &mut eframe::Frame, ui: &mut egui::U
     draw::cut_rect(position, info, my_app, ui, limits);
 
     ui.horizontal(|ui| {
+        if ui.button("Return").clicked() {
+            my_app.mode = 4;//go back to full image visualization
+            my_app.area = (0.0, 0.0, 0.0, 0.0);
+        }
         if ui.button("Confirm").clicked() {
             let width = ((my_app.area.2 - my_app.area.0).abs() * props.0) as u32;
             let height = ((my_app.area.3 - my_app.area.1).abs() * props.1) as u32;
@@ -254,10 +266,7 @@ pub fn gui_mode5(my_app: &mut MyApp, frame: &mut eframe::Frame, ui: &mut egui::U
             );
             my_app.mode = 4; //go back to visualization mode but with the cropped image
         }
-        if ui.button("Return").clicked() {
-            my_app.mode = 4;//go back to full image visualization
-            my_app.area = (0.0, 0.0, 0.0, 0.0);
-        }
+        
     });
 }
 
@@ -275,14 +284,16 @@ pub fn gui_mode6(my_app: &mut MyApp, frame: &mut eframe::Frame, ui: &mut egui::U
         my_app.paint.clear();
         my_app.paint.append(&mut my_app.def_paint);
     }
-
+    let mut u=my_app.paint.len();
     ui.horizontal(|ui| {
-
+        
         if ui.button("Return").clicked() {
             my_app.mode = 4;// go to visualization mode
             my_app.paint.clear();
+            u=0;
             my_app.eraser=false;
         }
+        
         draw::draw_button(Paints::Square,ui, &mut my_app.paint, my_app.edit_color, &mut my_app.eraser);
         draw::draw_button(Paints::Circle,ui, &mut my_app.paint, my_app.edit_color, &mut my_app.eraser);
         draw::draw_button(Paints::Arrow,ui, &mut my_app.paint, my_app.edit_color, &mut my_app.eraser);
@@ -292,6 +303,7 @@ pub fn gui_mode6(my_app: &mut MyApp, frame: &mut eframe::Frame, ui: &mut egui::U
         if my_app.eraser{
             eraser=egui::Button::new(egui::RichText::new("Eraser").underline());
             draw::eraser(ui, &mut my_app.erased_draw, my_rect, &mut my_app.paint);
+            u= my_app.paint.len();
         }
         if ui.add(eraser).clicked(){
             if my_app.eraser{
@@ -299,7 +311,7 @@ pub fn gui_mode6(my_app: &mut MyApp, frame: &mut eframe::Frame, ui: &mut egui::U
             }
             else{
             my_app.eraser=true;
-            let u = my_app.paint.len();
+            
             if u>0{
                 my_app.paint[u-1].draw=Paints::NoFigure;
             }
@@ -313,24 +325,23 @@ pub fn gui_mode6(my_app: &mut MyApp, frame: &mut eframe::Frame, ui: &mut egui::U
         }*/
 
         let f=ui.color_edit_button_srgba(&mut my_app.edit_color);
+        if u>0{
         if f.clicked(){
-            if my_app.paint.len()>0 {
-                let u= my_app.paint.len()-1;
-                if my_app.paint[u].color.is_some(){
-                    my_app.paint[u].color=None;
+
+                match my_app.paint[u-1].color{
+                    Some(_) => my_app.paint[u-1].color=None,
+                    None => {my_app.paint[u-1].color.replace(my_app.edit_color);},
                 }
-                else{
-                    my_app.paint[u].color=Some(my_app.edit_color);
-                }
-            }
+                
+   
        }
        if f.clicked_elsewhere(){
-        let u=my_app.paint.len();
-            if u>0{
-                my_app.paint[u-1].color=Some(my_app.edit_color);
-            }
+
+                my_app.paint[u-1].color.replace(my_app.edit_color);
+            
 
        }
+    }
         if ui.button("Confirm Changes").clicked() {
             frame.request_screenshot();
             my_app.def_paint.append(&mut my_app.paint.clone());
@@ -338,14 +349,14 @@ pub fn gui_mode6(my_app: &mut MyApp, frame: &mut eframe::Frame, ui: &mut egui::U
             my_app.mode = 4;// go back to visualization mode, but can't crop anymore
             
         }
-        if my_app.paint.len()>0{
+        if u>0{
             
-            if my_app.paint.last().unwrap().draw==Paints::Text{
+            if my_app.paint[u-1].draw==Paints::Text{
                 if ui.rect_contains_pointer(my_rect) && my_app.paint.last().unwrap().text.trim()!=""{
                     ui.ctx().set_cursor_icon(egui::CursorIcon::PointingHand);
                 }
                 draw::write_text(ui, my_app, my_rect);
-            }else if my_app.paint.last().unwrap().color.is_some() {
+            }else if my_app.paint[u-1].color.is_some() {
                 if ui.rect_contains_pointer(my_rect) && !my_app.eraser{
                     ui.ctx().set_cursor_icon(egui::CursorIcon::PointingHand);
                 }
@@ -355,15 +366,8 @@ pub fn gui_mode6(my_app: &mut MyApp, frame: &mut eframe::Frame, ui: &mut egui::U
         }
 
      });
-     if my_app.paint.last().is_some() && my_app.paint.last().unwrap().draw==Paints::Highlighter{
-
-            let hight=my_app.find_last_highliter_line().clone();
-            if hight.is_some(){
-                let mut line_struct=hight.unwrap();
-                let u=my_app.paint.len();
-            my_app.paint[u-1].points=Some(draw::highlight(&mut line_struct,ui, my_rect));
-            }
-            
+     if my_app.paint.last().is_some_and(|x|x.draw==Paints::Highlighter && x.points.is_some() && x.color.is_some()){
+                draw::highlight(&mut my_app.paint,ui, my_rect); 
         }
      
     let painter= ui.painter().with_clip_rect(my_rect);

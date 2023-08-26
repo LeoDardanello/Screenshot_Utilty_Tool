@@ -81,30 +81,24 @@ pub fn cut_rect(
 
 pub fn draw_shape(ui: &mut egui::Ui, my_app: &mut MyApp, rect: egui::Rect) {
     ui.input(|i| {
-        //println!("start");
+
         let u = my_app.paint.len();
-        //println!("prima{:?}", u);
+
         if i.pointer.is_decidedly_dragging() && i.pointer.primary_down() {
             if my_app.paint[u - 1].start.is_none() {
                 let pos=i.pointer.press_origin();
                 if pos.is_some() && rect.contains(pos.unwrap()){   
                     my_app.paint[u - 1].start = pos;
                 }
-                //println!("prima{:?}", my_app.paint[u-1].1);
             } else {
                 my_app.paint[u - 1].end = i.pointer.hover_pos();
-                //println!("dopo1{:?}", my_app.paint[u-1].2);
-                //ui.painter().arrow(my_app.init_pos.unwrap(), my_app.final_pos.unwrap()-my_app.init_pos.unwrap(), ui.visuals().widgets.noninteractive.bg_stroke);
-            }
+         }
         } else if i.pointer.primary_released() && my_app.paint[u - 1].start.is_some() {
             my_app.paint[u - 1].end = i.pointer.hover_pos();
-            //println!("dopo2{:?}", my_app.paint[u-1].1);
             my_app
                 .paint
                 .push(MyDraw::new(my_app.paint[u - 1].draw, my_app.edit_color));
 
-            //my_app.paint = true;
-            //println!("{:?} {:?}", my_app.paint[u-1].1, my_app.paint[u-1].2);
         }
     });
 }
@@ -135,44 +129,28 @@ pub fn write_text(ui: &mut egui::Ui, my_app: &mut MyApp,  rect: egui::Rect) {
 
 
 pub fn highlight(
-    current_line: &mut HighlighterLine,
+    paint: &mut Vec<MyDraw>,
     ui: &mut egui::Ui,
     rect: egui::Rect,
-) -> HighlighterLine {
-    //println!("{:?}",ui.available_size_before_wrap());
-
+)  {
+    let u=paint.len()-1;
     let mut response = ui.allocate_rect(rect, egui::Sense::drag());
-    let mut l = Vec::new();
-    l.append(&mut current_line.line);
-
-    // let to_screen = egui::emath::RectTransform::from_to(
-    //     egui::Rect::from_min_size(egui::Pos2::ZERO, response.rect.square_proportions()),
-    //     response.rect,
-    // );
-    // let from_screen = to_screen.inverse();
-
-    //println!("pointer-pos:{:?}",response.interact_pointer_pos());
+    let mut line=paint[u].points.clone().unwrap().line;
     if let Some(pointer_pos) = response.interact_pointer_pos() {
-        //if the mouse is being clicked or dragged
-        // let canvas_pos = from_screen * pointer_pos;
-        //println!("canvas pos:{:?}", canvas_pos);
-        if l.last() != Some(/*&canvas_pos*/&pointer_pos) {
-            // println!("entro dentro:");
-            // println!("prima del push:{:?}",current_line.line);
-            l.push(/*to_screen * canvas_pos*/ pointer_pos);
-            // println!("dopo del push:{:?}",current_line.line);
+
+        if line.last() != Some(&pointer_pos) {
+
+            line.push( pointer_pos);
             response.mark_changed();
         }
-    }
-    //     let line=egui::Shape::line(points, current_line.stroke);
-    //     println!("{:?}",line);
-    //     painter.add(line);
-    //     println!("response:{:?}",response);
+        
+    } 
+    paint[u].points.replace(HighlighterLine { line, width: 20 });
     
-    return HighlighterLine {
-        line: l,
-        width: current_line.width,
-    };
+    if response.drag_released(){
+        paint.push(MyDraw ::new(Paints::Highlighter, paint[u].color.unwrap()));
+    }
+       
 }
 
 pub fn draw_button(paint: Paints, ui: &mut egui::Ui, el: &mut Vec<MyDraw>, color: egui::Color32, eraser: &mut bool) {
@@ -207,10 +185,6 @@ pub fn draw_button(paint: Paints, ui: &mut egui::Ui, el: &mut Vec<MyDraw>, color
                 u=u-1;
             }
             
-        }
-        if u>0{
-            println!("{}", u);
-          println!("{:?}", el[u-1].start);  
         }
         
         if  !(!*eraser && u>0 && el[u-1].draw==Paints::NoFigure){
@@ -282,7 +256,7 @@ pub fn eraser_square(start: egui::Pos2, end: egui::Pos2, limits: (f32, f32, f32,
 
 pub fn eraser(ui: &mut egui::Ui,  erased_draw: &mut (Paints, String), rect: egui::Rect, paint: &mut Vec<MyDraw>){
    let combo=egui::ComboBox::from_label("Figures to eliminate")
-    .selected_text(format!("{:?}", erased_draw.1))
+    .selected_text(format!("{}", erased_draw.1))
     .show_ui(ui, |ui| {
         ui.selectable_value(
             erased_draw,

@@ -76,7 +76,7 @@ impl HotkeysConfig{
         if let Ok(event) = GlobalHotKeyEvent::receiver().try_recv() {
             for i in 0..self.hotkeys.len(){
                 if event.id == self.hotkeys[i].id(){
-                    println!("Hotkey # {:?}", i+1);
+                    println!("Hotkey # {}", i+1);
                     return Some(i);
                 }
             }
@@ -144,7 +144,7 @@ pub fn edit_shortcut(my_app: &mut MyApp, ui: &mut egui::Ui){
                             ui.vertical(|ui| {
                                 //println!("{:?} + {:?}", self.modif, new_key);
                                 egui::ComboBox::from_label("Set new modifier")
-                                    .selected_text(format!("{:?}", new_mod.1))
+                                    .selected_text(format!("{}", new_mod.1))
                                     .show_ui(ui, |ui| {
                                         ui.selectable_value(
                                             &mut new_mod,
@@ -163,7 +163,7 @@ pub fn edit_shortcut(my_app: &mut MyApp, ui: &mut egui::Ui){
                                         );
                                     });
                                 egui::ComboBox::from_label("Set new key")
-                                    .selected_text(format!("{:?}", new_key.1))
+                                    .selected_text(format!("{}", new_key.1))
                                     .show_ui(ui, |ui| {
                                         ui.selectable_value(
                                             &mut new_key,

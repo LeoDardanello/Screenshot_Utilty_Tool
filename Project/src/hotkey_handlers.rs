@@ -88,6 +88,7 @@ match ev {
                 }
              
             });
+            
             frame.set_fullscreen(false);
             my_app.default_name_index = my_app.default_name_index + 1;
             my_app.mode = 0;

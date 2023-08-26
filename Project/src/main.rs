@@ -74,10 +74,6 @@ pub struct MyApp {
 
 impl MyApp {
 
-    fn find_last_highliter_line(&self)->&Option<HighlighterLine>{
-        //println!("{:?}", self.paint.last().unwrap().points);
-        return &self.paint.last().unwrap().points;
-    }
 
     //costructor for MyApp
     fn new() -> MyApp {
@@ -149,9 +145,8 @@ impl eframe::App for MyApp {
         } else if self.mode == 2 {
             self.mode = 4; //go to editing mode
             self.image = screenshot::full_screen();
-            frame.set_window_size(egui::Vec2 { x: 640.0, y: 480.0 });
+            
             frame.set_fullscreen(true);
-
             if self.image.len() > 1 {
                 self.mode = 3;// go to screen selection mode
             }
@@ -214,8 +209,7 @@ impl eframe::App for MyApp {
             if limits.3>=frame.y{
                 limits.3=frame.y-10.0;
             }
-            println!("{:?}", limits);
-            println!("{:?}", _window_size);
+
             let pixels_per_point = Some((screenshot.pixels.len()/((_window_size[0]*_window_size[1]) as usize) )as f32);
     
                 let region = egui::Rect::from_min_max(
@@ -223,7 +217,6 @@ impl eframe::App for MyApp {
                     egui::pos2((limits.2*_window_size[1] as f32)/frame[1], (limits.3*_window_size[1] as f32)/frame[1])
                 );
                 let my_screenshot=screenshot.region(&region, pixels_per_point);
-                println!("{:?}", my_screenshot.size);
                 self.edit_image.screens = my_screenshot.as_raw().to_vec();
                 self.edit_image.size= ((my_screenshot.size[0]), my_screenshot.size[1]);
                 
@@ -242,6 +235,7 @@ fn main() {
         follow_system_theme: false,
         default_theme: eframe::Theme::Light,
         resizable: true,
+        initial_window_pos: Some(egui::pos2(0.0,0.0)),
         ..Default::default()
     };
     //let native_options=eframe::NativeOptions::default();
