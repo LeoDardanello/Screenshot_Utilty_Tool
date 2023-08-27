@@ -234,7 +234,7 @@ pub fn gui_mode4(my_app: &mut MyApp, frame: &mut eframe::Frame, ui: &mut egui::U
     hotkey_handlers::hotkey_handler_mode4(ev,my_app,frame);
    
 }
-//Mode for Cropping
+//Mode for Croppinge
 pub fn gui_mode5(my_app: &mut MyApp, frame: &mut eframe::Frame, ui: &mut egui::Ui) {
     let position = ui.input(|i| i.pointer.hover_pos());
     let info = frame.info().window_info;
