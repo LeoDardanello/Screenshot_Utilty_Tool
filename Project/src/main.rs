@@ -235,7 +235,7 @@ fn main() {
         follow_system_theme: false,
         default_theme: eframe::Theme::Light,
         resizable: true,
-        initial_window_pos: Some(egui::pos2(0.0,0.0)),
+        //initial_window_pos: Some(egui::pos2(0.0,0.0)),
         ..Default::default()
     };
     //let native_options=eframe::NativeOptions::default();
