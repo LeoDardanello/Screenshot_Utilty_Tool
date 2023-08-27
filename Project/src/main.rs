@@ -70,7 +70,7 @@ pub struct MyApp {
     mode: i32,
     image: Vec<MyScreen>,
     default_name_index: i32,
-    area: (f32, f32, f32, f32),
+    area: (Option<egui::Pos2>, Option<egui::Pos2>),
     delay_time: u32,
     n_monitor: usize,
     enable_screenshot: bool,
@@ -96,7 +96,7 @@ impl MyApp {
             output_format: default_output_format,
             mode: 0,
             image: Vec::new(),
-            area: (0.0, 0.0, 0.0, 0.0),
+            area: (None, None),
             default_name_index: 0,
             delay_time: 0,
             n_monitor: 0,
@@ -144,7 +144,7 @@ impl eframe::App for MyApp {
                 frame,
                 "Screenshot Utility Tool", //the title in this row is used
                 |my_app: &mut Self, frame: &mut eframe::Frame, ui| {
-                    println!("{:?}", ui.input(|i| i.time) - my_app.time);
+   
                     if ui.input(|i| i.time) - my_app.time >= 0.2 || frame.info().window_info.focused
                     {
                         my_app.mode = 2;

@@ -18,7 +18,8 @@ pub enum Paints {
 }
 
 pub fn gui_mode0(my_app: &mut MyApp, frame: &mut eframe::Frame, ui: &mut egui::Ui) {
-    if !frame.info().window_info.fullscreen{
+
+    if !frame.info().window_info.fullscreen && !frame.info().window_info.maximized{
         frame.set_window_size(egui::Vec2 { x: 640.0, y: 480.0 });
     }
     ui.label(
@@ -87,7 +88,7 @@ pub fn gui_mode0(my_app: &mut MyApp, frame: &mut eframe::Frame, ui: &mut egui::U
             
 
             my_app.time = ui.input(|i| i.time);
-            my_app.area = (0.0, 0.0, 0.0, 0.0);
+            my_app.area = (None, None);
             my_app.edit_image=MyScreen::new(None, None);
             my_app.def_paint.clear();
             my_app.paint.clear();
@@ -135,6 +136,7 @@ pub fn gui_mode4(my_app: &mut MyApp, frame: &mut eframe::Frame, ui: &mut egui::U
         );
     }
     else{
+
         screenshot::visualize_image(
         &mut my_app.image[my_app.n_monitor],
         ui,
@@ -205,10 +207,9 @@ pub fn gui_mode4(my_app: &mut MyApp, frame: &mut eframe::Frame, ui: &mut egui::U
                 None => my_app.mode = 4, //return to visualize the image
             }
         }
-        if my_app.area.2 == 0.0 && my_app.area.3 == 0.0 && my_app.edit_image.screens.len()==0{
+        if my_app.area.1.is_none() && my_app.edit_image.screens.len()==0{
             if ui.button("Crop").clicked() {
                 my_app.mode = 5;
-                frame.set_fullscreen(true);
             }
         }
         if ui.button("Copy").clicked() {
@@ -225,7 +226,6 @@ pub fn gui_mode4(my_app: &mut MyApp, frame: &mut eframe::Frame, ui: &mut egui::U
             clipboard.set_image(image_data).expect("Errore nel copy");
         }
         if ui.button("Edit").clicked(){
-            frame.set_fullscreen(true);
             my_app.mode=6;
 
         }
@@ -241,6 +241,7 @@ pub fn gui_mode5(my_app: &mut MyApp, frame: &mut eframe::Frame, ui: &mut egui::U
     let info = frame.info().window_info;
     let my_rect= my_app.image[my_app.n_monitor].rect.unwrap();
     let limits = (my_rect.min, my_rect.max);
+    
 
     let props = (
         (my_app.image[my_app.n_monitor].size.0 as f32) / (limits.1.x - limits.0.x),
@@ -252,15 +253,16 @@ pub fn gui_mode5(my_app: &mut MyApp, frame: &mut eframe::Frame, ui: &mut egui::U
     ui.horizontal(|ui| {
         if ui.button("Return").clicked() {
             my_app.mode = 4;//go back to full image visualization
-            my_app.area = (0.0, 0.0, 0.0, 0.0);
+            my_app.area = (None, None);
         }
         if ui.button("Confirm").clicked() {
-            let width = ((my_app.area.2 - my_app.area.0).abs() * props.0) as u32;
-            let height = ((my_app.area.3 - my_app.area.1).abs() * props.1) as u32;
+
+            let width = ((my_app.area.1.unwrap().x - my_app.area.0.unwrap().x)* props.0) as u32;
+            let height = ((my_app.area.1.unwrap().y - my_app.area.0.unwrap().y) * props.1) as u32;
             my_app.image[my_app.n_monitor] = screenshot::screen_area(
                 &mut my_app.image[my_app.n_monitor],
-                ((my_app.area.0 - limits.0.x) * props.0) as u32,
-                ((my_app.area.1 - limits.0.y) * props.1) as u32,
+                ((my_app.area.0.unwrap().x- limits.0.x) * props.0) as u32,
+                ((my_app.area.0.unwrap().y- limits.0.y) * props.1) as u32,
                 width,
                 height,
             );

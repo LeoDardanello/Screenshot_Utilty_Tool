@@ -9,7 +9,8 @@ pub fn cut_rect(
     ui: &mut egui::Ui,
     limits: egui::Rect,
 ) {
-    let mut valid = false;
+    let valid ;
+   
     let mut pos: egui::Pos2;
 
     match position {
@@ -17,6 +18,10 @@ pub fn cut_rect(
             pos = position.unwrap();
             if limits.contains(pos) {
                 valid = true;
+                ui.ctx().set_cursor_icon(egui::CursorIcon::Crosshair);
+            }
+            else{
+                valid=false;
             }
         }
         None => {
@@ -25,57 +30,56 @@ pub fn cut_rect(
         }
     }
 
-    if position.is_some() {
-        pos = position.unwrap();
-    }
 
-    if valid {
-        ui.ctx().set_cursor_icon(egui::CursorIcon::Crosshair);
-        if ui.input(|i| i.pointer.primary_pressed()) {
-            my_self.area = (0.0, 0.0, 0.0, 0.0);
+        if valid==true && ui.input(|i|  i.pointer.primary_pressed()) {
+
+            my_self.area = (None, None);
             let start_pos = ui.input(|i| i.pointer.press_origin()).unwrap();
-            my_self.area.0 = start_pos.x;
-            my_self.area.1 = start_pos.y;
+            my_self.area.0.replace(start_pos);
+  
+            
         }
-        if ui.input(|i| i.pointer.primary_released()) {
-            my_self.area.2 = pos.x;
-            my_self.area.3 = pos.y;
 
-            if my_self.area.0 > pos.x {
-                my_self.area.2 = my_self.area.0;
-                my_self.area.0 = pos.x;
-            }
-            if my_self.area.1 > pos.y {
-                my_self.area.3 = my_self.area.1;
-                my_self.area.1 = pos.y;
-            }
+
+        if ui.input(|i| i.pointer.primary_released()) && my_self.area.1.is_none(){
+
+                pos=pos.clamp(limits.min, limits.max);
+
+                let start= my_self.area.0.unwrap().min(pos);
+                let end=my_self.area.0.unwrap().max(pos);
+                my_self.area.0.replace(start);
+                my_self.area.1.replace(end);
+
         }
-    }
+
     screenshot::visualize_image(&mut my_self.image[my_self.n_monitor], ui, info.size, None);
-    if my_self.area.0 != 0.0 || my_self.area.1 != 0.0 {
+    if my_self.area.0.is_some(){
         let mut my_stroke = egui::Stroke::default();
         my_stroke.color = egui::Color32::WHITE;
         my_stroke.width = 2.0;
-        let mut my_rect = egui::Rect::NOTHING;
+        let my_rect:egui::Rect;
 
-        if my_self.area.2 == 0.0 && my_self.area.3 == 0.0 {
-            if valid {
-                my_rect = egui::Rect::from_two_pos(egui::pos2(my_self.area.0, my_self.area.1), pos);
-            }
+        if my_self.area.1.is_none(){
+                let start= my_self.area.0.unwrap().min(pos.clamp(limits.min, limits.max));
+                let end=my_self.area.0.unwrap().max(pos.clamp(limits.min, limits.max));
+
+
+                my_rect = egui::Rect::from_min_max(start, end);
+    
         } else {
-            my_rect = egui::Rect::from_two_pos(
-                egui::pos2(my_self.area.0, my_self.area.1),
-                egui::pos2(my_self.area.2, my_self.area.3),
+            my_rect = egui::Rect::from_min_max(
+                my_self.area.0.unwrap(),
+                my_self.area.1.unwrap(),
             );
         }
-        if my_rect.is_positive() {
+       
             ui.painter().rect(
                 my_rect,
                 egui::Rounding::none(),
                 egui::Color32::from_white_alpha(5),
                 my_stroke,
             );
-        }
+        
     }
 }
 
@@ -236,7 +240,7 @@ pub fn eraser_square(start: egui::Pos2, end: egui::Pos2, limits: (egui::Pos2, eg
                 else if p2.y>limits.1.y{
                     p2.y=limits.1.y;
                 }
-                let rect= egui::Rect::from_two_pos(p1, p2);
+                let rect= egui::Rect::from_min_max(p1, p2);
                 ui.painter().rect(
                     rect,
                     egui::Rounding::none(),
