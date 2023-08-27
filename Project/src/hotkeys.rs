@@ -1,5 +1,6 @@
 use global_hotkey::{GlobalHotKeyManager, hotkey::HotKey, GlobalHotKeyEvent};
 use keyboard_types::{Code, Modifiers};
+use native_dialog::MessageDialog;
 use crate::MyApp;
 
 pub struct HotkeysConfig{
@@ -306,6 +307,12 @@ pub fn edit_shortcut(my_app: &mut MyApp, ui: &mut egui::Ui){
                                     if success {
                                         //modification could fail if for example I try to set an already registered hotkey
                                         my_app.hotkey_conf.set_enable(true);
+                                    }else{
+                                        MessageDialog::new()
+                                        .set_title("Error")
+                                        .set_text("Hotkey already used!")
+                                        .show_alert()
+                                        .unwrap();
                                     }
                                 }
                                 my_app.hotkey_conf.set_new_hotkey(new_mod, new_key);
