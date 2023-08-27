@@ -106,7 +106,7 @@ fn close_maximize_minimize(my_app:&MyApp,ui: &mut egui::Ui, frame: &mut eframe::
         frame.close();
     }
 
-    if my_app.mode!=3{
+    if my_app.mode!=4 && my_app.mode!=5 && my_app.mode!=6{
     if frame.info().window_info.maximized {
         let maximized_response = ui
             .add(egui::Button::new(

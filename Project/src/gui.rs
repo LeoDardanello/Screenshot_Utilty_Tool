@@ -234,7 +234,7 @@ pub fn gui_mode4(my_app: &mut MyApp, frame: &mut eframe::Frame, ui: &mut egui::U
     hotkey_handlers::hotkey_handler_mode4(ev,my_app,frame);
    
 }
-
+//Mode for Cropping
 pub fn gui_mode5(my_app: &mut MyApp, frame: &mut eframe::Frame, ui: &mut egui::Ui) {
     let position = ui.input(|i| i.pointer.hover_pos());
     let info = frame.info().window_info;
@@ -366,7 +366,9 @@ pub fn gui_mode6(my_app: &mut MyApp, frame: &mut eframe::Frame, ui: &mut egui::U
         }
 
      });
-     if my_app.paint.last().is_some_and(|x|x.draw==Paints::Highlighter && x.points.is_some() && x.color.is_some()){
+     
+     if my_app.paint.last().is_some() && my_app.paint.last().unwrap().draw==Paints::Highlighter &&
+        my_app.paint.last().unwrap().points.is_some() && my_app.paint.last().unwrap().color.is_some(){
                 draw::highlight(&mut my_app.paint,ui, my_rect); 
         }
      
