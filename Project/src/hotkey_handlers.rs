@@ -17,7 +17,7 @@ pub fn hotkey_handler_mode0(ev:Option<usize>,my_app:&mut MyApp,ui:&mut egui::Ui,
                 my_app.area = (0.0, 0.0, 0.0, 0.0);
                 my_app.def_paint.clear();
                 my_app.paint.clear();
-                my_app.edit_image=MyScreen{screens:Vec::new(), size:(0,0)};
+                my_app.edit_image=MyScreen::new(None, None);
                 my_app.mode = 1;
             }
             if i == 1 {

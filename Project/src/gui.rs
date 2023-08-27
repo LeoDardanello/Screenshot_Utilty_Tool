@@ -87,7 +87,7 @@ pub fn gui_mode0(my_app: &mut MyApp, frame: &mut eframe::Frame, ui: &mut egui::U
 
             my_app.time = ui.input(|i| i.time);
             my_app.area = (0.0, 0.0, 0.0, 0.0);
-            my_app.edit_image=MyScreen{screens:Vec::new(), size:(0,0)};
+            my_app.edit_image=MyScreen::new(None, None);
             my_app.def_paint.clear();
             my_app.paint.clear();
             my_app.mode = 1;
@@ -238,16 +238,15 @@ pub fn gui_mode4(my_app: &mut MyApp, frame: &mut eframe::Frame, ui: &mut egui::U
 pub fn gui_mode5(my_app: &mut MyApp, frame: &mut eframe::Frame, ui: &mut egui::Ui) {
     let position = ui.input(|i| i.pointer.hover_pos());
     let info = frame.info().window_info;
-    let mut limits = (10.0, 80.0, info.size[0] - 10.0, ((info.size[0] - 20.0)*my_app.image[my_app.n_monitor].size.1 as f32)/my_app.image[my_app.n_monitor].size.0 as f32);
-    if limits.3>=info.size[1]{
-        limits.3=info.size[1]-10.0;
-    }
+    let my_rect= my_app.image[my_app.n_monitor].rect.unwrap();
+    let limits = (my_rect.min, my_rect.max);
+
     let props = (
-        (my_app.image[my_app.n_monitor].size.0 as f32) / (limits.2 - limits.0),
-        (my_app.image[my_app.n_monitor].size.1 as f32) / (limits.3 - limits.1),
+        (my_app.image[my_app.n_monitor].size.0 as f32) / (limits.1.x - limits.0.x),
+        (my_app.image[my_app.n_monitor].size.1 as f32) / (limits.1.y - limits.0.y),
     );
 
-    draw::cut_rect(position, info, my_app, ui, limits);
+    draw::cut_rect(position, info, my_app, ui,my_rect );
 
     ui.horizontal(|ui| {
         if ui.button("Return").clicked() {
@@ -259,8 +258,8 @@ pub fn gui_mode5(my_app: &mut MyApp, frame: &mut eframe::Frame, ui: &mut egui::U
             let height = ((my_app.area.3 - my_app.area.1).abs() * props.1) as u32;
             my_app.image[my_app.n_monitor] = screenshot::screen_area(
                 &mut my_app.image[my_app.n_monitor],
-                ((my_app.area.0 - limits.0) * props.0) as u32,
-                ((my_app.area.1 - limits.1) * props.1) as u32,
+                ((my_app.area.0 - limits.0.x) * props.0) as u32,
+                ((my_app.area.1 - limits.0.y) * props.1) as u32,
                 width,
                 height,
             );
@@ -273,13 +272,8 @@ pub fn gui_mode5(my_app: &mut MyApp, frame: &mut eframe::Frame, ui: &mut egui::U
 //Annotation Tool 
 pub fn gui_mode6(my_app: &mut MyApp, frame: &mut eframe::Frame, ui: &mut egui::Ui){
     screenshot::visualize_image(&mut my_app.image[my_app.n_monitor], ui, frame.info().window_info.size, None);
-    let info = frame.info().window_info;
-    let mut limits = (10.0, 80.0, info.size[0] - 10.0, ((info.size[0] - 20.0)*my_app.image[my_app.n_monitor].size.1 as f32)/my_app.image[my_app.n_monitor].size.0 as f32);
-    let my_rect=egui::Rect::from_two_pos(egui::pos2(limits.0, limits.1), egui::pos2(limits.2, limits.3));
-    
-    if limits.3>=info.size[1]{
-        limits.3=info.size[1]-10.0;
-    }
+     let my_rect=my_app.image[my_app.n_monitor].rect.unwrap();
+    let limits = (my_rect.min, my_rect.max);
     if my_app.def_paint.len()>0 && my_app.paint.len()==0{
         my_app.paint.clear();
         my_app.paint.append(&mut my_app.def_paint);

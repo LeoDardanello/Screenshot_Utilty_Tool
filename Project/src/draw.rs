@@ -7,7 +7,7 @@ pub fn cut_rect(
     info: eframe::WindowInfo,
     my_self: &mut MyApp,
     ui: &mut egui::Ui,
-    limits: (f32, f32, f32, f32),
+    limits: egui::Rect,
 ) {
     let mut valid = false;
     let mut pos: egui::Pos2;
@@ -15,7 +15,7 @@ pub fn cut_rect(
     match position {
         Some(_) => {
             pos = position.unwrap();
-            if pos.x >= limits.0 && pos.y >= limits.1 && pos.x <= limits.2 && pos.y <= limits.3 {
+            if limits.contains(pos) {
                 valid = true;
             }
         }
@@ -196,7 +196,7 @@ pub fn draw_button(paint: Paints, ui: &mut egui::Ui, el: &mut Vec<MyDraw>, color
 }
 
 
-pub fn eraser_square(start: egui::Pos2, end: egui::Pos2, limits: (f32, f32, f32, f32), ui: &mut egui::Ui){
+pub fn eraser_square(start: egui::Pos2, end: egui::Pos2, limits: (egui::Pos2, egui::Pos2), ui: &mut egui::Ui){
                 let mut p1=start;
                 let mut p2=end;
 
@@ -209,32 +209,32 @@ pub fn eraser_square(start: egui::Pos2, end: egui::Pos2, limits: (f32, f32, f32,
                     p1.y = end.y;
                 }
 
-                if p1.x<limits.0{
-                    p1.x=limits.0;
+                if p1.x<limits.0.x{
+                    p1.x=limits.0.x;
                 }
-                else if p1.x>limits.2{
-                    p1.x=limits.2;
-                }
-
-                if p1.y<limits.1{
-                    p1.y=limits.1;
-                }
-                else if p1.y>limits.3{
-                    p1.y=limits.3;
+                else if p1.x>limits.1.x{
+                    p1.x=limits.1.x;
                 }
 
-                if p2.x<limits.0{
-                    p2.x=limits.0;
+                if p1.y<limits.0.y{
+                    p1.y=limits.0.y;
                 }
-                else if p2.x>limits.2{
-                    p2.x=limits.2;
+                else if p1.y>limits.1.y{
+                    p1.y=limits.1.y;
+                }
+
+                if p2.x<limits.0.x{
+                    p2.x=limits.0.x;
+                }
+                else if p2.x>limits.1.x{
+                    p2.x=limits.1.x;
                 }
                 
-                if p2.y<limits.1{
-                    p2.y=limits.1;
+                if p2.y<limits.0.y{
+                    p2.y=limits.0.y;
                 }
-                else if p2.y>limits.3{
-                    p2.y=limits.3;
+                else if p2.y>limits.1.y{
+                    p2.y=limits.1.y;
                 }
                 let rect= egui::Rect::from_two_pos(p1, p2);
                 ui.painter().rect(

@@ -26,7 +26,19 @@ impl HighlighterLine {
 pub struct MyScreen {
     screens: Vec<u8>,
     size: (usize, usize),
+    rect: Option<egui::Rect>,
 }
+
+impl MyScreen{
+    fn new( screen: Option<Vec<u8>>, size: Option<(usize, usize)>) -> Self {
+        Self {
+            screens: if screen.is_some(){ screen.unwrap()}else{Vec::new()},
+            size: if size.is_some(){size.unwrap()}else{(0,0)},
+            rect: None
+        }
+    }
+}
+
 #[derive(Clone)]
 pub struct MyDraw{
     draw: gui::Paints,
@@ -95,10 +107,7 @@ impl MyApp {
             def_paint: Vec::new(),
             edit_color:egui::Color32::BLACK,
             time: 0.0,
-            edit_image: MyScreen{
-                screens: Vec::new(),
-                size: (0,0)
-            },
+            edit_image: MyScreen::new(None, None),
             eraser: false,
             erased_draw: (gui::Paints::NoFigure, "None".to_string()),
         }
@@ -204,17 +213,15 @@ impl eframe::App for MyApp {
   
         if let Some(screenshot) = frame.screenshot() {
             let frame=frame.info().window_info.size;
-            let mut limits = (10.0, 80.0, frame[0] - 10.0, ((frame[0] - 20.0)*self.image[self.n_monitor].size.1 as f32)/self.image[self.n_monitor].size.0 as f32);
-            
-            if limits.3>=frame.y{
-                limits.3=frame.y-10.0;
-            }
+            let limits =(self.image[self.n_monitor].rect.unwrap().min, self.image[self.n_monitor].rect.unwrap().max); 
+
+     
 
             let pixels_per_point = Some((screenshot.pixels.len()/((_window_size[0]*_window_size[1]) as usize) )as f32);
     
                 let region = egui::Rect::from_min_max(
-                    egui::pos2(limits.0*_window_size[0] as f32/frame[0], limits.1*_window_size[0] as f32/frame[0]),
-                    egui::pos2((limits.2*_window_size[1] as f32)/frame[1], (limits.3*_window_size[1] as f32)/frame[1])
+                    egui::pos2(limits.0.x*_window_size[0] as f32/frame[0], limits.0.y*_window_size[0] as f32/frame[0]),
+                    egui::pos2((limits.1.x*_window_size[1] as f32)/frame[1], (limits.1.y*_window_size[1] as f32)/frame[1])
                 );
                 let my_screenshot=screenshot.region(&region, pixels_per_point);
                 self.edit_image.screens = my_screenshot.as_raw().to_vec();

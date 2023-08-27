@@ -12,23 +12,34 @@ struct MyImage {
 }
 
 impl MyImage {
-    fn ui(&mut self, ui: &mut egui::Ui, im: ColorImage, size: egui::Vec2, im_size: (usize, usize)) {
+    fn ui(&mut self, ui: &mut egui::Ui, im: ColorImage, size: egui::Vec2, im_size: (usize, usize))->egui::Rect {
         let texture: &egui::TextureHandle = self.texture.get_or_insert_with(|| {
             // Load the texture only once.
             ui.ctx().load_texture("my-image", im, Default::default())
         });
-        let mut max_size = egui::vec2(size.x - 10.0, ((size.x-20.0)*im_size.1 as f32)/im_size.0 as f32 ).to_pos2();
-        if max_size.y>=size.y{
-            max_size.y=size.y-10.0;
+        let mut start=egui::pos2(10.0, 80.0);
+        let mut max_size: egui::Pos2;
+        if im_size.1>im_size.0{
+            start.x=(size.x-im_size.0 as f32)/2.0;
+            max_size = egui::pos2( ((im_size.1 as f32-start.y)*im_size.0 as f32)/im_size.0 as f32,im_size.1 as f32-start.y);
         }
+        else{
+            max_size = egui::pos2(size.x - start.x, ((size.x-start.x*2.0)*im_size.1 as f32)/im_size.0 as f32 );
+            
+        }
+        if max_size.y>=size.y{
+                max_size.y=size.y-10.0;
+            }
+        
 
-        let my_rect = egui::Rect::from_two_pos(egui::pos2(10.0, 80.0), max_size);
+        let my_rect = egui::Rect::from_two_pos(start, max_size);
         ui.painter().image(
             texture.id(),
             my_rect,
             egui::Rect::from_min_max(egui::pos2(0.0, 0.0), egui::pos2(1.0, 1.0)),
             egui::Color32::WHITE,
         );
+        my_rect
     }
 }
 
@@ -37,10 +48,7 @@ pub fn full_screen() -> Vec<MyScreen> {
     let mut screen_image = Vec::new();
     for screen in screens {
         let img = screen.capture().unwrap();
-        let image = MyScreen {
-            screens: img.rgba().to_vec(),
-            size: (img.width() as usize, img.height() as usize),
-        };
+        let image = MyScreen::new(Some(img.rgba().to_vec()), Some((img.width() as usize, img.height() as usize)));
         screen_image.push(image);
     }
     screen_image
@@ -52,8 +60,8 @@ pub fn visualize_image(image: &mut MyScreen, ui: &mut Ui, size: egui::Vec2,dim: 
         let im =
             egui::ColorImage::from_rgba_unmultiplied([image.size.0, image.size.1], &image.screens);
             match dim {
-                Some(_) => {my_image.ui(ui, im, size, dim.unwrap());},
-                None => {my_image.ui(ui, im, size, image.size);},
+                Some(_) => {image.rect=Some(my_image.ui(ui, im, size, dim.unwrap()));},
+                None => {image.rect=Some(my_image.ui(ui, im, size, image.size));},
             }
                 
 
@@ -82,10 +90,7 @@ pub fn screen_area(image: &mut MyScreen, x0: u32, y0: u32, width: u32, height: u
             cropped_bytes.push(pixel[2]); // Blue
             cropped_bytes.push(pixel[3]); // Alpha
         }
-        let img = MyScreen {
-            screens: cropped_bytes,
-            size: (width as usize, height as usize),
-        };
+        let img = MyScreen::new(Some(cropped_bytes), Some((width as usize, height as usize)));
 
     
     img
