@@ -81,6 +81,7 @@ pub fn gui_mode0(my_app: &mut MyApp, frame: &mut eframe::Frame, ui: &mut egui::U
             if my_app.delay_time != 0 {
                 my_app.enable_screenshot = false;
                 thread::sleep(Duration::new(u64::from(my_app.delay_time), 0));
+                my_app.enable_screenshot=true;
             }
             frame.set_window_size(egui::Vec2 { x: 0.0, y: 0.0 });
             
