@@ -154,7 +154,7 @@ impl eframe::App for MyApp {
         } else if self.mode == 2 {
             self.mode = 4; //go to editing mode
             self.image = screenshot::full_screen();
-            
+            frame.set_window_size(egui::Vec2 { x: 640.0, y: 480.0 });
             frame.set_fullscreen(true);
             if self.image.len() > 1 {
                 self.mode = 3;// go to screen selection mode
@@ -242,7 +242,7 @@ fn main() {
         follow_system_theme: false,
         default_theme: eframe::Theme::Light,
         resizable: true,
-        initial_window_pos: Some(egui::pos2(0.0,0.0)),
+        //initial_window_pos: Some(egui::pos2(0.0,0.0)),
         ..Default::default()
     };
     //let native_options=eframe::NativeOptions::default();
