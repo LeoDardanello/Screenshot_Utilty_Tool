@@ -22,10 +22,8 @@ pub fn gui_mode0(my_app: &mut MyApp, frame: &mut eframe::Frame, ui: &mut egui::U
     if !frame.info().window_info.fullscreen && !frame.info().window_info.maximized{
         frame.set_window_size(egui::Vec2 { x: 640.0, y: 480.0 });
     }
-    ui.label(
-        egui::RichText::new(
-            "Welcome to the Screenshot Utility Tool, everything is ready to take a screenshot!",
-        )
+    ui.label(egui::RichText::new(
+            "Welcome to the Screenshot Utility Tool, everything is ready to take a screenshot!")
         .font(egui::FontId::proportional(17.5)),
     );
     ui.add_space(10.0);
@@ -35,54 +33,39 @@ pub fn gui_mode0(my_app: &mut MyApp, frame: &mut eframe::Frame, ui: &mut egui::U
         ui.label(egui::RichText::new("Format Selection:").font(egui::FontId::proportional(17.0)));
     });
     ui.add_space(10.0);
-
-    hotkeys::edit_shortcut(my_app, ui);
-    ui.add_space(40.0); //space between first and second group of widget
-    ui.horizontal(|ui| {
+    //Displaying curretnly selected Hotkeys and radio button for format selection
+    ui.horizontal(|ui|{
+        hotkeys::display_shortcut(my_app, ui);
+        ui.add_space(170.0);
+        //radio button for format selection
         ui.vertical(|ui| {
-            ui.label(egui::RichText::new("Set delay:").font(egui::FontId::proportional(17.0)));
-            ui.add_space(10.0);
-            ui.add(egui::Slider::new(&mut my_app.delay_time, 0..=10).text("Delay in seconds"));
-        });
-        //space between delay setting and default path setting
-        ui.add_space(80.0);
-        ui.vertical(|ui| {
-            ui.label(
-                egui::RichText::new("Current default path:").font(egui::FontId::proportional(17.0)),
-            );
-            ui.add_space(10.0);
-            ui.horizontal(|ui| {
-                ui.label(
-                    egui::RichText::new(&my_app.default_path)
-                        .font(egui::FontId::proportional(15.0)),
-                );
-                if ui.button("Change Default Path").clicked() {
-                    let path = FileDialog::new().show_open_single_dir().unwrap();
-                    match path {
-                        Some(path_ok) => {
-                            my_app.default_path = path_ok.to_string_lossy().to_string()
-                        }
-                        None => my_app.mode = 0,
-                    }
-                }
-            })
-        });
+            if ui.add(egui::RadioButton::new(my_app.output_format == ".jpg",".jpg")).clicked()
+            {my_app.output_format = String::from(".jpg");}
+            if ui.add(egui::RadioButton::new(my_app.output_format == ".png",".png")).clicked()
+            {my_app.output_format = String::from(".png");}
+            if ui.add(egui::RadioButton::new(my_app.output_format == ".gif",".gif")).clicked()
+            {my_app.output_format = String::from(".gif");}
+        })    
     });
+
+    ui.add_space(40.0);
+    ui.label(egui::RichText::new("To change default settings click down below:").font(egui::FontId::proportional(17.5)));
+    ui.add_space(10.0);
+    if ui.add_sized([80.0,20.0],egui::Button::new("Settings")).clicked(){
+        my_app.mode=7;
+    }
+
+    ui.add_space(40.0); //space between first and second group of widget
+
+    
 
     ui.horizontal(|ui| {
         //to place widgets on the same row
-
-        if ui
-            .add_enabled(
-                my_app.enable_screenshot,
-                egui::Button::new("Take Screenshot!"),
-            )
-            .clicked()
+        ui.add_space((frame.info().window_info.size.x/2.0)-80.0);
+        if ui.add_sized([80.0,20.0],egui::Button::new("Take Screenshot!")).clicked()
         {
             if my_app.delay_time != 0 {
-                my_app.enable_screenshot = false;
-                thread::sleep(Duration::new(u64::from(my_app.delay_time), 0));
-                my_app.enable_screenshot=true;
+                thread::sleep(Duration::new(u64::from(my_app.delay_time), 0)); 
             }
             frame.set_window_size(egui::Vec2 { x: 0.0, y: 0.0 });
             
@@ -100,9 +83,52 @@ pub fn gui_mode0(my_app: &mut MyApp, frame: &mut eframe::Frame, ui: &mut egui::U
     let ev = my_app.hotkey_conf.listen_to_event();
     hotkey_handlers::hotkey_handler_mode0(ev,my_app,ui,frame);
 }
+pub fn gui_mode_setting(my_app:&mut MyApp,ui:&mut egui::Ui){
 
+    ui.horizontal(|ui| {
+        ui.vertical(|ui| {
+            ui.label(egui::RichText::new("Set delay:").font(egui::FontId::proportional(17.0)));
+            ui.add_space(10.0);
+            ui.add(egui::Slider::new(&mut my_app.delay_time, 0..=10).text("Delay in seconds"));
+        });
+    });
+        // Vertcal space between delay setting and default path setting
+        ui.add_space(50.0);
+
+        ui.vertical(|ui| {
+            ui.label(egui::RichText::new("Current default path:").font(egui::FontId::proportional(17.0)));
+
+            ui.add_space(10.0);
+            ui.horizontal(|ui| {
+                ui.label(
+                    egui::RichText::new(&my_app.default_path)
+                        .font(egui::FontId::proportional(15.0)),
+                );
+                if ui.button("Change Default Path").clicked() {
+                    let path = FileDialog::new().show_open_single_dir().unwrap();
+                    match path {
+                        Some(path_ok) => {
+                            my_app.default_path = path_ok.to_string_lossy().to_string()
+                        }
+                        None => my_app.mode = 7,//go back to setting window
+                    }
+                }
+            });
+            ui.add_space(50.0);
+            hotkeys::edit_shortcut(my_app,ui);
+        });
+
+    ui.add_space(50.0);
+    if ui.button("Confirm Settings").clicked(){
+        my_app.mode=0;//go back to main window
+    }
+
+
+}
+
+//Multiple screen support
 pub fn gui_mode3(my_app: &mut MyApp, ui: &mut egui::Ui) {
-    //Multiple screen support
+    
     ui.label(
         egui::RichText::new("Multiple monitors detected\nChoose the monitor to acquire")
             .font(egui::FontId::proportional(17.5)),
@@ -148,11 +174,7 @@ pub fn gui_mode4(my_app: &mut MyApp, frame: &mut eframe::Frame, ui: &mut egui::U
     ui.horizontal(|ui| {
         if ui.button("Return").clicked() {    
             frame.set_fullscreen(false);
-            
-            
             my_app.mode = 0;
-            
-            my_app.enable_screenshot = true;
         }
 
         let window_name =
