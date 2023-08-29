@@ -132,27 +132,23 @@ pub fn write_text(ui: &mut egui::Ui, my_app: &mut MyApp,  rect: egui::Rect) {
 }
 
 
-pub fn highlight(
-    paint: &mut Vec<MyDraw>,
-    ui: &mut egui::Ui,
-    rect: egui::Rect,
-)  {
+pub fn highlight_eraser(paint: &mut Vec<MyDraw>,ui: &mut egui::Ui,rect: egui::Rect,mode:Paints){
+
     let u=paint.len()-1;
     let mut response = ui.allocate_rect(rect, egui::Sense::drag());
     let mut line=paint[u].points.clone().unwrap().line;
-    if let Some(pointer_pos) = response.interact_pointer_pos() {
 
+    if let Some(pointer_pos) = response.interact_pointer_pos() {
         if line.last() != Some(&pointer_pos) {
 
             line.push( pointer_pos);
             response.mark_changed();
         }
-        
     } 
     paint[u].points.replace(HighlighterLine { line, width: 20 });
     
     if response.drag_released(){
-        paint.push(MyDraw ::new(Paints::Highlighter, paint[u].color.unwrap()));
+        paint.push(MyDraw ::new(mode, paint[u].color.unwrap()));//when using eraser color doesn't matter
     }
        
 }
@@ -170,6 +166,9 @@ pub fn draw_button(paint: Paints, ui: &mut egui::Ui, el: &mut Vec<MyDraw>, color
     } else if paint == Paints::Highlighter {
         icon = "Highlighter";
     }
+    else if paint==Paints::Eraser{
+        icon = "Eraser";
+    }
 
     let mut button = egui::Button::new(egui::RichText::new(icon));
     let mut u=el.len();
@@ -178,6 +177,17 @@ pub fn draw_button(paint: Paints, ui: &mut egui::Ui, el: &mut Vec<MyDraw>, color
     }
 
     if ui.add(button).clicked() {
+        if paint==Paints::Eraser{
+            if *eraser{
+                *eraser=false;
+            }
+            else {
+                *eraser=true;
+            }
+        }
+        else{
+            *eraser=false;
+        }
         
 
         if u>0 && el[u-1].start.is_none() {
@@ -191,11 +201,10 @@ pub fn draw_button(paint: Paints, ui: &mut egui::Ui, el: &mut Vec<MyDraw>, color
             
         }
         
-        if  !(!*eraser && u>0 && el[u-1].draw==Paints::NoFigure){
+        if  !(u>0 && el[u-1].draw==Paints::NoFigure){
             el.push(MyDraw::new(paint, color));
         }
         
-        *eraser=false;
     }
 }
 

@@ -14,7 +14,8 @@ pub enum Paints {
     Square,
     Circle,
     Highlighter,
-    NoFigure
+    NoFigure,
+    Eraser
 }
 
 pub fn gui_mode0(my_app: &mut MyApp, frame: &mut eframe::Frame, ui: &mut egui::Ui) {
@@ -296,24 +297,26 @@ pub fn gui_mode6(my_app: &mut MyApp, frame: &mut eframe::Frame, ui: &mut egui::U
         draw::draw_button(Paints::Arrow,ui, &mut my_app.paint, my_app.edit_color, &mut my_app.eraser);
         draw::draw_button(Paints::Text,ui, &mut my_app.paint, my_app.edit_color, &mut my_app.eraser);
         draw::draw_button(Paints::Highlighter,ui, &mut my_app.paint, my_app.edit_color, &mut my_app.eraser);
-        let mut  eraser=egui::Button::new(egui::RichText::new("Eraser"));
-        if my_app.eraser{
-            eraser=egui::Button::new(egui::RichText::new("Eraser").underline());
-            draw::eraser(ui, &mut my_app.erased_draw, my_rect, &mut my_app.paint);
-            u= my_app.paint.len();
-        }
-        if ui.add(eraser).clicked(){
-            if my_app.eraser{
-                my_app.eraser=false;
-            }
-            else{
-            my_app.eraser=true;
+        draw::draw_button(Paints::Eraser,ui, &mut my_app.paint, my_app.edit_color, &mut my_app.eraser);
+        
+        // let mut eraser=egui::Button::new(egui::RichText::new("Eraser"));
+        // if my_app.eraser{
+        //     eraser=egui::Button::new(egui::RichText::new("Eraser").underline());
+        // }
+        // if ui.add(eraser).clicked(){
+        //     if my_app.eraser{
+        //         my_app.eraser=false;
+        //     }
+        //     else{
+        //     my_app.eraser=true;
+        //     }
             
-            if u>0{
-                my_app.paint[u-1].draw=Paints::NoFigure;
-            }
-        }
-        }
+            
+        //     if u>0{
+        //         my_app.paint[u-1].draw=Paints::Eraser;
+        //     }
+        // }
+        // }
 
         /*if my_app.paint.len()>0{
         ui.add_enabled(my_app.paint.last().unwrap().draw==Paints::Highlighter ,{
@@ -363,10 +366,19 @@ pub fn gui_mode6(my_app: &mut MyApp, frame: &mut eframe::Frame, ui: &mut egui::U
         }
 
      });
+
+     if my_app.eraser{
+        if my_app.paint.last().unwrap().points.is_some() {
+             draw::highlight_eraser(&mut my_app.paint,ui, my_rect,Paints::Eraser); 
+     }
+         
+        //  draw::eraser(ui, &mut my_app.erased_draw, my_rect, &mut my_app.paint);
+         // u= my_app.paint.len();
+     }
      
      if my_app.paint.last().is_some() && my_app.paint.last().unwrap().draw==Paints::Highlighter &&
         my_app.paint.last().unwrap().points.is_some() && my_app.paint.last().unwrap().color.is_some(){
-                draw::highlight(&mut my_app.paint,ui, my_rect); 
+                draw::highlight_eraser(&mut my_app.paint,ui, my_rect,Paints::Highlighter); 
         }
      
     let painter= ui.painter().with_clip_rect(my_rect);
@@ -441,6 +453,41 @@ pub fn gui_mode6(my_app: &mut MyApp, frame: &mut eframe::Frame, ui: &mut egui::U
                 }
             }
         }
+        else if figure.draw==Paints::Eraser{
+            let props = (
+                (my_app.image[my_app.n_monitor].size.0 as f32) / (limits.1.x - limits.0.x),
+                (my_app.image[my_app.n_monitor].size.1 as f32) / (limits.1.y - limits.0.y),
+            );
+            if figure.points.is_some(){
+            let points= figure.points.clone().unwrap();
+            if points.line.len()>0{
+            for i in 0..points.line.len()-1{
+                let p1 = points.line[i];
+                let p2 = points.line[i+1];
+                let mut start=p1.min(p2);
+                start.x-=10.0;
+                start.y-=10.0;
+                let mut end=p1.max(p2);
+                end.x+=10.0;
+                end.y+=10.0;
+                let height= ((end.y-start.y).abs()*props.1) as u32;
+                let width= ((end.x-start.x).abs()*props.0) as u32;
+                let square= screenshot::screen_area(&mut my_app.image[my_app.n_monitor], ((start.x- limits.0.x)*props.0) as u32, ((start.y- limits.0.y)*props.1) as u32, width, height);
+                let im =egui::ColorImage::from_rgba_unmultiplied([square.size.0,square.size.1], &square.screens);
+                let mut texture: Option<egui::TextureHandle>= None;
+                let my_texture: &egui::TextureHandle = texture.get_or_insert_with(|| { ui.ctx().load_texture("my-image", im, Default::default())});
+                painter.image(
+                    my_texture.id(),
+                    egui::Rect::from_min_max(start, end),
+                    egui::Rect::from_min_max(egui::pos2(0.0, 0.0), egui::pos2(1.0, 1.0)),
+                    egui::Color32::WHITE,
+                );
+
+            }
+
+        }
+    }
+    }
     
     }
     }
