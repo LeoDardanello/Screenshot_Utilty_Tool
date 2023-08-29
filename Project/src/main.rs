@@ -73,7 +73,6 @@ pub struct MyApp {
     area: (Option<egui::Pos2>, Option<egui::Pos2>),
     delay_time: u32,
     n_monitor: usize,
-    enable_screenshot: bool,
     default_path: String,
     paint: Vec<MyDraw>,
     def_paint: Vec<MyDraw>,
@@ -100,8 +99,7 @@ impl MyApp {
             default_name_index: 0,
             delay_time: 0,
             n_monitor: 0,
-            enable_screenshot: true,
-            //use backslashes to be compatible with different OS
+            //use frontslashes to be compatible with different OS
             default_path: String::from("./screenshot_default"), //default screenshot save location, used by save hotkey
             paint: Vec::new(),
             def_paint: Vec::new(),
@@ -136,8 +134,18 @@ impl eframe::App for MyApp {
                 },
             );
 
-            //self.hotkey_conf.listen_to_event();
-        } else if self.mode == 1 {
+        }if self.mode == 7 {
+            gui_base::custom_window_frame(
+                self,
+                ctx,
+                frame,
+                "Screenshot Utility Tool", //the title in this row is used
+                |my_app: &mut Self, frame: &mut eframe::Frame, ui| {
+                    gui::gui_mode_setting(my_app, ui);
+                },
+            );
+
+        }else if self.mode == 1 {
             gui_base::custom_window_frame(
                 self,
                 ctx,
@@ -207,8 +215,6 @@ impl eframe::App for MyApp {
         }
     }
    
-    
-
     fn post_rendering(& mut self , _window_size: [u32; 2], frame: &eframe::Frame) {
   
         if let Some(screenshot) = frame.screenshot() {
