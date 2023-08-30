@@ -1,5 +1,6 @@
 use global_hotkey::{GlobalHotKeyManager, hotkey::HotKey, GlobalHotKeyEvent};
 use keyboard_types::{Code, Modifiers};
+use native_dialog::MessageDialog;
 use crate::MyApp;
 
 pub struct HotkeysConfig{
@@ -109,6 +110,23 @@ impl HotkeysConfig{
     }
 }
 
+pub fn display_shortcut(my_app: &mut MyApp,ui:&mut egui::Ui){
+    ui.vertical(|ui|{
+
+        for i in 0..my_app.hotkey_conf.get_hotkeys_len() {
+            ui.horizontal(|ui| {
+    
+                let u = my_app.hotkey_conf.get_hotkey_as_string(i);
+    
+                ui.label(egui::RichText::new(my_app.hotkey_conf.get_command(i).to_owned()+&" :".to_string()).font(egui::FontId::proportional(14.0)));
+    
+                ui.label(egui::RichText::new(u).font(egui::FontId::proportional(14.0)));
+            });
+    
+        }
+    });
+}
+    
 pub fn edit_shortcut(my_app: &mut MyApp, ui: &mut egui::Ui){
     ui.label(
         egui::RichText::new("Click on the shortcut to edit it")
@@ -119,6 +137,7 @@ pub fn edit_shortcut(my_app: &mut MyApp, ui: &mut egui::Ui){
     ui.horizontal(|ui| {
         //hotkeys display
         ui.vertical(|ui| {
+
             for i in 0..my_app.hotkey_conf.get_hotkeys_len() {
                 ui.horizontal(|ui| {
                     let u = my_app.hotkey_conf.get_hotkey_as_string(i);
@@ -306,6 +325,12 @@ pub fn edit_shortcut(my_app: &mut MyApp, ui: &mut egui::Ui){
                                     if success {
                                         //modification could fail if for example I try to set an already registered hotkey
                                         my_app.hotkey_conf.set_enable(true);
+                                    }else{
+                                        MessageDialog::new()
+                                        .set_title("Error")
+                                        .set_text("Hotkey already used!")
+                                        .show_alert()
+                                        .unwrap();
                                     }
                                 }
                                 my_app.hotkey_conf.set_new_hotkey(new_mod, new_key);
@@ -315,37 +340,5 @@ pub fn edit_shortcut(my_app: &mut MyApp, ui: &mut egui::Ui){
                 });
             }
         });
-        ui.add_space(185.0);
-        //radio button for format selection
-        ui.vertical(|ui| {
-            if ui
-                .add(egui::RadioButton::new(
-                    my_app.output_format == ".jpg",
-                    ".jpg",
-                ))
-                .clicked()
-            {
-                my_app.output_format = String::from(".jpg");
-            }
-
-            if ui
-                .add(egui::RadioButton::new(
-                    my_app.output_format == ".png",
-                    ".png",
-                ))
-                .clicked()
-            {
-                my_app.output_format = String::from(".png");
-            }
-            if ui
-                .add(egui::RadioButton::new(
-                    my_app.output_format == ".gif",
-                    ".gif",
-                ))
-                .clicked()
-            {
-                my_app.output_format = String::from(".gif");
-            }
-        })
     });
 }

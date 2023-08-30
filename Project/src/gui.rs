@@ -14,7 +14,8 @@ pub enum Paints {
     Square,
     Circle,
     Highlighter,
-    NoFigure
+    NoFigure,
+    Eraser
 }
 
 pub fn gui_mode0(my_app: &mut MyApp, frame: &mut eframe::Frame, ui: &mut egui::Ui) {
@@ -22,67 +23,42 @@ pub fn gui_mode0(my_app: &mut MyApp, frame: &mut eframe::Frame, ui: &mut egui::U
     if !frame.info().window_info.fullscreen && !frame.info().window_info.maximized{
         frame.set_window_size(egui::Vec2 { x: 640.0, y: 480.0 });
     }
-    ui.label(
-        egui::RichText::new(
-            "Welcome to the Screenshot Utility Tool, everything is ready to take a screenshot!",
-        )
+    ui.label(egui::RichText::new(
+            "Welcome to the Screenshot Utility Tool, everything is ready to take a screenshot!")
         .font(egui::FontId::proportional(17.5)),
     );
-    ui.add_space(10.0);
+    ui.add_space(20.0);
+    ui.label(egui::RichText::new("Instruction:").font(egui::FontId::proportional(17.0)));
+    ui.label(egui::RichText::new("For a quick acquisition with default settings use the Hotkeys").font(egui::FontId::proportional(17.0)));
+    ui.label(egui::RichText::new("For an acquisition with customized settings use the 'Take Screenshot' Button").font(egui::FontId::proportional(17.0)));
+    ui.add_space(20.0);
     ui.horizontal(|ui| {
         ui.label(egui::RichText::new("Hotkey List:").font(egui::FontId::proportional(17.0)));
-        ui.add_space(250.0);
-        ui.label(egui::RichText::new("Format Selection:").font(egui::FontId::proportional(17.0)));
     });
     ui.add_space(10.0);
-
-    hotkeys::edit_shortcut(my_app, ui);
-    ui.add_space(40.0); //space between first and second group of widget
-    ui.horizontal(|ui| {
-        ui.vertical(|ui| {
-            ui.label(egui::RichText::new("Set delay:").font(egui::FontId::proportional(17.0)));
-            ui.add_space(10.0);
-            ui.add(egui::Slider::new(&mut my_app.delay_time, 0..=10).text("Delay in seconds"));
-        });
-        //space between delay setting and default path setting
-        ui.add_space(80.0);
-        ui.vertical(|ui| {
-            ui.label(
-                egui::RichText::new("Current default path:").font(egui::FontId::proportional(17.0)),
-            );
-            ui.add_space(10.0);
-            ui.horizontal(|ui| {
-                ui.label(
-                    egui::RichText::new(&my_app.default_path)
-                        .font(egui::FontId::proportional(15.0)),
-                );
-                if ui.button("Change Default Path").clicked() {
-                    let path = FileDialog::new().show_open_single_dir().unwrap();
-                    match path {
-                        Some(path_ok) => {
-                            my_app.default_path = path_ok.to_string_lossy().to_string()
-                        }
-                        None => my_app.mode = 0,
-                    }
-                }
-            })
-        });
+    //Displaying curretnly selected Hotkeys and radio button for format selection
+    ui.horizontal(|ui|{
+        hotkeys::display_shortcut(my_app, ui);
     });
+
+    ui.add_space(40.0);
+    ui.label(egui::RichText::new("To change default settings click down below:").font(egui::FontId::proportional(17.5)));
+    ui.add_space(10.0);
+    if ui.add_sized([80.0,20.0],egui::Button::new("Settings")).clicked(){
+        my_app.mode=7;
+    }
+
+    ui.add_space(40.0); //space between first and second group of widget
+
+    
 
     ui.horizontal(|ui| {
         //to place widgets on the same row
-
-        if ui
-            .add_enabled(
-                my_app.enable_screenshot,
-                egui::Button::new("Take Screenshot!"),
-            )
-            .clicked()
+        ui.add_space((frame.info().window_info.size.x/2.0)-80.0);
+        if ui.add_sized([80.0,20.0],egui::Button::new("Take Screenshot!")).clicked()
         {
             if my_app.delay_time != 0 {
-                my_app.enable_screenshot = false;
-                thread::sleep(Duration::new(u64::from(my_app.delay_time), 0));
-                my_app.enable_screenshot=true;
+                thread::sleep(Duration::new(u64::from(my_app.delay_time), 0)); 
             }
             frame.set_window_size(egui::Vec2 { x: 0.0, y: 0.0 });
             
@@ -100,9 +76,64 @@ pub fn gui_mode0(my_app: &mut MyApp, frame: &mut eframe::Frame, ui: &mut egui::U
     let ev = my_app.hotkey_conf.listen_to_event();
     hotkey_handlers::hotkey_handler_mode0(ev,my_app,ui,frame);
 }
+pub fn gui_mode_setting(my_app:&mut MyApp,ui:&mut egui::Ui){
+    ui.add_space(10.0);
+    ui.horizontal(|ui| {
+        ui.vertical(|ui| {
+            ui.label(egui::RichText::new("Set delay:").font(egui::FontId::proportional(17.0)));
+            ui.add_space(10.0);
+            ui.add(egui::Slider::new(&mut my_app.delay_time, 0..=10).text("Delay in seconds"));
+        });
+        ui.add_space(200.0);//Horizontal space between slider and radio button
 
+        ui.vertical(|ui|{
+        //Radio Button for format selection
+        ui.label(egui::RichText::new("Format Selection:").font(egui::FontId::proportional(17.0)));
+        ui.add_space(10.0);
+        if ui.add(egui::RadioButton::new(my_app.output_format == ".jpg",".jpg")).clicked()
+        {my_app.output_format = String::from(".jpg");}
+        if ui.add(egui::RadioButton::new(my_app.output_format == ".png",".png")).clicked()
+        {my_app.output_format = String::from(".png");}
+        if ui.add(egui::RadioButton::new(my_app.output_format == ".gif",".gif")).clicked()
+        {my_app.output_format = String::from(".gif");}
+        });
+    });
+        // Vertical space between delay setting and default path setting
+        ui.add_space(20.0);
+
+        ui.vertical(|ui| {
+            ui.label(egui::RichText::new("Current default path:").font(egui::FontId::proportional(17.0)));
+
+            ui.horizontal(|ui| {
+                ui.label(
+                    egui::RichText::new(&my_app.default_path)
+                        .font(egui::FontId::proportional(15.0)),
+                );
+                if ui.button("Change Default Path").clicked() {
+                    let path = FileDialog::new().show_open_single_dir().unwrap();
+                    match path {
+                        Some(path_ok) => {
+                            my_app.default_path = path_ok.to_string_lossy().to_string()
+                        }
+                        None => my_app.mode = 7,//go back to setting window
+                    }
+                }
+            });
+            ui.add_space(50.0);
+            hotkeys::edit_shortcut(my_app,ui);
+        });
+
+    ui.add_space(50.0);
+    if ui.button("Confirm Settings").clicked(){
+        my_app.mode=0;//go back to main window
+    }
+
+
+}
+
+//Multiple screen support
 pub fn gui_mode3(my_app: &mut MyApp, ui: &mut egui::Ui) {
-    //Multiple screen support
+    
     ui.label(
         egui::RichText::new("Multiple monitors detected\nChoose the monitor to acquire")
             .font(egui::FontId::proportional(17.5)),
@@ -148,11 +179,7 @@ pub fn gui_mode4(my_app: &mut MyApp, frame: &mut eframe::Frame, ui: &mut egui::U
     ui.horizontal(|ui| {
         if ui.button("Return").clicked() {    
             frame.set_fullscreen(false);
-            
-            
             my_app.mode = 0;
-            
-            my_app.enable_screenshot = true;
         }
 
         let window_name =
@@ -296,24 +323,26 @@ pub fn gui_mode6(my_app: &mut MyApp, frame: &mut eframe::Frame, ui: &mut egui::U
         draw::draw_button(Paints::Arrow,ui, &mut my_app.paint, my_app.edit_color, &mut my_app.eraser);
         draw::draw_button(Paints::Text,ui, &mut my_app.paint, my_app.edit_color, &mut my_app.eraser);
         draw::draw_button(Paints::Highlighter,ui, &mut my_app.paint, my_app.edit_color, &mut my_app.eraser);
-        let mut  eraser=egui::Button::new(egui::RichText::new("Eraser"));
-        if my_app.eraser{
-            eraser=egui::Button::new(egui::RichText::new("Eraser").underline());
-            draw::eraser(ui, &mut my_app.erased_draw, my_rect, &mut my_app.paint);
-            u= my_app.paint.len();
-        }
-        if ui.add(eraser).clicked(){
-            if my_app.eraser{
-                my_app.eraser=false;
-            }
-            else{
-            my_app.eraser=true;
+        draw::draw_button(Paints::Eraser,ui, &mut my_app.paint, my_app.edit_color, &mut my_app.eraser);
+        
+        // let mut eraser=egui::Button::new(egui::RichText::new("Eraser"));
+        // if my_app.eraser{
+        //     eraser=egui::Button::new(egui::RichText::new("Eraser").underline());
+        // }
+        // if ui.add(eraser).clicked(){
+        //     if my_app.eraser{
+        //         my_app.eraser=false;
+        //     }
+        //     else{
+        //     my_app.eraser=true;
+        //     }
             
-            if u>0{
-                my_app.paint[u-1].draw=Paints::NoFigure;
-            }
-        }
-        }
+            
+        //     if u>0{
+        //         my_app.paint[u-1].draw=Paints::Eraser;
+        //     }
+        // }
+        // }
 
         /*if my_app.paint.len()>0{
         ui.add_enabled(my_app.paint.last().unwrap().draw==Paints::Highlighter ,{
@@ -363,10 +392,19 @@ pub fn gui_mode6(my_app: &mut MyApp, frame: &mut eframe::Frame, ui: &mut egui::U
         }
 
      });
+
+     if my_app.eraser{
+        if my_app.paint.last().unwrap().points.is_some() {
+             draw::highlight_eraser(&mut my_app.paint,ui, my_rect,Paints::Eraser); 
+     }
+         
+        //  draw::eraser(ui, &mut my_app.erased_draw, my_rect, &mut my_app.paint);
+         // u= my_app.paint.len();
+     }
      
      if my_app.paint.last().is_some() && my_app.paint.last().unwrap().draw==Paints::Highlighter &&
         my_app.paint.last().unwrap().points.is_some() && my_app.paint.last().unwrap().color.is_some(){
-                draw::highlight(&mut my_app.paint,ui, my_rect); 
+                draw::highlight_eraser(&mut my_app.paint,ui, my_rect,Paints::Highlighter); 
         }
      
     let painter= ui.painter().with_clip_rect(my_rect);
@@ -441,6 +479,41 @@ pub fn gui_mode6(my_app: &mut MyApp, frame: &mut eframe::Frame, ui: &mut egui::U
                 }
             }
         }
+        else if figure.draw==Paints::Eraser{
+            let props = (
+                (my_app.image[my_app.n_monitor].size.0 as f32) / (limits.1.x - limits.0.x),
+                (my_app.image[my_app.n_monitor].size.1 as f32) / (limits.1.y - limits.0.y),
+            );
+            if figure.points.is_some(){
+            let points= figure.points.clone().unwrap();
+            if points.line.len()>0{
+            for i in 0..points.line.len()-1{
+                let p1 = points.line[i];
+                let p2 = points.line[i+1];
+                let mut start=p1.min(p2);
+                start.x-=10.0;
+                start.y-=10.0;
+                let mut end=p1.max(p2);
+                end.x+=10.0;
+                end.y+=10.0;
+                let height= ((end.y-start.y).abs()*props.1) as u32;
+                let width= ((end.x-start.x).abs()*props.0) as u32;
+                let square= screenshot::screen_area(&mut my_app.image[my_app.n_monitor], ((start.x- limits.0.x)*props.0) as u32, ((start.y- limits.0.y)*props.1) as u32, width, height);
+                let im =egui::ColorImage::from_rgba_unmultiplied([square.size.0,square.size.1], &square.screens);
+                let mut texture: Option<egui::TextureHandle>= None;
+                let my_texture: &egui::TextureHandle = texture.get_or_insert_with(|| { ui.ctx().load_texture("my-image", im, Default::default())});
+                painter.image(
+                    my_texture.id(),
+                    egui::Rect::from_min_max(start, end),
+                    egui::Rect::from_min_max(egui::pos2(0.0, 0.0), egui::pos2(1.0, 1.0)),
+                    egui::Color32::WHITE,
+                );
+
+            }
+
+        }
+    }
+    }
     
     }
     }
