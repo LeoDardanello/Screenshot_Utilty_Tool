@@ -56,7 +56,7 @@ impl MyDraw {
                 start: None,
                 end: None,
                 color: Some(color),
-                points: if draw==gui::Paints::Highlighter|| draw==gui::Paints::Eraser{ Some(HighlighterLine::new())}else{None},
+                points: if draw==gui::Paints::Highlighter{ Some(HighlighterLine::new())}else{None},
                 text: String::from("")
             }
     

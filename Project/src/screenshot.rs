@@ -132,3 +132,60 @@ pub fn save_image(path: &String, image: &MyScreen, format: &String,use_format:bo
     
 }
 
+// fn save_images_as_gif2(image: screenshots::Image){
+
+//         let mut encoder = gif::Encoder::new(image.rgba().to_vec(), image.width() as u16, image.height() as u16,&[0xFF, 0xFF, 0xFF]).expect("msg");
+//         let img_buf = image::ImageBuffer::<image::Rgba<u8>, _>::from_vec(
+//             image.width(),
+//             image.height(),
+//             image.rgba().to_vec(),
+//         ).expect("impossibile creare l'immagine");
+//         let mut my_img = image::RgbaImage::from(img_buf).into_raw();
+//         let mut gif_frame = gif::Frame::from_rgba_speed(
+//             image.width() as u16,
+//             image.height() as u16,
+//             &mut my_img,
+//             10, // Adjust the speed (in hundredths of a second) as needed
+//         );
+
+//             gif_frame.dispose = gif::DisposalMethod::Background;
+//             encoder.write_frame(&gif_frame).expect("Failed to write GIF frame");
+//             std::fs::
+
+// }
+
+// fn save_images_as_gif(path: &String, screens: &mut Vec<screenshots::Image>) {
+//     // Crea un nuovo file GIF
+//     let mut output_file = File::create(path).expect("Impossibile creare il file GIF");
+
+//     // Configura l'encoder GIF
+//     let mut encoder = Encoder::new(
+//         &mut output_file,
+//         screens[0].width() as u16,
+//         screens[0].height() as u16,
+//         &[0xFF, 0xFF, 0xFF],
+//     )
+//     .expect("Impossibile creare l'encoder GIF");
+
+//     // Aggiungi i frame all'encoder
+//     for image in screens {
+//         let image_rgba = image.rgba();
+//         let img_buf = image::ImageBuffer::<image::Rgba<u8>, _>::from_vec(
+//             image.width(),
+//             image.height(),
+//             image_rgba.to_vec(),
+//         )
+//         .expect("impossibile creare l'immagine");
+
+//         let mut my_img = image::RgbaImage::from(img_buf).into_raw();
+
+//         let frame = Frame::from_rgba(
+//             image.width() as u16,
+//             image.height() as u16,
+//             my_img.as_mut_slice(),
+//         );
+//         encoder
+//             .write_frame(&frame)
+//             .expect("Impossibile scrivere il frame");
+//     }
+// }
