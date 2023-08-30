@@ -1,7 +1,5 @@
 use eframe::egui;
 use egui::{ColorImage, Ui};
-// use gif::{Encoder, Frame};  servono per save as gif (forse non necessaria)
-//use std::fs::File;
 use image::{self, ImageFormat};
 use screenshots::Screen;
 
