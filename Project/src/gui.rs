@@ -3,7 +3,7 @@ use arboard;
 use eframe::egui;
 use native_dialog::FileDialog;
 use std::borrow::Cow;
-use std::{thread};
+use std::thread;
 use std::time::Duration;
 
 
@@ -14,6 +14,7 @@ pub enum Paints {
     Square,
     Circle,
     Highlighter,
+    Eraser,
     NoFigure
 }
 
@@ -322,24 +323,25 @@ pub fn gui_mode6(my_app: &mut MyApp, frame: &mut eframe::Frame, ui: &mut egui::U
         draw::draw_button(Paints::Arrow,ui, &mut my_app.paint, my_app.edit_color, &mut my_app.eraser);
         draw::draw_button(Paints::Text,ui, &mut my_app.paint, my_app.edit_color, &mut my_app.eraser);
         draw::draw_button(Paints::Highlighter,ui, &mut my_app.paint, my_app.edit_color, &mut my_app.eraser);
-        let mut  eraser=egui::Button::new(egui::RichText::new("Eraser"));
-        if my_app.eraser{
-            eraser=egui::Button::new(egui::RichText::new("Eraser").underline());
-            draw::eraser(ui, &mut my_app.erased_draw, my_rect, &mut my_app.paint);
-            u= my_app.paint.len();
-        }
-        if ui.add(eraser).clicked(){
-            if my_app.eraser{
-                my_app.eraser=false;
-            }
-            else{
-            my_app.eraser=true;
+        draw::draw_button(Paints::Eraser,ui, &mut my_app.paint, my_app.edit_color, &mut my_app.eraser);
+        // let mut  eraser=egui::Button::new(egui::RichText::new("Eraser"));
+        
+            // eraser=egui::Button::new(egui::RichText::new("Eraser").underline());
+            // draw::eraser(ui, &mut my_app.erased_draw, my_rect, &mut my_app.paint);
+            // u= my_app.paint.len();
+        
+        // if ui.add(eraser).clicked(){
+        //     if my_app.eraser{
+        //         my_app.eraser=false;
+        //     }
+        //     else{
+        //     my_app.eraser=true;
             
-            if u>0{
-                my_app.paint[u-1].draw=Paints::NoFigure;
-            }
-        }
-        }
+        //     if u>0{
+        //         my_app.paint[u-1].draw=Paints::NoFigure;
+        //     }
+        // }
+        // }
 
         /*if my_app.paint.len()>0{
         ui.add_enabled(my_app.paint.last().unwrap().draw==Paints::Highlighter ,{
@@ -389,10 +391,17 @@ pub fn gui_mode6(my_app: &mut MyApp, frame: &mut eframe::Frame, ui: &mut egui::U
         }
 
      });
+
+     if my_app.eraser {
+        if my_app.paint.last().is_some() && my_app.paint.last().unwrap().draw==Paints::Eraser &&
+        my_app.paint.last().unwrap().points.is_some() {
+            draw::highlight_eraser(&mut my_app.paint,ui, my_rect, Paints::Eraser); 
+    }
+}
      
      if my_app.paint.last().is_some() && my_app.paint.last().unwrap().draw==Paints::Highlighter &&
         my_app.paint.last().unwrap().points.is_some() && my_app.paint.last().unwrap().color.is_some(){
-                draw::highlight(&mut my_app.paint,ui, my_rect); 
+                draw::highlight_eraser(&mut my_app.paint,ui, my_rect, Paints::Highlighter); 
         }
      
     let painter= ui.painter().with_clip_rect(my_rect);
@@ -444,9 +453,9 @@ pub fn gui_mode6(my_app: &mut MyApp, frame: &mut eframe::Frame, ui: &mut egui::U
                     color: figure.color.unwrap(),//color selected with the color picker
             });
         }
-        else if figure.draw==Paints::Highlighter{
+        else if figure.draw==Paints::Highlighter || figure.draw==Paints::Eraser{
             let points= figure.points.clone().unwrap();
-            let stroke=egui::Stroke::new(points.width as f32, egui::Color32::from_rgba_unmultiplied(figure.color.unwrap().r(), figure.color.unwrap().g(), figure.color.unwrap().b(),50));
+            let stroke=egui::Stroke::new(points.width as f32, figure.color.unwrap().linear_multiply(0.5));
             let line=egui::Shape::line(points.line, stroke);
             painter.add(line);
         }

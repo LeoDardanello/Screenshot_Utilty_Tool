@@ -56,7 +56,7 @@ impl MyDraw {
                 start: None,
                 end: None,
                 color: Some(color),
-                points: if draw==gui::Paints::Highlighter{ Some(HighlighterLine::new())}else{None},
+                points: if draw==gui::Paints::Highlighter{ Some(HighlighterLine::new())}else if draw==gui::Paints::Eraser{Some(HighlighterLine::new())}else{None},
                 text: String::from("")
             }
     
@@ -140,7 +140,7 @@ impl eframe::App for MyApp {
                 ctx,
                 frame,
                 "Screenshot Utility Tool", //the title in this row is used
-                |my_app: &mut Self, frame: &mut eframe::Frame, ui| {
+                |my_app: &mut Self, _frame: &mut eframe::Frame, ui| {
                     gui::gui_mode_setting(my_app, ui);
                 },
             );

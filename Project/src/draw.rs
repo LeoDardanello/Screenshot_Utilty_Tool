@@ -132,15 +132,16 @@ pub fn write_text(ui: &mut egui::Ui, my_app: &mut MyApp,  rect: egui::Rect) {
 }
 
 
-pub fn highlight(
-    paint: &mut Vec<MyDraw>,
-    ui: &mut egui::Ui,
-    rect: egui::Rect,
-)  {
+pub fn highlight_eraser(paint: &mut Vec<MyDraw>,ui: &mut egui::Ui,rect: egui::Rect,mode:Paints) {
     let u=paint.len()-1;
     let mut response = ui.allocate_rect(rect, egui::Sense::drag());
     let mut line=paint[u].points.clone().unwrap().line;
-    if let Some(pointer_pos) = response.interact_pointer_pos() {
+    if  response.dragged() {
+        let mut pointer_pos= egui::Pos2::default();
+        if response.hover_pos().is_some(){
+            pointer_pos=response.hover_pos().unwrap();
+        }
+        
 
         if line.last() != Some(&pointer_pos) {
 
@@ -152,7 +153,12 @@ pub fn highlight(
     paint[u].points.replace(HighlighterLine { line, width: 20 });
     
     if response.drag_released(){
-        paint.push(MyDraw ::new(Paints::Highlighter, paint[u].color.unwrap()));
+        if mode==Paints::Eraser{
+            paint[u].points.replace(HighlighterLine::new());
+        }
+        else{
+        paint.push(MyDraw ::new(mode, paint[u-1].color.unwrap()));//when using eraser color doesn't matter
+        }
     }
        
 }
@@ -170,6 +176,11 @@ pub fn draw_button(paint: Paints, ui: &mut egui::Ui, el: &mut Vec<MyDraw>, color
     } else if paint == Paints::Highlighter {
         icon = "Highlighter";
     }
+    else if paint==Paints::Eraser{
+        icon ="Eraser";
+    }
+
+    
 
     let mut button = egui::Button::new(egui::RichText::new(icon));
     let mut u=el.len();
@@ -178,6 +189,17 @@ pub fn draw_button(paint: Paints, ui: &mut egui::Ui, el: &mut Vec<MyDraw>, color
     }
 
     if ui.add(button).clicked() {
+        if paint==Paints::Eraser{
+            if *eraser{
+                *eraser=false;
+            }
+            else {
+                *eraser=true;
+            }
+        }
+        else{
+            *eraser=false;
+        }
         
 
         if u>0 && el[u-1].start.is_none() {
@@ -191,11 +213,16 @@ pub fn draw_button(paint: Paints, ui: &mut egui::Ui, el: &mut Vec<MyDraw>, color
             
         }
         
-        if  !(!*eraser && u>0 && el[u-1].draw==Paints::NoFigure){
+        if  !(u>0 && el[u-1].draw==Paints::NoFigure){
+            if paint==Paints::Eraser{
+                el.push(MyDraw::new(paint, egui::Color32::WHITE));
+            }
+            else{
             el.push(MyDraw::new(paint, color));
+            }
         }
         
-        *eraser=false;
+
     }
 }
 
@@ -296,7 +323,7 @@ pub fn eraser(ui: &mut egui::Ui,  erased_draw: &mut (Paints, String), rect: egui
     if combo.inner.is_none(){
     ui.input(|i|{
         let p=i.pointer.hover_pos();
-        if p.is_some() && i.pointer.primary_clicked() {
+        if p.is_some() && i.pointer.primary_down() {
             let pos=p.unwrap();
             if rect.contains(pos){
                 paint.retain(|x|{
@@ -305,7 +332,9 @@ pub fn eraser(ui: &mut egui::Ui,  erased_draw: &mut (Paints, String), rect: egui
                             if x.draw == Paints::Circle{
                                 let c = x.start.unwrap();
                                 let r = c.distance(x.end.unwrap());
-                                if pos.x as usize>=(c.x-r) as usize && pos.x as usize<=(c.x+r) as usize && pos.y as usize>=(c.y-r) as usize && pos.y as usize<=(c.y+r) as usize{
+                                let d = pos.distance(c);
+                                //if pos.x as usize>=(c.x-r) as usize && pos.x as usize<=(c.x+r) as usize && pos.y as usize>=(c.y-r) as usize && pos.y as usize<=(c.y+r) as usize{
+                                if d >= r-5.0 && d <= r+5.0 {
                                     return false;
                                 }
                                 else{
@@ -314,14 +343,17 @@ pub fn eraser(ui: &mut egui::Ui,  erased_draw: &mut (Paints, String), rect: egui
                             }
                             else if x.draw == Paints::Highlighter{
                                 if let Some(a) = &x.points{
-                                    for i in 0..a.line.len()-1{
-                                        let p1 = a.line[i];
-                                        let p2 = a.line[i+1];
-                                        if pos.x as usize>=cmp::min(p1.x as usize, p2.x as usize)-10 && pos.x as usize<=cmp::max(p1.x as usize, p2.x as usize)+10
-                                        && pos.y as usize>=cmp::min(p1.y as usize, p2.y as usize)-10 && pos.y as usize<=cmp::max(p1.y as usize, p2.y as usize)+10{
-                                            return false;
+                                    if a.line.len()>0{
+                                        for i in 0..a.line.len()-1{
+                                            let p1 = a.line[i];
+                                            let p2 = a.line[i+1];
+                                            if pos.x as usize>=cmp::min(p1.x as usize, p2.x as usize)-10 && pos.x as usize<=cmp::max(p1.x as usize, p2.x as usize)+10
+                                            && pos.y as usize>=cmp::min(p1.y as usize, p2.y as usize)-10 && pos.y as usize<=cmp::max(p1.y as usize, p2.y as usize)+10{
+                                                return false;
+                                            }
                                         }
                                     }
+
                                     return true;
                                 }
                                 else{
@@ -329,6 +361,22 @@ pub fn eraser(ui: &mut egui::Ui,  erased_draw: &mut (Paints, String), rect: egui
                                 }
 
                             }
+                            else if x.draw==Paints::Arrow{
+                                let p1 = x.start.unwrap();
+                                let p2 = x.end.unwrap();
+                                if ((pos.x-p1.x)/(p2.x-p1.x)) == ((pos.y-p1.y)/(p2.y-p1.y)) && ((p1.x >= pos.x && p2.x <= pos.x) || (p1.x <= pos.x && p2.x >= pos.x)){  //da sistemare cercando di implementare il range
+                                    return false;
+                                } 
+                                return true;
+                            }
+                            // else if x.draw==Paints::Square{
+                            //     let p1 = x.start.unwrap();
+                            //     let p2 = x.end.unwrap();
+                            //     if (pos.x <= p1.x-5.0 && pos.x >= p2.x+5.0 && pos.y>=p1.y-5.0 && pos.y>=p1.y+5.0) || (){
+                            //         return false;
+                            //     }
+                            //     return true;
+                            // }
                             else{
                                 let p1 = x.start.unwrap();
                                 let p2 = x.end.unwrap();
