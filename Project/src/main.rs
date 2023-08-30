@@ -214,7 +214,7 @@ impl eframe::App for MyApp {
 
         }
     }
-   
+    //executed after every update rendering
     fn post_rendering(& mut self , _window_size: [u32; 2], frame: &eframe::Frame) {
   
         if let Some(screenshot) = frame.screenshot() {

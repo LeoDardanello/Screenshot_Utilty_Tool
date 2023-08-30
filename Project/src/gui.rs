@@ -27,26 +27,18 @@ pub fn gui_mode0(my_app: &mut MyApp, frame: &mut eframe::Frame, ui: &mut egui::U
             "Welcome to the Screenshot Utility Tool, everything is ready to take a screenshot!")
         .font(egui::FontId::proportional(17.5)),
     );
-    ui.add_space(10.0);
+    ui.add_space(20.0);
+    ui.label(egui::RichText::new("Instruction:").font(egui::FontId::proportional(17.0)));
+    ui.label(egui::RichText::new("For a quick acquisition with default settings use the Hotkeys").font(egui::FontId::proportional(17.0)));
+    ui.label(egui::RichText::new("For an acquisition with customized settings use the 'Take Screenshot' Button").font(egui::FontId::proportional(17.0)));
+    ui.add_space(20.0);
     ui.horizontal(|ui| {
         ui.label(egui::RichText::new("Hotkey List:").font(egui::FontId::proportional(17.0)));
-        ui.add_space(250.0);
-        ui.label(egui::RichText::new("Format Selection:").font(egui::FontId::proportional(17.0)));
     });
     ui.add_space(10.0);
     //Displaying curretnly selected Hotkeys and radio button for format selection
     ui.horizontal(|ui|{
         hotkeys::display_shortcut(my_app, ui);
-        ui.add_space(170.0);
-        //radio button for format selection
-        ui.vertical(|ui| {
-            if ui.add(egui::RadioButton::new(my_app.output_format == ".jpg",".jpg")).clicked()
-            {my_app.output_format = String::from(".jpg");}
-            if ui.add(egui::RadioButton::new(my_app.output_format == ".png",".png")).clicked()
-            {my_app.output_format = String::from(".png");}
-            if ui.add(egui::RadioButton::new(my_app.output_format == ".gif",".gif")).clicked()
-            {my_app.output_format = String::from(".gif");}
-        })    
     });
 
     ui.add_space(40.0);
@@ -85,21 +77,33 @@ pub fn gui_mode0(my_app: &mut MyApp, frame: &mut eframe::Frame, ui: &mut egui::U
     hotkey_handlers::hotkey_handler_mode0(ev,my_app,ui,frame);
 }
 pub fn gui_mode_setting(my_app:&mut MyApp,ui:&mut egui::Ui){
-
+    ui.add_space(10.0);
     ui.horizontal(|ui| {
         ui.vertical(|ui| {
             ui.label(egui::RichText::new("Set delay:").font(egui::FontId::proportional(17.0)));
             ui.add_space(10.0);
             ui.add(egui::Slider::new(&mut my_app.delay_time, 0..=10).text("Delay in seconds"));
         });
+        ui.add_space(200.0);//Horizontal space between slider and radio button
+
+        ui.vertical(|ui|{
+        //Radio Button for format selection
+        ui.label(egui::RichText::new("Format Selection:").font(egui::FontId::proportional(17.0)));
+        ui.add_space(10.0);
+        if ui.add(egui::RadioButton::new(my_app.output_format == ".jpg",".jpg")).clicked()
+        {my_app.output_format = String::from(".jpg");}
+        if ui.add(egui::RadioButton::new(my_app.output_format == ".png",".png")).clicked()
+        {my_app.output_format = String::from(".png");}
+        if ui.add(egui::RadioButton::new(my_app.output_format == ".gif",".gif")).clicked()
+        {my_app.output_format = String::from(".gif");}
+        });
     });
-        // Vertcal space between delay setting and default path setting
-        ui.add_space(50.0);
+        // Vertical space between delay setting and default path setting
+        ui.add_space(20.0);
 
         ui.vertical(|ui| {
             ui.label(egui::RichText::new("Current default path:").font(egui::FontId::proportional(17.0)));
 
-            ui.add_space(10.0);
             ui.horizontal(|ui| {
                 ui.label(
                     egui::RichText::new(&my_app.default_path)

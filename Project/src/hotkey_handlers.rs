@@ -10,7 +10,7 @@ pub fn hotkey_handler_mode0(ev:Option<usize>,my_app:&mut MyApp,ui:&mut egui::Ui,
     match ev {
         None => {}
         Some(i) => {
-            if i == 0 {
+            if i == 0 {//Acquire
                 frame.set_window_size(egui::Vec2 { x: 0.0, y: 0.0 });
 
                 my_app.time = ui.input(|i| i.time);
@@ -20,14 +20,14 @@ pub fn hotkey_handler_mode0(ev:Option<usize>,my_app:&mut MyApp,ui:&mut egui::Ui,
                 my_app.edit_image=MyScreen::new(None, None);
                 my_app.mode = 1;
             }
-            if i == 1 {
+            if i == 1 {//Save
                 MessageDialog::new()
                     .set_title("Error")
                     .set_text("Can't save before taking screenshot!")
                     .show_alert()
                     .unwrap();
             }
-            if i == 2 {
+            if i == 2 {//Copy
                 MessageDialog::new()
                     .set_title("Error")
                     .set_text("Can't copy before taking screenshot!")
@@ -45,9 +45,6 @@ match ev {
     Some(i) => {
         if i == 1 {
             //Save Hotkey
-            /*println!("salvo screen");
-            println!("default path:{}",my_app.default_path);
-            println!("output_format:{}",my_app.output_format);*/
             
             let path_for_thread = String::from(
                 String::from(&my_app.default_path)
@@ -60,7 +57,6 @@ match ev {
             }
             let dir_path_for_thread=my_app.default_path.clone();
             let image_for_thread = image.clone();
-            let output_format_for_thread = my_app.output_format.clone();
 
             thread::spawn(move || {
                 if Path::new(&dir_path_for_thread).exists(){
@@ -68,10 +64,9 @@ match ev {
                     screenshot::save_image(
                         &path_for_thread,
                         &image_for_thread,
-                        &output_format_for_thread,
+                        &".jpg".to_string(),//uses default output format
                         true,
                     );
-                    println!("ho finito di salvare");
                 }else{
                     let result=fs::create_dir(dir_path_for_thread);
                     match result{
@@ -79,7 +74,7 @@ match ev {
                             screenshot::save_image(
                                 &path_for_thread,
                                 &image_for_thread,
-                                &output_format_for_thread,
+                                &".jpg".to_string(),//uses default output format
                                 true,
                             )},
 
