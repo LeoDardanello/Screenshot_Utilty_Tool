@@ -156,15 +156,17 @@ pub fn highlight_eraser(paint: &mut Vec<MyDraw>,ui: &mut egui::Ui,rect: egui::Re
         }
         
     } 
+    let len=line.len();
     paint[u].points.replace(HighlighterLine { line, width: 20 });
     
-    if i.pointer.primary_released(){
+    if i.pointer.primary_released() && len>0{
         if paint[u].draw==Paints::Eraser{
             paint.pop();
 
             paint.push(MyDraw ::new(Paints::Eraser, egui::Color32::WHITE));
         }
         else if paint[u].draw==Paints::Highlighter{
+    
         paint.push(MyDraw ::new(Paints::Highlighter, paint[u].color.unwrap()));//when using eraser color doesn't matter
         }
     }

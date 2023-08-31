@@ -1,7 +1,6 @@
 use crate::{draw, hotkeys, screenshot,hotkey_handlers, MyApp, MyScreen};
 use arboard;
 use eframe::egui;
-use emath::Pos2;
 use native_dialog::FileDialog;
 use std::borrow::Cow;
 use std::thread;
@@ -265,7 +264,7 @@ pub fn gui_mode4(my_app: &mut MyApp, frame: &mut eframe::Frame, ui: &mut egui::U
 }
 //Mode for Croppinge
 pub fn gui_mode5(my_app: &mut MyApp, frame: &mut eframe::Frame, ui: &mut egui::Ui) {
-    //TO FIX 
+    //TO FIX (disegni spostati e della dimensione sbagliata quando si ritorna all'edit)
     let position = ui.input(|i| i.pointer.hover_pos());
     let info = frame.info().window_info;
     let my_rect= my_app.image[my_app.n_monitor].rect.unwrap();
@@ -313,8 +312,8 @@ pub fn gui_mode5(my_app: &mut MyApp, frame: &mut eframe::Frame, ui: &mut egui::U
                     &mut my_app.edit_image,
                     ((my_app.area.0.unwrap().x- limits1.0.x) * props1.0) as u32,
                     ((my_app.area.0.unwrap().y- limits1.0.y) * props1.1) as u32,
-                    width,
-                    height,
+                    ((my_app.area.1.unwrap().x - my_app.area.0.unwrap().x)* props1.0) as u32,
+                    ((my_app.area.1.unwrap().y - my_app.area.0.unwrap().y) * props1.1) as u32,
                 );
 
             }
@@ -339,13 +338,16 @@ pub fn gui_mode6(my_app: &mut MyApp, frame: &mut eframe::Frame, ui: &mut egui::U
      let my_rect=my_app.image[my_app.n_monitor].rect.unwrap();
 
     if my_app.def_paint.len()>0 && my_app.paint.len()==0{
-        my_app.paint.clear();
-        my_app.paint.append(&mut my_app.def_paint);
+
+    
+        my_app.paint.append(&mut my_app.def_paint.clone());
+
     }
     let mut u=my_app.paint.len();
     ui.horizontal(|ui| {
         
         if ui.button("Return").clicked() {
+   
             my_app.mode = 4;// go to visualization mode
             my_app.paint.clear();
             u=0;
@@ -378,15 +380,36 @@ pub fn gui_mode6(my_app: &mut MyApp, frame: &mut eframe::Frame, ui: &mut egui::U
        }
     }
         if ui.button("Confirm Changes").clicked() {
+
             if u>0 {
-            frame.request_screenshot();
+            
             let last= &my_app.paint[u-1];
-            if last.draw== Paints::Eraser || last.start.is_none() {
-                my_app.paint.pop();
-                u=my_app.paint.len();
+            if last.draw== Paints::Highlighter{
+                println!("{:?}",last.points);
+            }
+            if (last.draw== Paints::Highlighter && last.points.clone().unwrap().line.len()==0) || last.start.is_none() {
+                if last.draw== Paints::Eraser || u==1{
+                    my_app.paint.pop();
+                    u=my_app.paint.len();
+                }
+                else{
+                    my_app.paint[u-1].draw=Paints::NoFigure;
+                    if my_app.paint[u-1].draw== Paints::Highlighter{
+                        my_app.paint[u-1].points=None;
+                    }
+                }
+                
             }
             
+            my_app.def_paint.clear();
             my_app.def_paint.append(&mut my_app.paint.clone());
+            if my_app.def_paint.len()>0{
+                frame.request_screenshot();
+            }
+            else{
+                my_app.edit_image.screens.clear();
+            }
+            
             }
            
             my_app.mode = 4;// go back to visualization mode, but can't crop anymore
