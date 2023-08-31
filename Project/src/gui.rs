@@ -1,6 +1,7 @@
 use crate::{draw, hotkeys, screenshot,hotkey_handlers, MyApp, MyScreen};
 use arboard;
 use eframe::egui;
+use emath::Pos2;
 use native_dialog::FileDialog;
 use std::borrow::Cow;
 use std::thread;
@@ -264,19 +265,39 @@ pub fn gui_mode4(my_app: &mut MyApp, frame: &mut eframe::Frame, ui: &mut egui::U
 }
 //Mode for Croppinge
 pub fn gui_mode5(my_app: &mut MyApp, frame: &mut eframe::Frame, ui: &mut egui::Ui) {
+    //TO FIX 
     let position = ui.input(|i| i.pointer.hover_pos());
     let info = frame.info().window_info;
-
-    let my_rect= if my_app.edit_image.screens.len()>0{my_app.edit_image.rect.unwrap()}else{my_app.image[my_app.n_monitor].rect.unwrap()};
+    let my_rect= my_app.image[my_app.n_monitor].rect.unwrap();
     let limits = (my_rect.min, my_rect.max);
-    let size= if my_app.edit_image.screens.len()>0{my_app.edit_image.size}else{my_app.image[my_app.n_monitor].size};
+    let size= my_app.image[my_app.n_monitor].size;
 
     let props = (
         (size.0 as f32) / (limits.1.x - limits.0.x),
         (size.1 as f32) / (limits.1.y - limits.0.y),
     );
+    let my_rect1;
+    let mut props1=(0.0, 0.0);
+    let mut limits1=(egui::Pos2::default(), egui::Pos2::default());
 
-    draw::cut_rect(position, info, my_app, ui,my_rect );
+    
+
+    if my_app.edit_image.screens.len()>0{
+        my_rect1=my_app.edit_image.rect.unwrap();
+        limits1=(my_rect1.min, my_rect1.max);
+        let size1=my_app.edit_image.size;
+        props1=(
+            (size1.0 as f32) / (limits1.1.x - limits1.0.x),
+            (size1.1 as f32) / (limits1.1.y - limits1.0.y),
+        );
+        draw::cut_rect(position, info, my_app, ui,my_rect1 );
+
+    }else{
+        draw::cut_rect(position, info, my_app, ui,my_rect );
+    }
+    
+
+    
 
     ui.horizontal(|ui| {
         if ui.button("Return").clicked() {
@@ -290,8 +311,8 @@ pub fn gui_mode5(my_app: &mut MyApp, frame: &mut eframe::Frame, ui: &mut egui::U
             if my_app.edit_image.screens.len()>0{
                 my_app.edit_image = screenshot::screen_area(
                     &mut my_app.edit_image,
-                    ((my_app.area.0.unwrap().x- limits.0.x) * props.0) as u32,
-                    ((my_app.area.0.unwrap().y- limits.0.y) * props.1) as u32,
+                    ((my_app.area.0.unwrap().x- limits1.0.x) * props1.0) as u32,
+                    ((my_app.area.0.unwrap().y- limits1.0.y) * props1.1) as u32,
                     width,
                     height,
                 );
@@ -336,30 +357,7 @@ pub fn gui_mode6(my_app: &mut MyApp, frame: &mut eframe::Frame, ui: &mut egui::U
         draw::draw_button(Paints::Text,ui, &mut my_app.paint, my_app.edit_color);
         draw::draw_button(Paints::Highlighter,ui, &mut my_app.paint, my_app.edit_color);
         draw::draw_button(Paints::Eraser,ui, &mut my_app.paint, my_app.edit_color);
-        // let mut  eraser=egui::Button::new(egui::RichText::new("Eraser"));
-        
-            // eraser=egui::Button::new(egui::RichText::new("Eraser").underline());
-            // draw::eraser(ui, &mut my_app.erased_draw, my_rect, &mut my_app.paint);
-            // u= my_app.paint.len();
-        
-        // if ui.add(eraser).clicked(){
-        //     if my_app.eraser{
-        //         my_app.eraser=false;
-        //     }
-        //     else{
-        //     my_app.eraser=true;
-            
-        //     if u>0{
-        //         my_app.paint[u-1].draw=Paints::NoFigure;
-        //     }
-        // }
-        // }
 
-        /*if my_app.paint.len()>0{
-        ui.add_enabled(my_app.paint.last().unwrap().draw==Paints::Highlighter ,{
-            egui::Slider::new(&mut my_app.paint.last().unwrap().points.unwrap().width, 10..=30).text("Change Width")
-        });
-        }*/
 
         let f=ui.color_edit_button_srgba(&mut my_app.edit_color);
         if u>0 && my_app.paint[u-1].draw!=Paints::Eraser{
@@ -383,7 +381,7 @@ pub fn gui_mode6(my_app: &mut MyApp, frame: &mut eframe::Frame, ui: &mut egui::U
             if u>0 {
             frame.request_screenshot();
             let last= &my_app.paint[u-1];
-            if last.draw== Paints::Eraser || last.start.is_none() ||last.draw==Paints::NoFigure {
+            if last.draw== Paints::Eraser || last.start.is_none() {
                 my_app.paint.pop();
                 u=my_app.paint.len();
             }

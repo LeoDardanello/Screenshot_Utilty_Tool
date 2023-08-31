@@ -100,10 +100,12 @@ pub fn draw_shape(ui: &mut egui::Ui, my_app: &mut MyApp, rect: egui::Rect) {
                 my_app.paint[u - 1].end = i.pointer.hover_pos();
          }
         } else if i.pointer.primary_released() && my_app.paint[u - 1].start.is_some() {
+            if rect.contains(i.pointer.hover_pos().unwrap()){
             my_app.paint[u - 1].end = i.pointer.hover_pos();
             my_app
                 .paint
                 .push(MyDraw::new(my_app.paint[u - 1].draw, my_app.edit_color));
+            }
 
         }
     });
