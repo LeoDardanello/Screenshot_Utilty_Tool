@@ -1,6 +1,8 @@
 use crate::{gui::Paints, screenshot, HighlighterLine, MyApp, MyDraw};
 use eframe::egui;
-use std::cmp;
+use geo::{Line, line_intersection::line_intersection};
+use emath::Rot2;
+
 
 pub fn cut_rect(
     position: Option<egui::Pos2>,
@@ -132,34 +134,39 @@ pub fn write_text(ui: &mut egui::Ui, my_app: &mut MyApp,  rect: egui::Rect) {
 }
 
 
-pub fn highlight_eraser(paint: &mut Vec<MyDraw>,ui: &mut egui::Ui,rect: egui::Rect,mode:Paints) {
+pub fn highlight_eraser(paint: &mut Vec<MyDraw>,ui: &mut egui::Ui,rect: egui::Rect,_mode:Paints) {
     let u=paint.len()-1;
-    let mut response = ui.allocate_rect(rect, egui::Sense::drag());
+    // let mut response = ui.allocate_rect(rect, egui::Sense::drag());
     let mut line=paint[u].points.clone().unwrap().line;
-    if  response.dragged() {
-        let mut pointer_pos= egui::Pos2::default();
-        if response.hover_pos().is_some(){
-            pointer_pos=response.hover_pos().unwrap();
-        }
+    ui.input(|i|{
+        let p=i.pointer.hover_pos();
+    if  p.is_some() && i.pointer.primary_down() {
+        let pointer_pos= p.unwrap();
         
 
-        if line.last() != Some(&pointer_pos) {
+        if line.last() != Some(&pointer_pos)  && rect.contains(pointer_pos){
+            if paint[u].draw==Paints::Eraser && line.len()==2{
+                line.remove(0);
+            }
 
             line.push( pointer_pos);
-            response.mark_changed();
+
         }
         
     } 
     paint[u].points.replace(HighlighterLine { line, width: 20 });
     
-    if response.drag_released(){
-        if mode==Paints::Eraser{
-            paint[u].points.replace(HighlighterLine::new());
+    if i.pointer.primary_released(){
+        if paint[u].draw==Paints::Eraser{
+            paint.pop();
+
+            paint.push(MyDraw ::new(Paints::Eraser, egui::Color32::WHITE));
         }
         else{
-        paint.push(MyDraw ::new(mode, paint[u-1].color.unwrap()));//when using eraser color doesn't matter
+        paint.push(MyDraw ::new(Paints::Highlighter, paint[u].color.unwrap()));//when using eraser color doesn't matter
         }
     }
+});
        
 }
 
@@ -200,7 +207,9 @@ pub fn draw_button(paint: Paints, ui: &mut egui::Ui, el: &mut Vec<MyDraw>, color
         else{
             *eraser=false;
         }
-        
+        if u>0 && el[u-1].draw==Paints::Eraser{
+            el[u-1].draw=Paints::NoFigure;
+        }
 
         if u>0 && el[u-1].start.is_none() {
             if el[u-1].draw==paint{
@@ -226,131 +235,121 @@ pub fn draw_button(paint: Paints, ui: &mut egui::Ui, el: &mut Vec<MyDraw>, color
     }
 }
 
+pub fn eraser(ui: &mut egui::Ui,  points: Vec<egui::Pos2>, rect: egui::Rect, paint: &mut Vec<MyDraw>){
 
-pub fn eraser_square(start: egui::Pos2, end: egui::Pos2, limits: (egui::Pos2, egui::Pos2), ui: &mut egui::Ui){
-                let mut p1=start;
-                let mut p2=end;
-
-                if p1.x > p2.x {
-                    p2.x = p1.x;
-                    p1.x = end.x;
-                }
-                if p1.y > p2.y {
-                    p2.y = p1.y;
-                    p1.y = end.y;
-                }
-
-                if p1.x<limits.0.x{
-                    p1.x=limits.0.x;
-                }
-                else if p1.x>limits.1.x{
-                    p1.x=limits.1.x;
-                }
-
-                if p1.y<limits.0.y{
-                    p1.y=limits.0.y;
-                }
-                else if p1.y>limits.1.y{
-                    p1.y=limits.1.y;
-                }
-
-                if p2.x<limits.0.x{
-                    p2.x=limits.0.x;
-                }
-                else if p2.x>limits.1.x{
-                    p2.x=limits.1.x;
-                }
-                
-                if p2.y<limits.0.y{
-                    p2.y=limits.0.y;
-                }
-                else if p2.y>limits.1.y{
-                    p2.y=limits.1.y;
-                }
-                let rect= egui::Rect::from_min_max(p1, p2);
-                ui.painter().rect(
-                    rect,
-                    egui::Rounding::none(),
-                    egui::Color32::TRANSPARENT,
-                    egui::Stroke {
-                        width: 1.5,
-                        color: egui::Color32::RED,
-                    },
-                );
-                if ui.rect_contains_pointer(rect){
-                    ui.ctx().set_cursor_icon(egui::CursorIcon::PointingHand);
-                }
-                
-                
-
-}
-
-pub fn eraser(ui: &mut egui::Ui,  erased_draw: &mut (Paints, String), rect: egui::Rect, paint: &mut Vec<MyDraw>){
-   let combo=egui::ComboBox::from_label("Figures to eliminate")
-    .selected_text(format!("{}", erased_draw.1))
-    .show_ui(ui, |ui| {
-        ui.selectable_value(
-            erased_draw,
-            (Paints::NoFigure, "None".to_string()),
-            "None",
-        );
-        ui.selectable_value(
-            erased_draw,
-            (Paints::Arrow, "Arrow".to_string()),
-            "Arrow",
-        );
-        ui.selectable_value(
-            erased_draw,
-            (Paints::Square, "Square".to_string()),
-            "Square",
-        );
-        ui.selectable_value(
-            erased_draw,
-            (Paints::Circle, "Circle".to_string()),
-            "Circle",
-        );
-        ui.selectable_value(
-            erased_draw,
-            (Paints::Text, "Text".to_string()),
-            "Text",
-        );
-        ui.selectable_value(
-            erased_draw,
-            (Paints::Highlighter, "Highlighter".to_string()),
-            "Highlighter"
-        );
-    });
-    if combo.inner.is_none(){
     ui.input(|i|{
         let p=i.pointer.hover_pos();
-        if p.is_some() && i.pointer.primary_down() {
+        if p.is_some() && i.pointer.is_decidedly_dragging() && i.pointer.primary_down() {
             let pos=p.unwrap();
+            
             if rect.contains(pos){
+                
                 paint.retain(|x|{
+                    let mut my_rect= egui::Rect::NOTHING;
                     if x.start.is_some() && x.end.is_some(){
-                        if x.draw == erased_draw.0{   //Cancel only the figures you have selected 
-                            if x.draw == Paints::Circle{
-                                let c = x.start.unwrap();
-                                let r = c.distance(x.end.unwrap());
-                                let d = pos.distance(c);
-                                //if pos.x as usize>=(c.x-r) as usize && pos.x as usize<=(c.x+r) as usize && pos.y as usize>=(c.y-r) as usize && pos.y as usize<=(c.y+r) as usize{
-                                if d >= r-5.0 && d <= r+5.0 {
+                        
+                        
+                            my_rect= egui::Rect::from_min_max(x.start.unwrap(), x.end.unwrap());
+                        
+                        
+                    }
+                  
+                       
+                            if x.draw==Paints::Text{
+                                return false;
+                            }
+                            else if x.draw==Paints::Square{
+                                let line=Line::new(geo::coord!{x:points[0].x, y: points[0].y},geo::coord!{x:points[1].x, y: points[1].y} );
+                                let line_top=Line::new(geo::coord!{x:my_rect.left(), y: my_rect.top()},geo::coord!{x:my_rect.right(), y: my_rect.top()} );
+                                let line_bottom=Line::new(geo::coord!{x:my_rect.left(), y: my_rect.bottom()},geo::coord!{x:my_rect.right(), y: my_rect.bottom()} );
+                                let line_left=Line::new(geo::coord!{x:my_rect.left(), y: my_rect.top()},geo::coord!{x:my_rect.left(), y: my_rect.bottom()} );
+                                let line_right=Line::new(geo::coord!{x:my_rect.right(), y: my_rect.top()},geo::coord!{x:my_rect.right(), y: my_rect.bottom()} );
+                                if line_intersection(line, line_top).is_some() || line_intersection(line, line_bottom).is_some() ||
+                                line_intersection(line, line_left).is_some() || line_intersection(line, line_right).is_some(){
                                     return false;
                                 }
+                               
+                                //[left, top][right, bottom]
+                                //top= min.y (ordinata più in alto- numericamente più piccola), bottom= max.y (ordinata più in basso- numericamente più grande) 
+                                // if ( my_rect.x_range().contains(&pos.x) && (my_rect.top()-5.0..my_rect.top()+5.0).contains(&pos.y)) ||//lato in alto
+                                // ( my_rect.x_range().contains(&pos.x)  && (my_rect.bottom()-5.0..my_rect.bottom()+5.0).contains(&pos.y) ) //lato in basso
+                                // ||(my_rect.y_range().contains(&pos.y) && (my_rect.left()-5.0..my_rect.left()+5.0).contains(&pos.x) ) || //lato a sinistra
+                                // (my_rect.y_range().contains(&pos.y) && (my_rect.right()-5.0..my_rect.right()+5.0).contains(&pos.x)) //lato a destra
+                                //  {
+                                //         return false;
+                                //     } 
+                                    else{
+                                        return true;
+                                    }
+                        }
+  
+ 
+                
+                    else if x.draw == Paints::Circle{
+                                let c = my_rect.min;
+                                let r = c.distance(my_rect.max);
+                                let d1 = points[0].distance(c)-r;
+                                let d2=points[1].distance(c)-r;
+                                if (d1>=0.0 && d2<=0.0) ||(d1<=0.0 && d2>=0.0){
+                                    return false;
+                                }
+
+                                //if pos.x as usize>=(c.x-r) as usize && pos.x as usize<=(c.x+r) as usize && pos.y as usize>=(c.y-r) as usize && pos.y as usize<=(c.y+r) as usize{
+                                // if (r-5.0..r+5.0).contains(&d){
+                                //     return false;
+                                // }
                                 else{
                                     return true;
                                 }
                             }
-                            else if x.draw == Paints::Highlighter{
+                            else if x.draw==Paints::Arrow{
+                                let line=Line::new(geo::coord!{x:points[0].x, y: points[0].y},geo::coord!{x:points[1].x, y: points[1].y} );
+                                let p1 = my_rect.min;
+                                let p2 = my_rect.max;
+                                
+                                let line1 = Line::new(geo::coord!{ x:p1.x, y:p1.y}, geo::coord!{ x:p2.x, y:p2.y});
+
+                                let vec = p2 - p1;
+
+                                let rot = Rot2::from_angle(std::f32::consts::TAU / 10.0);
+                                let tip_length = vec.length() / 4.0;
+                                let tip = p2;
+                                let dir = vec.normalized();
+
+                                let p3 = tip - tip_length * (rot * dir);
+                                let p4 = tip - tip_length * (rot.inverse() * dir);
+
+                                let line2 = Line::new(geo::coord!{ x:p2.x, y:p2.y}, geo::coord!{ x:p3.x, y:p3.y});
+                                let line3 = Line::new(geo::coord!{ x:p2.x, y:p2.y}, geo::coord!{ x:p4.x, y:p4.y});                                
+    
+                                // let a = p2.y - p1.y;
+                                // let b = p1.x - p2.x;
+                                // let c = (p2.x - p1.x) * p1.y - (p2.y - p1.y) * p1.x;
+    
+                                // let dist = (a*pos.x + b*pos.y + c).abs()/(a*a + b*b).sqrt();
+                                //if ((pos.x-p1.x)/(p2.x-p1.x)) == ((pos.y-p1.y)/(p2.y-p1.y)) && ((p1.x >= pos.x && p2.x <= pos.x) || (p1.x <= pos.x && p2.x >= pos.x)){  da sistemare cercando di implementare il range
+                                if line_intersection(line, line1).is_some() || line_intersection(line, line2).is_some() ||line_intersection(line, line3).is_some(){
+                                    return false;
+                                } 
+                                return true;
+                            }
+                    
+                
+                else if x.draw == Paints::Highlighter{
                                 if let Some(a) = &x.points{
                                     if a.line.len()>0{
+                                        let line=Line::new(geo::coord!{x:points[0].x, y: points[0].y},geo::coord!{x:points[1].x, y: points[1].y} );
                                         for i in 0..a.line.len()-1{
                                             let p1 = a.line[i];
                                             let p2 = a.line[i+1];
-                                            if pos.x as usize>=cmp::min(p1.x as usize, p2.x as usize)-10 && pos.x as usize<=cmp::max(p1.x as usize, p2.x as usize)+10
-                                            && pos.y as usize>=cmp::min(p1.y as usize, p2.y as usize)-10 && pos.y as usize<=cmp::max(p1.y as usize, p2.y as usize)+10{
-                                                return false;
+                                            let line_hight=Line::new(geo::coord!{x: p1.x, y: p1.y},geo::coord!{x:p2.x, y: p2.y} );
+                                            if line_intersection(line,line_hight).is_some(){
+                                                return  false;
                                             }
+                                            // if pos.x as usize>=cmp::min(p1.x as usize, p2.x as usize)-10 && pos.x as usize<=cmp::max(p1.x as usize, p2.x as usize)+10
+                                            // && pos.y as usize>=cmp::min(p1.y as usize, p2.y as usize)-10 && pos.y as usize<=cmp::max(p1.y as usize, p2.y as usize)+10{
+                                            //     return false;
+                                            // }
                                         }
                                     }
 
@@ -360,47 +359,17 @@ pub fn eraser(ui: &mut egui::Ui,  erased_draw: &mut (Paints, String), rect: egui
                                     return true;
                                 }
 
-                            }
-                            else if x.draw==Paints::Arrow{
-                                let p1 = x.start.unwrap();
-                                let p2 = x.end.unwrap();
-                                if ((pos.x-p1.x)/(p2.x-p1.x)) == ((pos.y-p1.y)/(p2.y-p1.y)) && ((p1.x >= pos.x && p2.x <= pos.x) || (p1.x <= pos.x && p2.x >= pos.x)){  //da sistemare cercando di implementare il range
-                                    return false;
-                                } 
+                        }
+                            else{
                                 return true;
                             }
-                            // else if x.draw==Paints::Square{
-                            //     let p1 = x.start.unwrap();
-                            //     let p2 = x.end.unwrap();
-                            //     if (pos.x <= p1.x-5.0 && pos.x >= p2.x+5.0 && pos.y>=p1.y-5.0 && pos.y>=p1.y+5.0) || (){
-                            //         return false;
-                            //     }
-                            //     return true;
-                            // }
-                            else{
-                                let p1 = x.start.unwrap();
-                                let p2 = x.end.unwrap();
-                                if pos.x as usize>=cmp::min(p1.x as usize, p2.x as usize) && pos.x as usize<=cmp::max(p1.x as usize, p2.x as usize)
-                                && pos.y as usize>=cmp::min(p1.y as usize, p2.y as usize) && pos.y as usize<=cmp::max(p1.y as usize, p2.y as usize){
-                                    return false;
-                                }
-                                else{
-                                    return true;
-                                }
-                            }
-                        }
-                        else{
-                            return true;
-                        }
-                    }
-                    else{
-                        return true;
-                    }
+                            
+                           
                 });
             }
             
         }
     });
 
-    }
+    // }
 }

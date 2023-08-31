@@ -79,8 +79,7 @@ pub struct MyApp {
     edit_color:egui::Color32,
     time: f64,
     edit_image: MyScreen,  
-    eraser: bool,
-    erased_draw: (gui::Paints, String)
+    eraser: bool
 }
 
 impl MyApp {
@@ -106,8 +105,7 @@ impl MyApp {
             edit_color:egui::Color32::BLACK,
             time: 0.0,
             edit_image: MyScreen::new(None, None),
-            eraser: false,
-            erased_draw: (gui::Paints::NoFigure, "None".to_string()),
+            eraser: false
         }
     }
 }

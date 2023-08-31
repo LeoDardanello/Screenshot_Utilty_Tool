@@ -303,7 +303,7 @@ pub fn gui_mode5(my_app: &mut MyApp, frame: &mut eframe::Frame, ui: &mut egui::U
 pub fn gui_mode6(my_app: &mut MyApp, frame: &mut eframe::Frame, ui: &mut egui::Ui){
     screenshot::visualize_image(&mut my_app.image[my_app.n_monitor], ui, frame.info().window_info.size, None);
      let my_rect=my_app.image[my_app.n_monitor].rect.unwrap();
-    let limits = (my_rect.min, my_rect.max);
+
     if my_app.def_paint.len()>0 && my_app.paint.len()==0{
         my_app.paint.clear();
         my_app.paint.append(&mut my_app.def_paint);
@@ -350,7 +350,7 @@ pub fn gui_mode6(my_app: &mut MyApp, frame: &mut eframe::Frame, ui: &mut egui::U
         }*/
 
         let f=ui.color_edit_button_srgba(&mut my_app.edit_color);
-        if u>0{
+        if u>0 && my_app.paint[u-1].draw!=Paints::Eraser{
         if f.clicked(){
 
                 match my_app.paint[u-1].color{
@@ -381,7 +381,7 @@ pub fn gui_mode6(my_app: &mut MyApp, frame: &mut eframe::Frame, ui: &mut egui::U
                     ui.ctx().set_cursor_icon(egui::CursorIcon::PointingHand);
                 }
                 draw::write_text(ui, my_app, my_rect);
-            }else if my_app.paint[u-1].color.is_some() {
+            }else if my_app.paint[u-1].color.is_some()  && my_app.paint[u-1].draw!=Paints::Eraser && my_app.paint[u-1].draw!=Paints::Highlighter {
                 if ui.rect_contains_pointer(my_rect) && !my_app.eraser{
                     ui.ctx().set_cursor_icon(egui::CursorIcon::PointingHand);
                 }
@@ -396,6 +396,8 @@ pub fn gui_mode6(my_app: &mut MyApp, frame: &mut eframe::Frame, ui: &mut egui::U
         if my_app.paint.last().is_some() && my_app.paint.last().unwrap().draw==Paints::Eraser &&
         my_app.paint.last().unwrap().points.is_some() {
             draw::highlight_eraser(&mut my_app.paint,ui, my_rect, Paints::Eraser); 
+            let p=my_app.paint[u-1].points.clone().unwrap();
+            draw::eraser(ui, p.line, my_rect, &mut my_app.paint);
     }
 }
      
@@ -406,12 +408,13 @@ pub fn gui_mode6(my_app: &mut MyApp, frame: &mut eframe::Frame, ui: &mut egui::U
      
     let painter= ui.painter().with_clip_rect(my_rect);
     for figure in my_app.paint.iter_mut() {
+        let mut valid=false;
         if figure.start.is_some() && figure.end.is_some(){
+            valid=true;
+        }
             
-        if figure.draw == Paints::Arrow {
-            if my_app.eraser && figure.draw==my_app.erased_draw.0{
-                draw::eraser_square(figure.start.unwrap(), figure.end.unwrap(), limits, ui);
-            }
+        if figure.draw == Paints::Arrow  && valid{
+           
             painter.arrow(
                 figure.start.unwrap(),
                 figure.end.unwrap() - figure.start.unwrap(),
@@ -420,16 +423,8 @@ pub fn gui_mode6(my_app: &mut MyApp, frame: &mut eframe::Frame, ui: &mut egui::U
                     color: figure.color.unwrap(),
                 },
             );
-        } else if figure.draw == Paints::Square {
-            let start = figure.start.unwrap();
-            let end = figure.end.unwrap();
-            if my_app.eraser && figure.draw==my_app.erased_draw.0{
-                painter.line_segment([start, end], egui::Stroke { width: 1.5, color: egui::Color32::RED});
-                painter.line_segment([egui::pos2(start.x, end.y), egui::pos2(end.x, start.y)], egui::Stroke { width: 1.5, color: egui::Color32::RED});
-            }
-            // else{
-            //     col = figure.color.unwrap();
-            // }
+        } else if figure.draw == Paints::Square && valid {
+
             painter.rect(
                 egui::Rect::from_two_pos(figure.start.unwrap(), figure.end.unwrap()),
                 egui::Rounding::none(),
@@ -440,30 +435,22 @@ pub fn gui_mode6(my_app: &mut MyApp, frame: &mut eframe::Frame, ui: &mut egui::U
                 },
             );
 
-        } else if figure.draw==Paints::Circle{
-            if my_app.eraser && figure.draw==my_app.erased_draw.0{
-                let c = figure.start.unwrap();
-                let r = c.distance(figure.end.unwrap());
-                draw::eraser_square(egui::Pos2::new(c.x-r, c.y-r), egui::Pos2::new(c.x+r, c.y+r), limits, ui);
-
-              
-            }
+        } else if figure.draw==Paints::Circle && valid{
+           
             painter.circle(figure.start.unwrap(), figure.start.unwrap().distance(figure.end.unwrap()), egui::Color32::TRANSPARENT, egui::Stroke {
                     width: 1.5,
                     color: figure.color.unwrap(),//color selected with the color picker
             });
         }
-        else if figure.draw==Paints::Highlighter || figure.draw==Paints::Eraser{
+        else if (figure.draw==Paints::Highlighter &&  figure.color.is_some())|| figure.draw==Paints::Eraser{
             let points= figure.points.clone().unwrap();
-            let stroke=egui::Stroke::new(points.width as f32, figure.color.unwrap().linear_multiply(0.5));
+            let stroke=egui::Stroke::new(points.width as f32, figure.color.unwrap().linear_multiply(0.3));
             let line=egui::Shape::line(points.line, stroke);
             painter.add(line);
         }
-        else if figure.draw==Paints::Text{
+        else if figure.draw==Paints::Text && valid{
             if figure.text.trim() != "" {
-                if my_app.eraser && figure.draw==my_app.erased_draw.0{
-                    draw::eraser_square(figure.start.unwrap(), figure.end.unwrap(), limits, ui);
-                }
+                
                 let rect = painter.text(
                     figure.start.unwrap(),
                     egui::Align2::LEFT_TOP,
@@ -475,7 +462,7 @@ pub fn gui_mode6(my_app: &mut MyApp, frame: &mut eframe::Frame, ui: &mut egui::U
                     figure.end = Some(rect.max);
                 }
             }
-        }
+        
     
     }
     }
