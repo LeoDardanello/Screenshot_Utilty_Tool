@@ -79,7 +79,7 @@ pub struct MyApp {
     edit_color:egui::Color32,
     time: f64,
     edit_image: MyScreen,  
-    eraser: bool
+
 }
 
 impl MyApp {
@@ -105,7 +105,7 @@ impl MyApp {
             edit_color:egui::Color32::BLACK,
             time: 0.0,
             edit_image: MyScreen::new(None, None),
-            eraser: false
+          
         }
     }
 }

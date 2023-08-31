@@ -54,7 +54,7 @@ pub fn cut_rect(
 
         }
 
-    screenshot::visualize_image(&mut my_self.image[my_self.n_monitor], ui, info.size, None);
+    screenshot::visualize_image(if my_self.edit_image.screens.len()>0{&mut my_self.edit_image}else{&mut my_self.image[my_self.n_monitor] }, ui, info.size, None);
     if my_self.area.0.is_some(){
         let mut my_stroke = egui::Stroke::default();
         my_stroke.color = egui::Color32::WHITE;
@@ -116,7 +116,7 @@ pub fn write_text(ui: &mut egui::Ui, my_app: &mut MyApp,  rect: egui::Rect) {
         
         if i.pointer.primary_down() &&  my_app.paint[u].start.is_none(){
             let pos=i.pointer.hover_pos();
-            if pos.is_some() && rect.contains(pos.unwrap()) {
+            if pos.is_some() && rect.contains(pos.unwrap()) && my_app.paint[u].color.is_some(){
                 my_app.paint[u].start = pos ;
                 my_app.paint[u].end = pos ;
                 my_app.paint.push(MyDraw::new(Paints::Text, my_app.edit_color))
@@ -134,7 +134,7 @@ pub fn write_text(ui: &mut egui::Ui, my_app: &mut MyApp,  rect: egui::Rect) {
 }
 
 
-pub fn highlight_eraser(paint: &mut Vec<MyDraw>,ui: &mut egui::Ui,rect: egui::Rect,_mode:Paints) {
+pub fn highlight_eraser(paint: &mut Vec<MyDraw>,ui: &mut egui::Ui,rect: egui::Rect) {
     let u=paint.len()-1;
     // let mut response = ui.allocate_rect(rect, egui::Sense::drag());
     let mut line=paint[u].points.clone().unwrap().line;
@@ -162,7 +162,7 @@ pub fn highlight_eraser(paint: &mut Vec<MyDraw>,ui: &mut egui::Ui,rect: egui::Re
 
             paint.push(MyDraw ::new(Paints::Eraser, egui::Color32::WHITE));
         }
-        else{
+        else if paint[u].draw==Paints::Highlighter{
         paint.push(MyDraw ::new(Paints::Highlighter, paint[u].color.unwrap()));//when using eraser color doesn't matter
         }
     }
@@ -170,7 +170,7 @@ pub fn highlight_eraser(paint: &mut Vec<MyDraw>,ui: &mut egui::Ui,rect: egui::Re
        
 }
 
-pub fn draw_button(paint: Paints, ui: &mut egui::Ui, el: &mut Vec<MyDraw>, color: egui::Color32, eraser: &mut bool) {
+pub fn draw_button(paint: Paints, ui: &mut egui::Ui, el: &mut Vec<MyDraw>, color: egui::Color32) {
     let mut icon: &str = "";
     if paint == Paints::Square {
         icon = "⬜";
@@ -196,20 +196,8 @@ pub fn draw_button(paint: Paints, ui: &mut egui::Ui, el: &mut Vec<MyDraw>, color
     }
 
     if ui.add(button).clicked() {
-        if paint==Paints::Eraser{
-            if *eraser{
-                *eraser=false;
-            }
-            else {
-                *eraser=true;
-            }
-        }
-        else{
-            *eraser=false;
-        }
-        if u>0 && el[u-1].draw==Paints::Eraser{
-            el[u-1].draw=Paints::NoFigure;
-        }
+
+
 
         if u>0 && el[u-1].start.is_none() {
             if el[u-1].draw==paint{
@@ -254,11 +242,7 @@ pub fn eraser(ui: &mut egui::Ui,  points: Vec<egui::Pos2>, rect: egui::Rect, pai
                         
                     }
                   
-                       
-                            if x.draw==Paints::Text{
-                                return false;
-                            }
-                            else if x.draw==Paints::Square{
+            if x.draw==Paints::Square || x.draw==Paints::Text{
                                 let line=Line::new(geo::coord!{x:points[0].x, y: points[0].y},geo::coord!{x:points[1].x, y: points[1].y} );
                                 let line_top=Line::new(geo::coord!{x:my_rect.left(), y: my_rect.top()},geo::coord!{x:my_rect.right(), y: my_rect.top()} );
                                 let line_bottom=Line::new(geo::coord!{x:my_rect.left(), y: my_rect.bottom()},geo::coord!{x:my_rect.right(), y: my_rect.bottom()} );

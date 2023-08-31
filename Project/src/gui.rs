@@ -234,7 +234,7 @@ pub fn gui_mode4(my_app: &mut MyApp, frame: &mut eframe::Frame, ui: &mut egui::U
                 None => my_app.mode = 4, //return to visualize the image
             }
         }
-        if my_app.area.1.is_none() && my_app.edit_image.screens.len()==0{
+        if my_app.area.1.is_none(){
             if ui.button("Crop").clicked() {
                 my_app.mode = 5;
             }
@@ -266,13 +266,14 @@ pub fn gui_mode4(my_app: &mut MyApp, frame: &mut eframe::Frame, ui: &mut egui::U
 pub fn gui_mode5(my_app: &mut MyApp, frame: &mut eframe::Frame, ui: &mut egui::Ui) {
     let position = ui.input(|i| i.pointer.hover_pos());
     let info = frame.info().window_info;
-    let my_rect= my_app.image[my_app.n_monitor].rect.unwrap();
+
+    let my_rect= if my_app.edit_image.screens.len()>0{my_app.edit_image.rect.unwrap()}else{my_app.image[my_app.n_monitor].rect.unwrap()};
     let limits = (my_rect.min, my_rect.max);
-    
+    let size= if my_app.edit_image.screens.len()>0{my_app.edit_image.size}else{my_app.image[my_app.n_monitor].size};
 
     let props = (
-        (my_app.image[my_app.n_monitor].size.0 as f32) / (limits.1.x - limits.0.x),
-        (my_app.image[my_app.n_monitor].size.1 as f32) / (limits.1.y - limits.0.y),
+        (size.0 as f32) / (limits.1.x - limits.0.x),
+        (size.1 as f32) / (limits.1.y - limits.0.y),
     );
 
     draw::cut_rect(position, info, my_app, ui,my_rect );
@@ -286,6 +287,17 @@ pub fn gui_mode5(my_app: &mut MyApp, frame: &mut eframe::Frame, ui: &mut egui::U
 
             let width = ((my_app.area.1.unwrap().x - my_app.area.0.unwrap().x)* props.0) as u32;
             let height = ((my_app.area.1.unwrap().y - my_app.area.0.unwrap().y) * props.1) as u32;
+            if my_app.edit_image.screens.len()>0{
+                my_app.edit_image = screenshot::screen_area(
+                    &mut my_app.edit_image,
+                    ((my_app.area.0.unwrap().x- limits.0.x) * props.0) as u32,
+                    ((my_app.area.0.unwrap().y- limits.0.y) * props.1) as u32,
+                    width,
+                    height,
+                );
+
+            }
+        
             my_app.image[my_app.n_monitor] = screenshot::screen_area(
                 &mut my_app.image[my_app.n_monitor],
                 ((my_app.area.0.unwrap().x- limits.0.x) * props.0) as u32,
@@ -293,6 +305,7 @@ pub fn gui_mode5(my_app: &mut MyApp, frame: &mut eframe::Frame, ui: &mut egui::U
                 width,
                 height,
             );
+            my_app.area = (None, None);
             my_app.mode = 4; //go back to visualization mode but with the cropped image
         }
         
@@ -315,15 +328,14 @@ pub fn gui_mode6(my_app: &mut MyApp, frame: &mut eframe::Frame, ui: &mut egui::U
             my_app.mode = 4;// go to visualization mode
             my_app.paint.clear();
             u=0;
-            my_app.eraser=false;
         }
         
-        draw::draw_button(Paints::Square,ui, &mut my_app.paint, my_app.edit_color, &mut my_app.eraser);
-        draw::draw_button(Paints::Circle,ui, &mut my_app.paint, my_app.edit_color, &mut my_app.eraser);
-        draw::draw_button(Paints::Arrow,ui, &mut my_app.paint, my_app.edit_color, &mut my_app.eraser);
-        draw::draw_button(Paints::Text,ui, &mut my_app.paint, my_app.edit_color, &mut my_app.eraser);
-        draw::draw_button(Paints::Highlighter,ui, &mut my_app.paint, my_app.edit_color, &mut my_app.eraser);
-        draw::draw_button(Paints::Eraser,ui, &mut my_app.paint, my_app.edit_color, &mut my_app.eraser);
+        draw::draw_button(Paints::Square,ui, &mut my_app.paint, my_app.edit_color);
+        draw::draw_button(Paints::Circle,ui, &mut my_app.paint, my_app.edit_color);
+        draw::draw_button(Paints::Arrow,ui, &mut my_app.paint, my_app.edit_color);
+        draw::draw_button(Paints::Text,ui, &mut my_app.paint, my_app.edit_color);
+        draw::draw_button(Paints::Highlighter,ui, &mut my_app.paint, my_app.edit_color);
+        draw::draw_button(Paints::Eraser,ui, &mut my_app.paint, my_app.edit_color);
         // let mut  eraser=egui::Button::new(egui::RichText::new("Eraser"));
         
             // eraser=egui::Button::new(egui::RichText::new("Eraser").underline());
@@ -368,9 +380,17 @@ pub fn gui_mode6(my_app: &mut MyApp, frame: &mut eframe::Frame, ui: &mut egui::U
        }
     }
         if ui.button("Confirm Changes").clicked() {
+            if u>0 {
             frame.request_screenshot();
+            let last= &my_app.paint[u-1];
+            if last.draw== Paints::Eraser || last.start.is_none() ||last.draw==Paints::NoFigure {
+                my_app.paint.pop();
+                u=my_app.paint.len();
+            }
+            
             my_app.def_paint.append(&mut my_app.paint.clone());
-            my_app.eraser=false;
+            }
+           
             my_app.mode = 4;// go back to visualization mode, but can't crop anymore
             
         }
@@ -382,7 +402,7 @@ pub fn gui_mode6(my_app: &mut MyApp, frame: &mut eframe::Frame, ui: &mut egui::U
                 }
                 draw::write_text(ui, my_app, my_rect);
             }else if my_app.paint[u-1].color.is_some()  && my_app.paint[u-1].draw!=Paints::Eraser && my_app.paint[u-1].draw!=Paints::Highlighter {
-                if ui.rect_contains_pointer(my_rect) && !my_app.eraser{
+                if ui.rect_contains_pointer(my_rect) {
                     ui.ctx().set_cursor_icon(egui::CursorIcon::PointingHand);
                 }
             draw::draw_shape(ui, my_app, my_rect); 
@@ -392,18 +412,20 @@ pub fn gui_mode6(my_app: &mut MyApp, frame: &mut eframe::Frame, ui: &mut egui::U
 
      });
 
-     if my_app.eraser {
+     
         if my_app.paint.last().is_some() && my_app.paint.last().unwrap().draw==Paints::Eraser &&
         my_app.paint.last().unwrap().points.is_some() {
-            draw::highlight_eraser(&mut my_app.paint,ui, my_rect, Paints::Eraser); 
+            draw::highlight_eraser(&mut my_app.paint,ui, my_rect); 
+            if u>0{
             let p=my_app.paint[u-1].points.clone().unwrap();
             draw::eraser(ui, p.line, my_rect, &mut my_app.paint);
+            }
+            
     }
-}
      
      if my_app.paint.last().is_some() && my_app.paint.last().unwrap().draw==Paints::Highlighter &&
         my_app.paint.last().unwrap().points.is_some() && my_app.paint.last().unwrap().color.is_some(){
-                draw::highlight_eraser(&mut my_app.paint,ui, my_rect, Paints::Highlighter); 
+                draw::highlight_eraser(&mut my_app.paint,ui, my_rect); 
         }
      
     let painter= ui.painter().with_clip_rect(my_rect);
@@ -448,7 +470,7 @@ pub fn gui_mode6(my_app: &mut MyApp, frame: &mut eframe::Frame, ui: &mut egui::U
             let line=egui::Shape::line(points.line, stroke);
             painter.add(line);
         }
-        else if figure.draw==Paints::Text && valid{
+        else if figure.draw==Paints::Text && valid && figure.color.is_some(){
             if figure.text.trim() != "" {
                 
                 let rect = painter.text(
