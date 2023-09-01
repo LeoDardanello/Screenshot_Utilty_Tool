@@ -12,8 +12,7 @@ pub fn cut_rect(
     limits: egui::Rect,
 ) {
     let valid ;
-    let vertical;
-    let horizontal;
+
    
     let mut pos: egui::Pos2;
 
@@ -24,57 +23,57 @@ pub fn cut_rect(
                 valid = true;
                 if my_self.area.0.is_none() || my_self.area.1.is_none(){
                 ui.ctx().set_cursor_icon(egui::CursorIcon::Crosshair);
-                vertical=false;
-                horizontal=false;
+
                 }
-                else{
+                else if my_self.area.2==-1{
                     let rect1= egui::Rect::from_min_max(my_self.area.0.unwrap(), my_self.area.1.unwrap());
-                    if rect1.x_range().contains(&pos.x) &&((rect1.top()-5.0..rect1.top()+5.0).contains(&pos.y) || (rect1.bottom()-5.0..rect1.bottom()+5.0).contains(&pos.y)){
-                        ui.ctx().set_cursor_icon(egui::CursorIcon::ResizeVertical);
-                        vertical=true;
-                        horizontal=false;
+                    
+                    if rect1.x_range().contains(&pos.x) {//resizongVertical
+                        if (rect1.top()-5.0..rect1.top()+5.0).contains(&pos.y){
+                            ui.ctx().set_cursor_icon(egui::CursorIcon::ResizeVertical);
+                    
+                            my_self.area.2=0;
+                            
+                        }else if (rect1.bottom()-5.0..rect1.bottom()+5.0).contains(&pos.y){
+                            ui.ctx().set_cursor_icon(egui::CursorIcon::ResizeVertical);
+              
+                            my_self.area.2=1;
+                        }
+
                     }
-                    else if rect1.y_range().contains(&pos.y) &&((rect1.left()-5.0..rect1.left()+5.0).contains(&pos.x) || (rect1.right()-5.0..rect1.right()+5.0).contains(&pos.x)){
-                        ui.ctx().set_cursor_icon(egui::CursorIcon::ResizeHorizontal);
-                        vertical=false;
-                        horizontal=true;
+                    else if rect1.y_range().contains(&pos.y){//ResizingHorizontal
+                        if (rect1.left()-5.0..rect1.left()+5.0).contains(&pos.x){
+                            ui.ctx().set_cursor_icon(egui::CursorIcon::ResizeHorizontal);
+                            
+                            my_self.area.2=2;
+                            
                         }
-                        else{
-                            vertical=false;
-                            horizontal=false;
+                        else if (rect1.right()-5.0..rect1.right()+5.0).contains(&pos.x){
+                            ui.ctx().set_cursor_icon(egui::CursorIcon::ResizeHorizontal);
+        
+                            my_self.area.2=3;
+                            
                         }
-
+                    }
                 }
-
-            }
-            else{
-                valid=false;
-                vertical=false;
-                horizontal=false;
-            }
         }
+        else{
+            valid=false;
+        }
+    }
         None => {
             pos = egui::Pos2::default();
             valid = false;
-            vertical=false;
-            horizontal=false;
+
         }
     }
-        if valid {
-            if vertical{
+        
 
-            }
-            if horizontal{
-
-            }
-
-        }
-
-        if my_self.area.0.is_none() || my_self.area.1.is_none(){
+    if my_self.area.0.is_none() || my_self.area.1.is_none(){
 
         if valid==true && ui.input(|i|  i.pointer.primary_pressed()) {
 
-            my_self.area = (None, None);
+            my_self.area = (None, None, -1);
             let start_pos = ui.input(|i| i.pointer.press_origin()).unwrap();
             my_self.area.0.replace(start_pos);
   
@@ -93,8 +92,45 @@ pub fn cut_rect(
 
         }
     }
+    else{
+        //TO DO modifica bordi
+        if ui.input(|i| i.pointer.primary_released() || !i.pointer.primary_down()){
+            my_self.area.2=-1;
+        }
+   
+        if valid && ui.input(|i|  i.pointer.primary_down()){
 
-    screenshot::visualize_image(&mut my_self.image[my_self.n_monitor] , ui, info.size,None, true);
+            
+            if my_self.area.2==0{
+                ui.ctx().set_cursor_icon(egui::CursorIcon::ResizeVertical);
+                    my_self.area.0.replace(egui::pos2(my_self.area.0.unwrap().x, pos.y.clamp(limits.top(),my_self.area.1.unwrap().y )));
+                
+            }
+            else if my_self.area.2==1{
+                ui.ctx().set_cursor_icon(egui::CursorIcon::ResizeVertical);
+
+                my_self.area.1.replace(egui::pos2(my_self.area.1.unwrap().x,pos.y.clamp(my_self.area.0.unwrap().y , limits.bottom())));
+            }
+            else if my_self.area.2==2{
+                ui.ctx().set_cursor_icon(egui::CursorIcon::ResizeHorizontal);
+                my_self.area.0.replace(egui::pos2(pos.x.clamp(limits.left(),my_self.area.1.unwrap().x), my_self.area.0.unwrap().y));
+
+            }
+            else if my_self.area.2==3{
+                ui.ctx().set_cursor_icon(egui::CursorIcon::ResizeHorizontal);
+                my_self.area.1.replace(egui::pos2(pos.x.clamp(my_self.area.0.unwrap().x, limits.right() ), my_self.area.1.unwrap().y));
+
+            }
+
+     
+        }
+     
+            
+
+        
+    }
+
+    screenshot::visualize_image(&mut my_self.image[my_self.n_monitor] , ui, info.size,None, true, my_self.mode);
     if my_self.area.0.is_some(){
         let mut my_stroke = egui::Stroke::default();
         my_stroke.color = egui::Color32::WHITE;

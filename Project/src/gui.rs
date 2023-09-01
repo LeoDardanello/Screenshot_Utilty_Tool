@@ -64,7 +64,7 @@ pub fn gui_mode0(my_app: &mut MyApp, frame: &mut eframe::Frame, ui: &mut egui::U
             
 
             my_app.time = ui.input(|i| i.time);
-            my_app.area = (None, None);
+            my_app.area = (None, None,-1);
             my_app.edit_image=MyScreen::new(None, None);
             my_app.def_paint.clear();
             my_app.paint.clear();
@@ -138,18 +138,27 @@ pub fn gui_mode3(my_app: &mut MyApp, ui: &mut egui::Ui, frame: &mut eframe::Fram
         egui::RichText::new("Multiple monitors detected\nChoose the monitor to acquire")
             .font(egui::FontId::proportional(17.5)),
     );
+    ui.add_space(30.0);
     ui.vertical(|ui| {
         for i in 0..my_app.image.len() {
-            if ui
-                .add(egui::RadioButton::new(
-                    my_app.n_monitor == i,
-                    (i + 1).to_string(),
-                ))
-                .clicked()
+            ui.horizontal(|ui|{
+            if ui.add(egui::RadioButton::new(my_app.n_monitor == i,(i+1).to_string())).clicked()
             {
                 my_app.n_monitor = i;
             }
+            //if needed to make the screenshot persistent on screen
+            if my_app.n_monitor==i{ 
+                ui.vertical(|ui|{
+                ui.add_space(30.0);
+                screenshot::visualize_image(&mut my_app.image[i], ui, egui::Vec2::new(400.0, 200.0), None, true,my_app.mode);
+                });
+
+            }
+    
+            });
         }
+        
+        ui.add_space(100.0);
         if ui.button("Conferma").clicked() {
             my_app.mode = 5;//go to image selection mode
             frame.set_fullscreen(true);
@@ -165,7 +174,8 @@ pub fn gui_mode4(my_app: &mut MyApp, frame: &mut eframe::Frame, ui: &mut egui::U
             ui,
             frame.info().window_info.size,
             Some(my_app.image[my_app.n_monitor].size),
-            true
+            true,
+            my_app.mode
         );
     }
     else{
@@ -175,7 +185,8 @@ pub fn gui_mode4(my_app: &mut MyApp, frame: &mut eframe::Frame, ui: &mut egui::U
         ui,
         frame.info().window_info.size,
         None,
-        true
+        true,
+        my_app.mode
     );
     }
     
@@ -237,11 +248,7 @@ pub fn gui_mode4(my_app: &mut MyApp, frame: &mut eframe::Frame, ui: &mut egui::U
                 None => my_app.mode = 4, //return to visualize the image
             }
         }
-        if my_app.area.1.is_none() && my_app.edit_image.screens.len()==0{
-            if ui.button("Crop").clicked() {
-                my_app.mode = 5;
-            }
-        }
+
         if ui.button("Copy").clicked() {
             let mut clipboard = arboard::Clipboard::new().unwrap();
             let mut image=& my_app.image[my_app.n_monitor];
@@ -270,7 +277,7 @@ pub fn gui_mode5(my_app: &mut MyApp, frame: &mut eframe::Frame, ui: &mut egui::U
     let position = ui.input(|i| i.pointer.hover_pos());
     let info = frame.info().window_info;
     if my_app.image[my_app.n_monitor].rect.is_none(){
-        screenshot::visualize_image(&mut my_app.image[my_app.n_monitor], ui, info.size,None, false);
+        screenshot::visualize_image(&mut my_app.image[my_app.n_monitor], ui, info.size,None, false, my_app.mode);
     }
     
     let my_rect= my_app.image[my_app.n_monitor].rect.unwrap();
@@ -307,7 +314,7 @@ pub fn gui_mode5(my_app: &mut MyApp, frame: &mut eframe::Frame, ui: &mut egui::U
 
         }
         if ui.button("Reset").clicked(){
-            my_app.area=(None, None);
+            my_app.area=(None, None,-1);
         }
         
     });
@@ -315,7 +322,7 @@ pub fn gui_mode5(my_app: &mut MyApp, frame: &mut eframe::Frame, ui: &mut egui::U
 
 //Annotation Tool 
 pub fn gui_mode6(my_app: &mut MyApp, frame: &mut eframe::Frame, ui: &mut egui::Ui){
-    screenshot::visualize_image(&mut my_app.image[my_app.n_monitor], ui, frame.info().window_info.size, None, true);
+    screenshot::visualize_image(&mut my_app.image[my_app.n_monitor], ui, frame.info().window_info.size, None, true, my_app.mode);
      let my_rect=my_app.image[my_app.n_monitor].rect.unwrap();
 
     if my_app.def_paint.len()>0 && my_app.paint.len()==0{

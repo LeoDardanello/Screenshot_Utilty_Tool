@@ -66,14 +66,21 @@ pub fn full_screen() -> Vec<MyScreen> {
     screen_image
 }
 
-pub fn visualize_image(image: &mut MyScreen, ui: &mut Ui, size: egui::Vec2,dim: Option<(usize, usize)>, show: bool) {
+pub fn visualize_image(image: &mut MyScreen, ui: &mut Ui, size: egui::Vec2,dim: Option<(usize, usize)>, show: bool, mode: i32) {
 
         let mut my_image = MyImage { texture: None, rect: image.rect };
         let im =
             egui::ColorImage::from_rgba_unmultiplied([image.size.0, image.size.1], &image.screens);
             match dim {
                 Some(_) => {image.rect=Some(my_image.ui(ui, im, size, dim.unwrap(), show));},
-                None => {image.rect=Some(my_image.ui(ui, im, size, image.size, show));},
+                None => {if mode==3{
+                    my_image.ui(ui, im, size, image.size, show);
+                }
+                else {
+                    
+                    image.rect=Some(my_image.ui(ui, im, size, image.size, show));
+                }
+                    },
             }
                 
 
