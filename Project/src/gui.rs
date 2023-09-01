@@ -40,13 +40,7 @@ pub fn gui_mode0(my_app: &mut MyApp, frame: &mut eframe::Frame, ui: &mut egui::U
     ui.horizontal(|ui|{
         hotkeys::display_shortcut(my_app, ui);
     });
-
-    ui.add_space(40.0);
-    ui.label(egui::RichText::new("To change default settings click down below:").font(egui::FontId::proportional(17.5)));
-    ui.add_space(10.0);
-    if ui.add_sized([80.0,20.0],egui::Button::new("⚙ Settings")).clicked(){
-        my_app.mode=7;
-    }
+ 
 
     ui.add_space(40.0); //space between first and second group of widget
 

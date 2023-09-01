@@ -44,20 +44,39 @@ pub fn custom_window_frame(
     }
 
 fn title_bar_ui(
-    my_app:&MyApp,
+    my_app:&mut MyApp,
     ui: &mut egui::Ui,
     frame: &mut eframe::Frame,
     title_bar_rect: eframe::epaint::Rect,
     title: &str,
 ) {
-    let painter = ui.painter();
+    
 
     let title_bar_response = ui.interact(
         title_bar_rect,
         egui::Id::new("title_bar"),
         egui::Sense::click(),
     );
+    
+    ui.allocate_ui_at_rect(title_bar_rect, |ui| {
+        ui.with_layout(egui::Layout::left_to_right(egui::Align::Center), |ui| {
+            ui.spacing_mut().item_spacing.x = 0.0;
+            ui.visuals_mut().button_frame = false;
+            ui.add_space(8.0);
+            if my_app.mode==0{
+            let res=ui
+            .add(egui::Button::new(
+                egui::RichText::new("⚙").size(15.0),
+            ))
+            .on_hover_text("Settings");
+            if res.clicked(){
+             my_app.mode=7;
+            }}
+        });
+    });
 
+    
+        let painter = ui.painter();
     // Paint the title:
     painter.text(
         title_bar_rect.center(),
