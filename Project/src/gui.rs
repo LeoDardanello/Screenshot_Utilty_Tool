@@ -44,7 +44,7 @@ pub fn gui_mode0(my_app: &mut MyApp, frame: &mut eframe::Frame, ui: &mut egui::U
     ui.add_space(40.0);
     ui.label(egui::RichText::new("To change default settings click down below:").font(egui::FontId::proportional(17.5)));
     ui.add_space(10.0);
-    if ui.add_sized([80.0,20.0],egui::Button::new("Settings")).clicked(){
+    if ui.add_sized([80.0,20.0],egui::Button::new("⚙ Settings")).clicked(){
         my_app.mode=7;
     }
 
@@ -61,8 +61,6 @@ pub fn gui_mode0(my_app: &mut MyApp, frame: &mut eframe::Frame, ui: &mut egui::U
                 thread::sleep(Duration::new(u64::from(my_app.delay_time), 0)); 
             }
             frame.set_window_size(egui::Vec2 { x: 0.0, y: 0.0 });
-            
-
             my_app.time = ui.input(|i| i.time);
             my_app.area = (None, None,-1);
             my_app.edit_image=MyScreen::new(None, None);
@@ -127,7 +125,8 @@ pub fn gui_mode_setting(my_app:&mut MyApp,ui:&mut egui::Ui){
     if ui.button("Confirm Settings").clicked(){
         my_app.mode=0;//go back to main window
     }
-
+    let ev = my_app.hotkey_conf.listen_to_event();
+    hotkey_handlers::hotkey_handler_setting(ev,my_app,ui);
 
 }
 
@@ -191,7 +190,7 @@ pub fn gui_mode4(my_app: &mut MyApp, frame: &mut eframe::Frame, ui: &mut egui::U
     }
     
     ui.horizontal(|ui| {
-        if ui.button("Return").clicked() {    
+        if ui.button("Back To Menu").clicked() {    
             frame.set_fullscreen(false);
             my_app.mode = 0;
         }
@@ -235,9 +234,7 @@ pub fn gui_mode4(my_app: &mut MyApp, frame: &mut eframe::Frame, ui: &mut egui::U
                             &output_format_for_thread,
                             false,
                         );
-                        println!("ho finito di salvare");
                     });
-                    println!("path:{:?}", file_path);
                     frame.set_fullscreen(false);
                     
                     
@@ -272,7 +269,7 @@ pub fn gui_mode4(my_app: &mut MyApp, frame: &mut eframe::Frame, ui: &mut egui::U
     hotkey_handlers::hotkey_handler_mode4(ev,my_app,frame);
    
 }
-//Mode for Croppinge
+//Mode for Cropping 
 pub fn gui_mode5(my_app: &mut MyApp, frame: &mut eframe::Frame, ui: &mut egui::Ui) {
     let position = ui.input(|i| i.pointer.hover_pos());
     let info = frame.info().window_info;
@@ -292,7 +289,7 @@ pub fn gui_mode5(my_app: &mut MyApp, frame: &mut eframe::Frame, ui: &mut egui::U
     draw::cut_rect(position, info, my_app, ui,my_rect );
 
     ui.horizontal(|ui| {
-        if ui.button("Return").clicked(){
+        if ui.button("Back To Menu").clicked(){
             frame.set_fullscreen(false);
             my_app.mode = 0;
 
@@ -313,10 +310,9 @@ pub fn gui_mode5(my_app: &mut MyApp, frame: &mut eframe::Frame, ui: &mut egui::U
             my_app.mode = 4; //go back to visualization mode but with the cropped image
 
         }
-        if ui.button("Reset").clicked(){
+        if ui.button("Reset Crop").clicked(){
             my_app.area=(None, None,-1);
         }
-        
     });
 }
 
@@ -326,11 +322,9 @@ pub fn gui_mode6(my_app: &mut MyApp, frame: &mut eframe::Frame, ui: &mut egui::U
      let my_rect=my_app.image[my_app.n_monitor].rect.unwrap();
 
     if my_app.def_paint.len()>0 && my_app.paint.len()==0{
-
-    
         my_app.paint.append(&mut my_app.def_paint.clone());
-
     }
+
     let mut u=my_app.paint.len();
     ui.horizontal(|ui| {
         
@@ -372,9 +366,6 @@ pub fn gui_mode6(my_app: &mut MyApp, frame: &mut eframe::Frame, ui: &mut egui::U
             if u>0 {
             
             let last= &my_app.paint[u-1];
-            if last.draw== Paints::Highlighter{
-                println!("{:?}",last.points);
-            }
             if (last.draw== Paints::Highlighter && last.points.clone().unwrap().line.len()==0) || last.start.is_none() {
                 if last.draw== Paints::Eraser || u==1{
                     my_app.paint.pop();
@@ -388,7 +379,6 @@ pub fn gui_mode6(my_app: &mut MyApp, frame: &mut eframe::Frame, ui: &mut egui::U
                 }
                 
             }
-            
             my_app.def_paint.clear();
             my_app.def_paint.append(&mut my_app.paint.clone());
             if my_app.def_paint.len()>0{

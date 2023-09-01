@@ -122,10 +122,7 @@ impl eframe::App for MyApp {
         //custom window frame
 
         if self.mode == 0 {
-            gui_base::custom_window_frame(
-                self,
-                ctx,
-                frame,
+            gui_base::custom_window_frame(self,ctx,frame,
                 "Screenshot Utility Tool", //the title in this row is used
                 |my_app: &mut Self, frame: &mut eframe::Frame, ui| {
                     gui::gui_mode0(my_app, frame, ui);
@@ -133,10 +130,7 @@ impl eframe::App for MyApp {
             );
 
         }if self.mode == 7 {
-            gui_base::custom_window_frame(
-                self,
-                ctx,
-                frame,
+            gui_base::custom_window_frame(self,ctx,frame,
                 "Screenshot Utility Tool", //the title in this row is used
                 |my_app: &mut Self, _frame: &mut eframe::Frame, ui| {
                     gui::gui_mode_setting(my_app, ui);
@@ -144,18 +138,12 @@ impl eframe::App for MyApp {
             );
 
         }else if self.mode == 1 {
-            gui_base::custom_window_frame(
-                self,
-                ctx,
-                frame,
+            gui_base::custom_window_frame(self,ctx,frame,
                 "Screenshot Utility Tool", //the title in this row is used
                 |my_app: &mut Self, frame: &mut eframe::Frame, ui| {
-   
                     if ui.input(|i| i.time) - my_app.time >= 0.2 || frame.info().window_info.focused
-                    {
-                        my_app.mode = 2;
-                    }
-                },
+                    {my_app.mode = 2;}
+                }
             );
         } else if self.mode == 2 {
             self.mode = 5; //go to editing mode
@@ -170,44 +158,31 @@ impl eframe::App for MyApp {
             }
         } else if self.mode == 3 {
             //check for multiple monitors
-            gui_base::custom_window_frame(
-                self,
-                ctx,
-                frame,
-                "Screenshot Utility Tool", //the title in this row is used
+            gui_base::custom_window_frame(self,ctx,frame,
+                "Screen Selection", //the title in this row is used
                 |my_app: &mut Self, frame: &mut eframe::Frame, ui| {
                     gui::gui_mode3(my_app, ui, frame);
                 },
             );
             
         } else if self.mode == 4 {
-
-            gui_base::custom_window_frame(
-                self,
-                ctx,
-                frame,
+            gui_base::custom_window_frame(self,ctx,frame,
                 "Screenshot Utility Tool", //the title in this row is used
                 |my_app: &mut Self, frame: &mut eframe::Frame, ui| {
                     gui::gui_mode4(my_app, frame, ui);
                 },
             );
         } else if self.mode == 5 {
-            gui_base::custom_window_frame(
-                self,
-                ctx,
-                frame,
-                "Screenshot Utility Tool", //the title in this row is used
+            gui_base::custom_window_frame(self,ctx,frame,
+                "Cropping Mode", //the title in this row is used
                 |my_app: &mut Self, frame: &mut eframe::Frame, ui| {
                     gui::gui_mode5(my_app, frame, ui);
                 },
             );
         }
         else if self.mode==6{
-            gui_base::custom_window_frame(
-                self,
-                ctx,
-                frame,
-                "Screenshot Utility Tool", //the title in this row is used
+            gui_base::custom_window_frame(self,ctx,frame,
+                "Editing Mode", //the title in this row is used
                 |my_app: &mut Self, frame: &mut eframe::Frame, ui| {
                     gui::gui_mode6(my_app, frame, ui);
                 },
@@ -222,8 +197,6 @@ impl eframe::App for MyApp {
             let frame=frame.info().window_info.size;
             let limits =(self.image[self.n_monitor].rect.unwrap().min, self.image[self.n_monitor].rect.unwrap().max); 
 
-     
-
             let pixels_per_point = Some((screenshot.pixels.len()/((_window_size[0]*_window_size[1]) as usize) )as f32);
     
                 let region = egui::Rect::from_min_max(
@@ -232,8 +205,7 @@ impl eframe::App for MyApp {
                 );
                 let my_screenshot=screenshot.region(&region, pixels_per_point);
                 self.edit_image.screens = my_screenshot.as_raw().to_vec();
-                self.edit_image.size= ((my_screenshot.size[0]), my_screenshot.size[1]);
-                
+                self.edit_image.size= ((my_screenshot.size[0]), my_screenshot.size[1]); 
         }
     }
     
@@ -255,12 +227,5 @@ fn main() {
     //let native_options=eframe::NativeOptions::default();
 
     //app_name,native_options,app_creator, when usign the custom frame window the name in the first field is not used
-    run_native(
-        "Screenshot Utility Tool",
-        native_options,
-        Box::new(|_cc| Box::new(MyApp::new())),
-    )
-    .expect("A probelem has occurred while starting up!");
-    //|_cc| dummy closure, needed to make
-    // on the fly function
+    run_native("Screenshot Utility Tool",native_options,Box::new(|_cc| Box::new(MyApp::new()))).expect("A probelem has occurred while starting up!");//|_cc| dummy closure, needed to make on the fly function
 }

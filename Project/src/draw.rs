@@ -119,15 +119,8 @@ pub fn cut_rect(
             else if my_self.area.2==3{
                 ui.ctx().set_cursor_icon(egui::CursorIcon::ResizeHorizontal);
                 my_self.area.1.replace(egui::pos2(pos.x.clamp(my_self.area.0.unwrap().x, limits.right() ), my_self.area.1.unwrap().y));
-
             }
-
-     
-        }
-     
-            
-
-        
+        } 
     }
 
     screenshot::visualize_image(&mut my_self.image[my_self.n_monitor] , ui, info.size,None, true, my_self.mode);
@@ -209,9 +202,7 @@ pub fn write_text(ui: &mut egui::Ui, my_app: &mut MyApp,  rect: egui::Rect) {
     ui.add_space(250.0);
     ui.label(egui::RichText::new("Click in the image to clip text").font(egui::FontId::proportional(15.0)));
     ui.add(egui::TextEdit::singleline(str_ref).text_color(my_app.edit_color).font(egui::FontId::proportional(15.0)));
-
 }
-
 
 pub fn highlight_eraser(paint: &mut Vec<MyDraw>,ui: &mut egui::Ui,rect: egui::Rect) {
     let u=paint.len()-1;
@@ -222,17 +213,14 @@ pub fn highlight_eraser(paint: &mut Vec<MyDraw>,ui: &mut egui::Ui,rect: egui::Re
     if  p.is_some() && i.pointer.primary_down() {
         let pointer_pos= p.unwrap();
         
-
         if line.last() != Some(&pointer_pos)  && rect.contains(pointer_pos){
             if paint[u].draw==Paints::Eraser && line.len()==2{
                 line.remove(0);
             }
-
             line.push( pointer_pos);
-
         }
-        
     } 
+
     let len=line.len();
     paint[u].points.replace(HighlighterLine { line, width: 20 });
     
@@ -268,8 +256,6 @@ pub fn draw_button(paint: Paints, ui: &mut egui::Ui, el: &mut Vec<MyDraw>, color
         icon ="Eraser";
     }
 
-    
-
     let mut button = egui::Button::new(egui::RichText::new(icon));
     let mut u=el.len();
     if u>0 && el[u-1].draw == paint {
@@ -277,8 +263,6 @@ pub fn draw_button(paint: Paints, ui: &mut egui::Ui, el: &mut Vec<MyDraw>, color
     }
 
     if ui.add(button).clicked() {
-
-
 
         if u>0 && el[u-1].start.is_none() {
             if el[u-1].draw==paint{

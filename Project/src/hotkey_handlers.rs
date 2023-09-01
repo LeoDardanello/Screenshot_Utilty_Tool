@@ -105,3 +105,31 @@ match ev {
     }
 }
 }
+pub fn hotkey_handler_setting(ev:Option<usize>,my_app:&mut MyApp,ui:&mut egui::Ui){
+    match ev {
+        None => {}
+        Some(i) => {
+            if i == 0 {//Acquire
+                MessageDialog::new()
+                .set_title("Error")
+                .set_text("Can't acquire while changing settings!")
+                .show_alert()
+                .unwrap();
+            }
+            if i == 1 {//Save
+                MessageDialog::new()
+                    .set_title("Error")
+                    .set_text("Can't save while changing settings!")
+                    .show_alert()
+                    .unwrap();
+            }
+            if i == 2 {//Copy
+                MessageDialog::new()
+                    .set_title("Error")
+                    .set_text("Can't copy while changing settings!")
+                    .show_alert()
+                    .unwrap();
+            }
+        }
+    }
+}
