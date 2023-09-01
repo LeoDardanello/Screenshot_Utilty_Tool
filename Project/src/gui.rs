@@ -132,7 +132,7 @@ pub fn gui_mode_setting(my_app:&mut MyApp,ui:&mut egui::Ui){
 }
 
 //Multiple screen support
-pub fn gui_mode3(my_app: &mut MyApp, ui: &mut egui::Ui) {
+pub fn gui_mode3(my_app: &mut MyApp, ui: &mut egui::Ui, frame: &mut eframe::Frame) {
     
     ui.label(
         egui::RichText::new("Multiple monitors detected\nChoose the monitor to acquire")
@@ -151,7 +151,8 @@ pub fn gui_mode3(my_app: &mut MyApp, ui: &mut egui::Ui) {
             }
         }
         if ui.button("Conferma").clicked() {
-            my_app.mode = 4;//go to image selection mode
+            my_app.mode = 5;//go to image selection mode
+            frame.set_fullscreen(true);
         }
     });
 }
@@ -164,6 +165,7 @@ pub fn gui_mode4(my_app: &mut MyApp, frame: &mut eframe::Frame, ui: &mut egui::U
             ui,
             frame.info().window_info.size,
             Some(my_app.image[my_app.n_monitor].size),
+            true
         );
     }
     else{
@@ -172,7 +174,8 @@ pub fn gui_mode4(my_app: &mut MyApp, frame: &mut eframe::Frame, ui: &mut egui::U
         &mut my_app.image[my_app.n_monitor],
         ui,
         frame.info().window_info.size,
-        None
+        None,
+        true
     );
     }
     
@@ -234,7 +237,7 @@ pub fn gui_mode4(my_app: &mut MyApp, frame: &mut eframe::Frame, ui: &mut egui::U
                 None => my_app.mode = 4, //return to visualize the image
             }
         }
-        if my_app.area.1.is_none(){
+        if my_app.area.1.is_none() && my_app.edit_image.screens.len()==0{
             if ui.button("Crop").clicked() {
                 my_app.mode = 5;
             }
@@ -264,60 +267,34 @@ pub fn gui_mode4(my_app: &mut MyApp, frame: &mut eframe::Frame, ui: &mut egui::U
 }
 //Mode for Croppinge
 pub fn gui_mode5(my_app: &mut MyApp, frame: &mut eframe::Frame, ui: &mut egui::Ui) {
-    //TO FIX (disegni spostati e della dimensione sbagliata quando si ritorna all'edit)
     let position = ui.input(|i| i.pointer.hover_pos());
     let info = frame.info().window_info;
-    let my_rect= my_app.image[my_app.n_monitor].rect.unwrap();
-    let limits = (my_rect.min, my_rect.max);
-    let size= my_app.image[my_app.n_monitor].size;
-
-    let props = (
-        (size.0 as f32) / (limits.1.x - limits.0.x),
-        (size.1 as f32) / (limits.1.y - limits.0.y),
-    );
-    let my_rect1;
-    let mut props1=(0.0, 0.0);
-    let mut limits1=(egui::Pos2::default(), egui::Pos2::default());
-
-    
-
-    if my_app.edit_image.screens.len()>0{
-        my_rect1=my_app.edit_image.rect.unwrap();
-        limits1=(my_rect1.min, my_rect1.max);
-        let size1=my_app.edit_image.size;
-        props1=(
-            (size1.0 as f32) / (limits1.1.x - limits1.0.x),
-            (size1.1 as f32) / (limits1.1.y - limits1.0.y),
-        );
-        draw::cut_rect(position, info, my_app, ui,my_rect1 );
-
-    }else{
-        draw::cut_rect(position, info, my_app, ui,my_rect );
+    if my_app.image[my_app.n_monitor].rect.is_none(){
+        screenshot::visualize_image(&mut my_app.image[my_app.n_monitor], ui, info.size,None, false);
     }
     
-
+    let my_rect= my_app.image[my_app.n_monitor].rect.unwrap();
+    let limits = (my_rect.min, my_rect.max);
     
 
-    ui.horizontal(|ui| {
-        if ui.button("Return").clicked() {
-            my_app.mode = 4;//go back to full image visualization
-            my_app.area = (None, None);
-        }
-        if ui.button("Confirm").clicked() {
+    let props = (
+        (my_app.image[my_app.n_monitor].size.0 as f32) / (limits.1.x - limits.0.x),
+        (my_app.image[my_app.n_monitor].size.1 as f32) / (limits.1.y - limits.0.y),
+    );
 
+    draw::cut_rect(position, info, my_app, ui,my_rect );
+
+    ui.horizontal(|ui| {
+        if ui.button("Return").clicked(){
+            frame.set_fullscreen(false);
+            my_app.mode = 0;
+
+        }
+        
+        if ui.button("Confirm").clicked() {
+            if my_app.area.0.is_some(){
             let width = ((my_app.area.1.unwrap().x - my_app.area.0.unwrap().x)* props.0) as u32;
             let height = ((my_app.area.1.unwrap().y - my_app.area.0.unwrap().y) * props.1) as u32;
-            if my_app.edit_image.screens.len()>0{
-                my_app.edit_image = screenshot::screen_area(
-                    &mut my_app.edit_image,
-                    ((my_app.area.0.unwrap().x- limits1.0.x) * props1.0) as u32,
-                    ((my_app.area.0.unwrap().y- limits1.0.y) * props1.1) as u32,
-                    ((my_app.area.1.unwrap().x - my_app.area.0.unwrap().x)* props1.0) as u32,
-                    ((my_app.area.1.unwrap().y - my_app.area.0.unwrap().y) * props1.1) as u32,
-                );
-
-            }
-        
             my_app.image[my_app.n_monitor] = screenshot::screen_area(
                 &mut my_app.image[my_app.n_monitor],
                 ((my_app.area.0.unwrap().x- limits.0.x) * props.0) as u32,
@@ -325,8 +302,12 @@ pub fn gui_mode5(my_app: &mut MyApp, frame: &mut eframe::Frame, ui: &mut egui::U
                 width,
                 height,
             );
-            my_app.area = (None, None);
+        }
             my_app.mode = 4; //go back to visualization mode but with the cropped image
+
+        }
+        if ui.button("Reset").clicked(){
+            my_app.area=(None, None);
         }
         
     });
@@ -334,7 +315,7 @@ pub fn gui_mode5(my_app: &mut MyApp, frame: &mut eframe::Frame, ui: &mut egui::U
 
 //Annotation Tool 
 pub fn gui_mode6(my_app: &mut MyApp, frame: &mut eframe::Frame, ui: &mut egui::Ui){
-    screenshot::visualize_image(&mut my_app.image[my_app.n_monitor], ui, frame.info().window_info.size, None);
+    screenshot::visualize_image(&mut my_app.image[my_app.n_monitor], ui, frame.info().window_info.size, None, true);
      let my_rect=my_app.image[my_app.n_monitor].rect.unwrap();
 
     if my_app.def_paint.len()>0 && my_app.paint.len()==0{

@@ -13,7 +13,7 @@ struct MyImage {
 }
 
 impl MyImage {
-    fn ui(&mut self, ui: &mut egui::Ui, im: ColorImage, size: egui::Vec2, im_size: (usize, usize))->egui::Rect {
+    fn ui(&mut self, ui: &mut egui::Ui, im: ColorImage, size: egui::Vec2, im_size: (usize, usize), show: bool)->egui::Rect {
         let texture: &egui::TextureHandle = self.texture.get_or_insert_with(|| {
             // Load the texture only once.
             ui.ctx().load_texture("my-image", im, Default::default())
@@ -43,13 +43,14 @@ impl MyImage {
         
 
         let my_rect = if self.rect.is_some(){self.rect.unwrap()}else{egui::Rect::from_min_max(start, max_size)};
-
+        if show{
         ui.painter().image(
             texture.id(),
             my_rect,
             egui::Rect::from_min_max(egui::pos2(0.0, 0.0), egui::pos2(1.0, 1.0)),
             egui::Color32::WHITE,
         );
+    }
         my_rect
     }
 }
@@ -65,14 +66,14 @@ pub fn full_screen() -> Vec<MyScreen> {
     screen_image
 }
 
-pub fn visualize_image(image: &mut MyScreen, ui: &mut Ui, size: egui::Vec2,dim: Option<(usize, usize)>) {
+pub fn visualize_image(image: &mut MyScreen, ui: &mut Ui, size: egui::Vec2,dim: Option<(usize, usize)>, show: bool) {
 
         let mut my_image = MyImage { texture: None, rect: image.rect };
         let im =
             egui::ColorImage::from_rgba_unmultiplied([image.size.0, image.size.1], &image.screens);
             match dim {
-                Some(_) => {image.rect=Some(my_image.ui(ui, im, size, dim.unwrap()));},
-                None => {image.rect=Some(my_image.ui(ui, im, size, image.size));},
+                Some(_) => {image.rect=Some(my_image.ui(ui, im, size, dim.unwrap(), show));},
+                None => {image.rect=Some(my_image.ui(ui, im, size, image.size, show));},
             }
                 
 
