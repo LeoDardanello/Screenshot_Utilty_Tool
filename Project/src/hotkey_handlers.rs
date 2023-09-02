@@ -105,7 +105,7 @@ match ev {
     }
 }
 }
-pub fn hotkey_handler_setting(ev:Option<usize>,my_app:&mut MyApp,ui:&mut egui::Ui){
+pub fn hotkey_handler_setting(ev:Option<usize>,_my_app:&mut MyApp,_ui:&mut egui::Ui){
     match ev {
         None => {}
         Some(i) => {

@@ -150,15 +150,17 @@ ui.vertical(|ui|{
         screenshot::visualize_image(&mut my_app.image[my_app.n_monitor ], ui, egui::Vec2::new(700.0, 220.0), None, true,my_app.mode);
     });
                 
-              
-            
-    
-    
         ui.add_space(100.0);
-        if ui.button("Conferma").clicked() {
+        ui.horizontal(|ui|{
+        if ui.button("Back To Menu").clicked() {    
+            frame.set_fullscreen(false);
+            my_app.mode = 0;
+        }
+        if ui.button("Confirm").clicked() {
             my_app.mode = 5;//go to image selection mode
             frame.set_fullscreen(true);
         }
+    });
     
 }
 

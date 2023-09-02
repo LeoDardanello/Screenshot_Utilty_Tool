@@ -141,7 +141,7 @@ impl eframe::App for MyApp {
             gui_base::custom_window_frame(self,ctx,frame,
                 "Screenshot Utility Tool", //the title in this row is used
                 |my_app: &mut Self, frame: &mut eframe::Frame, ui| {
-                    if ui.input(|i| i.time) - my_app.time >= 0.2 || frame.info().window_info.focused
+                    if ui.input(|i| i.time) - my_app.time >= 0.4 || frame.info().window_info.focused
                     {my_app.mode = 2;}
                 }
             );
