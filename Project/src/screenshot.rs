@@ -23,7 +23,7 @@ impl MyImage {
         let mut start=egui::pos2(if x>10.0{x}else{10.0}, if y>80.0{y}else{80.0});
         let mut max_size=egui::Pos2::default();
      
-        if self.rect.is_none(){
+        
         if im_size.1>im_size.0{
                 max_size.y=if im_size.1 as f32+start.y>size.y{size.y-10.0}else{im_size.1 as f32+start.y};
                 max_size.x= start.x+ ((max_size.y-start.y)*im_size.0 as f32)/im_size.1 as f32;
@@ -39,10 +39,10 @@ impl MyImage {
                 max_size.x= start.x+ ((max_size.y-start.y)*im_size.0 as f32)/im_size.1 as f32;
             }
         }
-    }
+    
         
 
-        let my_rect = if self.rect.is_some(){self.rect.unwrap()}else{egui::Rect::from_min_max(start, max_size)};
+        let my_rect = if self.rect.is_some() && self.rect.unwrap().min== start && self.rect.unwrap().max==max_size{self.rect.unwrap()}else{egui::Rect::from_min_max(start, max_size)};
         if show{
         ui.painter().image(
             texture.id(),

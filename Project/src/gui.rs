@@ -126,37 +126,40 @@ pub fn gui_mode_setting(my_app:&mut MyApp,ui:&mut egui::Ui){
 
 //Multiple screen support
 pub fn gui_mode3(my_app: &mut MyApp, ui: &mut egui::Ui, frame: &mut eframe::Frame) {
-    
+   
     ui.label(
         egui::RichText::new("Multiple monitors detected\nChoose the monitor to acquire")
             .font(egui::FontId::proportional(17.5)),
     );
     ui.add_space(30.0);
-    ui.vertical(|ui| {
+ui.vertical(|ui|{
         for i in 0..my_app.image.len() {
             ui.horizontal(|ui|{
+            
             if ui.add(egui::RadioButton::new(my_app.n_monitor == i,(i+1).to_string())).clicked()
             {
                 my_app.n_monitor = i;
             }
             //if needed to make the screenshot persistent on screen
-            if my_app.n_monitor==i{ 
-                ui.vertical(|ui|{
-                ui.add_space(30.0);
-                screenshot::visualize_image(&mut my_app.image[i], ui, egui::Vec2::new(400.0, 200.0), None, true,my_app.mode);
-                });
-
-            }
+           
+            
+        });
     
-            });
+   
         }
-        
+        screenshot::visualize_image(&mut my_app.image[my_app.n_monitor ], ui, egui::Vec2::new(700.0, 220.0), None, true,my_app.mode);
+    });
+                
+              
+            
+    
+    
         ui.add_space(100.0);
         if ui.button("Conferma").clicked() {
             my_app.mode = 5;//go to image selection mode
             frame.set_fullscreen(true);
         }
-    });
+    
 }
 
 //Visualization mode
