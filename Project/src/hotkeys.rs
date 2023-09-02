@@ -59,10 +59,6 @@ impl HotkeysConfig{
         return &self.commands[i];
     }
 
-    // pub fn get_hotkey(self: &Self, i:usize) -> (&str, &str){
-    //     return (self.hotkeys_string[i].0.as_str(), self.hotkeys_string[i].1.as_str());
-    // }
-
     pub fn get_hotkey_as_string(self: &Self, i:usize) -> String{
 
         if self.hotkeys_string[i].0.eq(""){
@@ -77,7 +73,6 @@ impl HotkeysConfig{
         if let Ok(event) = GlobalHotKeyEvent::receiver().try_recv() {
             for i in 0..self.hotkeys.len(){
                 if event.id == self.hotkeys[i].id(){
-                    println!("Hotkey # {}", i+1);
                     return Some(i);
                 }
             }
@@ -128,10 +123,7 @@ pub fn display_shortcut(my_app: &mut MyApp,ui:&mut egui::Ui){
 }
     
 pub fn edit_shortcut(my_app: &mut MyApp, ui: &mut egui::Ui){
-    ui.label(
-        egui::RichText::new("Click on the shortcut to edit it")
-            .font(egui::FontId::proportional(17.0)),
-    );
+    ui.label(egui::RichText::new("Click on the shortcut to edit it").font(egui::FontId::proportional(17.0)),);
     ui.add_space(10.0);
 
     ui.horizontal(|ui| {
@@ -153,6 +145,7 @@ pub fn edit_shortcut(my_app: &mut MyApp, ui: &mut egui::Ui){
                         {
                             //If I click on the link, I unregister the hotkey
                             my_app.hotkey_conf.delete_hotkey(i);
+                            my_app.confirm_hotkey=false;
                         };
                     } else {
                         let mut new_mod = my_app.hotkey_conf.get_new_mod();
@@ -161,25 +154,14 @@ pub fn edit_shortcut(my_app: &mut MyApp, ui: &mut egui::Ui){
                             ui.label(u);
                         } else {
                             ui.vertical(|ui| {
-                                //println!("{:?} + {:?}", self.modif, new_key);
                                 egui::ComboBox::from_label("Set new modifier")
                                     .selected_text(format!("{}", new_mod.1))
                                     .show_ui(ui, |ui| {
-                                        ui.selectable_value(
-                                            &mut new_mod,
-                                            (None, "".to_string()),
-                                            "".to_string(),
-                                        );
-                                        ui.selectable_value(
-                                            &mut new_mod,
-                                            (Some(Modifiers::SHIFT), "SHIFT".to_string()),
-                                            "SHIFT",
-                                        );
-                                        ui.selectable_value(
-                                            &mut new_mod,
-                                            (Some(Modifiers::CONTROL), "CTRL".to_string()),
-                                            "CTRL",
-                                        );
+
+                                    ui.selectable_value(&mut new_mod,(Some(Modifiers::SHIFT), "SHIFT".to_string()),"SHIFT");
+                                    ui.selectable_value(&mut new_mod,(Some(Modifiers::CONTROL), "CTRL".to_string()),"CTRL");
+                                    ui.selectable_value(&mut new_mod,(Some(Modifiers::ALT), "ALT".to_string()),"ALT");
+                                    
                                     });
                                 egui::ComboBox::from_label("Set new key")
                                     .selected_text(format!("{}", new_key.1))
@@ -325,6 +307,7 @@ pub fn edit_shortcut(my_app: &mut MyApp, ui: &mut egui::Ui){
                                     if success {
                                         //modification could fail if for example I try to set an already registered hotkey
                                         my_app.hotkey_conf.set_enable(true);
+                                        my_app.confirm_hotkey=true;
                                     }else{
                                         MessageDialog::new()
                                         .set_title("Error")

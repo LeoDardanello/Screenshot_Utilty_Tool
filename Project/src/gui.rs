@@ -1,5 +1,6 @@
 use crate::{draw, hotkeys, screenshot,hotkey_handlers, MyApp, MyScreen};
 use arboard;
+use native_dialog::MessageDialog;
 use eframe::egui;
 use native_dialog::FileDialog;
 use std::borrow::Cow;
@@ -28,7 +29,10 @@ pub fn gui_mode0(my_app: &mut MyApp, frame: &mut eframe::Frame, ui: &mut egui::U
         .font(egui::FontId::proportional(17.5)),
     );
     ui.add_space(20.0);
+    ui.horizontal(|ui|{
+        ui.add_space((frame.info().window_info.size.x/2.0)-80.0);
     ui.label(egui::RichText::new("Instruction:").font(egui::FontId::proportional(17.0)));
+    });
     ui.label(egui::RichText::new("For a quick acquisition with default settings use the Hotkeys").font(egui::FontId::proportional(17.0)));
     ui.label(egui::RichText::new("For an acquisition with customized settings use the 'Take Screenshot' Button").font(egui::FontId::proportional(17.0)));
     ui.add_space(20.0);
@@ -55,9 +59,7 @@ pub fn gui_mode0(my_app: &mut MyApp, frame: &mut eframe::Frame, ui: &mut egui::U
                 thread::sleep(Duration::new(u64::from(my_app.delay_time), 0)); 
             }
             frame.set_window_size(egui::Vec2 { x: 0.0, y: 0.0 });
-            if my_app.time==0.0{
-            my_app.time = ui.input(|i| i.time);
-            }
+            // my_app.time = ui.input(|i| i.time);
             my_app.area = (None, None,-1);
             my_app.edit_image=MyScreen::new(None, None);
             my_app.def_paint.clear();
@@ -99,10 +101,8 @@ pub fn gui_mode_setting(my_app:&mut MyApp,ui:&mut egui::Ui){
             ui.label(egui::RichText::new("Current default path:").font(egui::FontId::proportional(17.0)));
 
             ui.horizontal(|ui| {
-                ui.label(
-                    egui::RichText::new(&my_app.default_path)
-                        .font(egui::FontId::proportional(15.0)),
-                );
+                ui.label(egui::RichText::new(&my_app.default_path).font(egui::FontId::proportional(15.0)));
+
                 if ui.button("Change Default Path").clicked() {
                     let path = FileDialog::new().show_open_single_dir().unwrap();
                     match path {
@@ -119,7 +119,19 @@ pub fn gui_mode_setting(my_app:&mut MyApp,ui:&mut egui::Ui){
 
     ui.add_space(50.0);
     if ui.button("Confirm Settings").clicked(){
-        my_app.mode=0;//go back to main window
+        
+        if my_app.confirm_hotkey==false{
+            MessageDialog::new()
+            .set_title("Error")
+            .set_text("Save the changing to the hotkeys before going back!")
+            .show_alert()
+            .unwrap();
+        }else{
+            //if all the hotkeys are confirmed go back to the main window
+
+            my_app.mode=0;
+        }
+
     }
     let ev = my_app.hotkey_conf.listen_to_event();
     hotkey_handlers::hotkey_handler_setting(ev,my_app,ui);
@@ -333,7 +345,6 @@ pub fn gui_mode6(my_app: &mut MyApp, frame: &mut eframe::Frame, ui: &mut egui::U
    
             my_app.mode = 4;// go to visualization mode
             my_app.paint.clear();
-            u=0;
         }
         
         draw::draw_button(Paints::Square,ui, &mut my_app.paint, my_app.edit_color);
@@ -345,6 +356,7 @@ pub fn gui_mode6(my_app: &mut MyApp, frame: &mut eframe::Frame, ui: &mut egui::U
 
 
         let f=ui.color_edit_button_srgba(&mut my_app.edit_color);
+        u=my_app.paint.len();
         if u>0 && my_app.paint[u-1].draw!=Paints::Eraser{
         if f.clicked(){
 
@@ -362,17 +374,31 @@ pub fn gui_mode6(my_app: &mut MyApp, frame: &mut eframe::Frame, ui: &mut egui::U
 
        }
     }
-        if ui.button("Confirm Changes").clicked() {
+        
+        if u>0{
+            
+            if my_app.paint[u-1].color.is_some()  && my_app.paint[u-1].draw!=Paints::Eraser && my_app.paint[u-1].draw!=Paints::Highlighter &&my_app.paint[u-1].draw!=Paints::NoFigure {
+                if ui.rect_contains_pointer(my_rect) {
+                    ui.ctx().set_cursor_icon(egui::CursorIcon::PointingHand);
+                }
+            draw::draw_shape(ui, my_app, my_rect); 
+            }
 
+        }
+        if ui.button("Confirm Changes").clicked() {
+            u=my_app.paint.len();
             if u>0 {
             
             let last= &my_app.paint[u-1];
             if (last.draw== Paints::Highlighter && last.points.clone().unwrap().line.len()==0) || last.start.is_none() {
                 if last.draw== Paints::Eraser || u==1{
                     my_app.paint.pop();
+                    if u!=1{
+                        my_app.paint.push(crate::MyDraw::new(Paints::NoFigure, my_app.edit_color));
+                    }
                     u=my_app.paint.len();
                 }
-                else{
+                else if my_app.paint[u-1].draw!=Paints::NoFigure{
                     my_app.paint[u-1].draw=Paints::NoFigure;
                     if my_app.paint[u-1].draw== Paints::Highlighter{
                         my_app.paint[u-1].points=None;
@@ -395,19 +421,12 @@ pub fn gui_mode6(my_app: &mut MyApp, frame: &mut eframe::Frame, ui: &mut egui::U
             
         }
         if u>0{
-            
             if my_app.paint[u-1].draw==Paints::Text{
                 if ui.rect_contains_pointer(my_rect) && my_app.paint.last().unwrap().text.trim()!=""{
                     ui.ctx().set_cursor_icon(egui::CursorIcon::PointingHand);
                 }
                 draw::write_text(ui, my_app, my_rect);
-            }else if my_app.paint[u-1].color.is_some()  && my_app.paint[u-1].draw!=Paints::Eraser && my_app.paint[u-1].draw!=Paints::Highlighter {
-                if ui.rect_contains_pointer(my_rect) {
-                    ui.ctx().set_cursor_icon(egui::CursorIcon::PointingHand);
-                }
-            draw::draw_shape(ui, my_app, my_rect); 
             }
-
         }
 
      });
