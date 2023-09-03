@@ -168,7 +168,9 @@ pub fn gui_mode3(my_app: &mut MyApp, ui: &mut egui::Ui, frame: &mut eframe::Fram
             frame.set_fullscreen(true);
         }
     });
-    
+    let ev = my_app.hotkey_conf.listen_to_event();
+
+    hotkey_handlers::hotkey_handler_mode3(ev);
 }
 
 //Visualization mode
@@ -310,7 +312,7 @@ pub fn gui_mode5(my_app: &mut MyApp, frame: &mut eframe::Frame, ui: &mut egui::U
 
     let ev = my_app.hotkey_conf.listen_to_event();
 
-    hotkey_handlers::hotkey_handler_mode5(ev,my_app);
+    hotkey_handlers::hotkey_handler_mode5(ev);
 }
 
 //Annotation Tool 
@@ -483,6 +485,6 @@ pub fn gui_mode6(my_app: &mut MyApp, frame: &mut eframe::Frame, ui: &mut egui::U
 
     let ev = my_app.hotkey_conf.listen_to_event();
 
-    hotkey_handlers::hotkey_handler_mode6(ev,my_app);
+    hotkey_handlers::hotkey_handler_mode6(ev);
 }
 

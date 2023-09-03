@@ -1,5 +1,4 @@
 use crate::{MyApp,MyScreen,screenshot};
-use egui::output;
 use native_dialog::MessageDialog;
 use std::path::Path;
 use std::borrow::Cow;
@@ -39,7 +38,34 @@ pub fn hotkey_handler_mode0(ev:Option<usize>,my_app:&mut MyApp,ui:&mut egui::Ui,
         }
     }
 }
-
+pub fn hotkey_handler_mode3(ev:Option<usize>){
+    match ev {
+        None => {}
+        Some(i) => {
+            if i == 0 {//Acquire
+                MessageDialog::new()
+                .set_title("Error")
+                .set_text("Can't take another screenshot right now!")
+                .show_alert()
+                .unwrap();
+            }
+            if i == 1 {//Save
+                MessageDialog::new()
+                    .set_title("Error")
+                    .set_text("Can't save screenshot right now!")
+                    .show_alert()
+                    .unwrap();
+            }
+            if i == 2 {//Copy
+                MessageDialog::new()
+                    .set_title("Error")
+                    .set_text("Can't copy screenshot right now!")
+                    .show_alert()
+                    .unwrap();
+            }
+        }
+    }
+}
 //Hotkey handler for visualization mode
 pub fn hotkey_handler_mode4(ev:Option<usize>,my_app:&mut MyApp,frame:&mut eframe::Frame){
 match ev {
@@ -138,7 +164,7 @@ pub fn hotkey_handler_setting(ev:Option<usize>,_my_app:&mut MyApp,_ui:&mut egui:
     }
 }
 //hotkey handler for editing mode(not yet confirmed the changes)
-pub fn hotkey_handler_mode5(ev:Option<usize>,my_app:&mut MyApp){
+pub fn hotkey_handler_mode5(ev:Option<usize>){
     match ev {
         None => {}
         Some(i) => {
@@ -167,7 +193,7 @@ pub fn hotkey_handler_mode5(ev:Option<usize>,my_app:&mut MyApp){
     }
 }
 //hotkey handler when editing(not yet confirmed the changes)
-pub fn hotkey_handler_mode6(ev:Option<usize>,my_app:&mut MyApp){
+pub fn hotkey_handler_mode6(ev:Option<usize>){
     match ev {
         None => {}
         Some(i) => {
