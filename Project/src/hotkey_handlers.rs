@@ -161,3 +161,32 @@ pub fn hotkey_handler_mode5(ev:Option<usize>,my_app:&mut MyApp){
         }
     }
 }
+//hotkey handler when editing(not yet confirmed the changes)
+pub fn hotkey_handler_mode6(ev:Option<usize>,my_app:&mut MyApp){
+    match ev {
+        None => {}
+        Some(i) => {
+            if i == 0 {//Acquire
+                MessageDialog::new()
+                .set_title("Error")
+                .set_text("Confirm the changes before taking another screenshot!")
+                .show_alert()
+                .unwrap();
+            }
+            if i == 1 {//Save
+                MessageDialog::new()
+                    .set_title("Error")
+                    .set_text("Confirm the changes before saving!")
+                    .show_alert()
+                    .unwrap();
+            }
+            if i == 2 {//Copy
+                MessageDialog::new()
+                    .set_title("Error")
+                    .set_text("Confirm the changes before copying!")
+                    .show_alert()
+                    .unwrap();
+            }
+        }
+    }
+}

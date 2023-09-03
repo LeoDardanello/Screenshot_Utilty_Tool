@@ -372,13 +372,9 @@ pub fn gui_mode6(my_app: &mut MyApp, frame: &mut eframe::Frame, ui: &mut egui::U
    
        }
        if f.clicked_elsewhere(){
-
                 my_app.paint[u-1].color.replace(my_app.edit_color);
-            
-
        }
-    }
-        
+    } 
         if u>0{
             
             if my_app.paint[u-1].color.is_some()  && my_app.paint[u-1].draw!=Paints::Eraser && my_app.paint[u-1].draw!=Paints::Highlighter &&my_app.paint[u-1].draw!=Paints::NoFigure {
@@ -511,5 +507,9 @@ pub fn gui_mode6(my_app: &mut MyApp, frame: &mut eframe::Frame, ui: &mut egui::U
     
     }
     }
+
+    let ev = my_app.hotkey_conf.listen_to_event();
+
+    hotkey_handlers::hotkey_handler_mode6(ev,my_app);
 }
 
