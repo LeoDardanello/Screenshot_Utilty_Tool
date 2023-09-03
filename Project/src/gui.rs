@@ -146,23 +146,16 @@ pub fn gui_mode3(my_app: &mut MyApp, ui: &mut egui::Ui, frame: &mut eframe::Fram
             .font(egui::FontId::proportional(17.5)),
     );
     ui.add_space(30.0);
-ui.vertical(|ui|{
+    ui.vertical(|ui|{
         for i in 0..my_app.image.len() {
             ui.horizontal(|ui|{
-            
-            if ui.add(egui::RadioButton::new(my_app.n_monitor == i,(i+1).to_string())).clicked()
-            {
-                my_app.n_monitor = i;
-            }
             //if needed to make the screenshot persistent on screen
-           
-            
+            if ui.add(egui::RadioButton::new(my_app.n_monitor == i,(i+1).to_string())).clicked()
+            {my_app.n_monitor = i;}
         });
-    
-   
         }
         screenshot::visualize_image(&mut my_app.image[my_app.n_monitor ], ui, egui::Vec2::new(700.0, 220.0), None, true,my_app.mode);
-    });
+        });
                 
         ui.add_space(100.0);
         ui.horizontal(|ui|{
@@ -191,23 +184,13 @@ pub fn gui_mode4(my_app: &mut MyApp, frame: &mut eframe::Frame, ui: &mut egui::U
         );
     }
     else{
-
-        screenshot::visualize_image(
-        &mut my_app.image[my_app.n_monitor],
-        ui,
-        frame.info().window_info.size,
-        None,
-        true,
-        my_app.mode
-    );
+        screenshot::visualize_image(&mut my_app.image[my_app.n_monitor],ui,frame.info().window_info.size,None,true,my_app.mode);
     }
-    
     ui.horizontal(|ui| {
         if ui.button("Back To Menu").clicked() {    
             frame.set_fullscreen(false);
             my_app.mode = 0;
         }
-
         let window_name =
             String::from(String::from("screenshot") + &(my_app.default_name_index.to_string()));
         if ui.button("Save").clicked() {
@@ -236,7 +219,7 @@ pub fn gui_mode4(my_app: &mut MyApp, frame: &mut eframe::Frame, ui: &mut egui::U
                     let mut image=& my_app.image[my_app.n_monitor];
                 if my_app.edit_image.screens.len()>0{
                     image=&my_app.edit_image;
-                }
+                    }
                     let path_for_thread: String = file_path.to_string_lossy().to_string();
                     let image_for_thread = image.clone();
                     let output_format_for_thread = my_app.output_format.clone();
@@ -245,15 +228,12 @@ pub fn gui_mode4(my_app: &mut MyApp, frame: &mut eframe::Frame, ui: &mut egui::U
                             &path_for_thread,
                             &image_for_thread,
                             &output_format_for_thread,
-                            false,
+                            false
                         );
                     });
                     frame.set_fullscreen(false);
-                    
-                    
                     my_app.default_name_index = my_app.default_name_index + 1;
                     my_app.mode = 0;
-             
                 }
                 None => my_app.mode = 4, //return to visualize the image
             }
@@ -414,11 +394,8 @@ pub fn gui_mode6(my_app: &mut MyApp, frame: &mut eframe::Frame, ui: &mut egui::U
             else{
                 my_app.edit_image.screens.clear();
             }
-            
             }
-           
             my_app.mode = 4;// go back to visualization mode, but can't crop anymore
-            
         }
         if u>0{
             if my_app.paint[u-1].draw==Paints::Text{
@@ -428,9 +405,7 @@ pub fn gui_mode6(my_app: &mut MyApp, frame: &mut eframe::Frame, ui: &mut egui::U
                 draw::write_text(ui, my_app, my_rect);
             }
         }
-
      });
-
      
         if my_app.paint.last().is_some() && my_app.paint.last().unwrap().draw==Paints::Eraser &&
         my_app.paint.last().unwrap().points.is_some() {
@@ -503,9 +478,7 @@ pub fn gui_mode6(my_app: &mut MyApp, frame: &mut eframe::Frame, ui: &mut egui::U
                     figure.end = Some(rect.max);
                 }
             }
-        
-    
-    }
+        }
     }
 
     let ev = my_app.hotkey_conf.listen_to_event();
