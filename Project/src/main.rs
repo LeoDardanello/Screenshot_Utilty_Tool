@@ -145,7 +145,7 @@ impl eframe::App for MyApp {
                 "Screenshot Utility Tool", //the title in this row is used
                 |my_app: &mut Self, _frame: &mut eframe::Frame, ui| {
                         my_app.mode = 2;
-                        ui.ctx().request_repaint_after(Duration::from_millis(400));
+                        ui.ctx().request_repaint_after(Duration::from_millis(4000));
                 }
             );
         } else if self.mode == 2 {

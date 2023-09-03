@@ -160,7 +160,7 @@ pub fn edit_shortcut(my_app: &mut MyApp, ui: &mut egui::Ui){
 
                                     ui.selectable_value(&mut new_mod,(Some(Modifiers::SHIFT), "SHIFT".to_string()),"SHIFT");
                                     ui.selectable_value(&mut new_mod,(Some(Modifiers::CONTROL), "CTRL".to_string()),"CTRL");
-                                    ui.selectable_value(&mut new_mod,(Some(Modifiers::ALT), "ALT".to_string()),"ALT");
+                                    ui.selectable_value(&mut new_mod,(Some(Modifiers::FN),"FN".to_string()),"FN");
                                     
                                     });
                                 egui::ComboBox::from_label("Set new key")
