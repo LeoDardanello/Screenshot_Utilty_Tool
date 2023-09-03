@@ -327,6 +327,10 @@ pub fn gui_mode5(my_app: &mut MyApp, frame: &mut eframe::Frame, ui: &mut egui::U
             my_app.area=(None, None,-1);
         }
     });
+
+    let ev = my_app.hotkey_conf.listen_to_event();
+
+    hotkey_handlers::hotkey_handler_mode5(ev,my_app);
 }
 
 //Annotation Tool 

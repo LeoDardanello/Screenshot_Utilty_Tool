@@ -133,3 +133,31 @@ pub fn hotkey_handler_setting(ev:Option<usize>,_my_app:&mut MyApp,_ui:&mut egui:
         }
     }
 }
+pub fn hotkey_handler_mode5(ev:Option<usize>,my_app:&mut MyApp){
+    match ev {
+        None => {}
+        Some(i) => {
+            if i == 0 {//Acquire
+                MessageDialog::new()
+                .set_title("Error")
+                .set_text("Confirm the Crop before taking another screenshot!")
+                .show_alert()
+                .unwrap();
+            }
+            if i == 1 {//Save
+                MessageDialog::new()
+                    .set_title("Error")
+                    .set_text("Confirm the Crop before saving!")
+                    .show_alert()
+                    .unwrap();
+            }
+            if i == 2 {//Copy
+                MessageDialog::new()
+                    .set_title("Error")
+                    .set_text("Confirm the Crop before copying!")
+                    .show_alert()
+                    .unwrap();
+            }
+        }
+    }
+}

@@ -159,9 +159,7 @@ pub fn edit_shortcut(my_app: &mut MyApp, ui: &mut egui::Ui){
                                     .show_ui(ui, |ui| {
 
                                     ui.selectable_value(&mut new_mod,(Some(Modifiers::SHIFT), "SHIFT".to_string()),"SHIFT");
-                                    ui.selectable_value(&mut new_mod,(Some(Modifiers::CONTROL), "CTRL".to_string()),"CTRL");
-                                    ui.selectable_value(&mut new_mod,(Some(Modifiers::FN),"FN".to_string()),"FN");
-                                    
+                                    ui.selectable_value(&mut new_mod,(Some(Modifiers::CONTROL), "CTRL".to_string()),"CTRL");                                    
                                     });
                                 egui::ComboBox::from_label("Set new key")
                                     .selected_text(format!("{}", new_key.1))
