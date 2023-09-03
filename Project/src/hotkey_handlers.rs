@@ -6,14 +6,14 @@ use std::fs;
 use std::thread;
 
 //Hotkey handler for settings mode
-pub fn hotkey_handler_mode0(ev:Option<usize>,my_app:&mut MyApp,_ui:&mut egui::Ui,frame:&mut eframe::Frame){
+pub fn hotkey_handler_mode0(ev:Option<usize>,my_app:&mut MyApp,ui:&mut egui::Ui,frame:&mut eframe::Frame){
     match ev {
         None => {}
         Some(i) => {
             if i == 0 {//Acquire
                 frame.set_window_size(egui::Vec2 { x: 0.0, y: 0.0 });
 
-                // my_app.time = ui.input(|i| i.time);
+                my_app.time = ui.input(|i| i.time);
                 my_app.area = (None, None,-1);
                 my_app.def_paint.clear();
                 my_app.paint.clear();

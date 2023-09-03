@@ -59,7 +59,7 @@ pub fn gui_mode0(my_app: &mut MyApp, frame: &mut eframe::Frame, ui: &mut egui::U
                 thread::sleep(Duration::new(u64::from(my_app.delay_time), 0)); 
             }
             frame.set_window_size(egui::Vec2 { x: 0.0, y: 0.0 });
-            // my_app.time = ui.input(|i| i.time);
+            my_app.time = ui.input(|i| i.time);
             my_app.area = (None, None,-1);
             my_app.edit_image=MyScreen::new(None, None);
             my_app.def_paint.clear();

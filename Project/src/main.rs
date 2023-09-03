@@ -1,6 +1,5 @@
 use eframe::{egui, run_native};
 use hotkeys::HotkeysConfig;
-use std::time::Duration;
 mod draw;
 mod gui;
 mod gui_base;
@@ -78,7 +77,7 @@ pub struct MyApp {
     paint: Vec<MyDraw>,
     def_paint: Vec<MyDraw>,
     edit_color:egui::Color32,
-    // time: f64,
+    time: f64,
     confirm_hotkey:bool,
     edit_image: MyScreen,  
 
@@ -105,7 +104,7 @@ impl MyApp {
             paint: Vec::new(),
             def_paint: Vec::new(),
             edit_color:egui::Color32::BLACK,
-            // time: 0.0,
+            time: 0.0,
             confirm_hotkey:true,
             edit_image: MyScreen::new(None, None),
           
@@ -144,8 +143,10 @@ impl eframe::App for MyApp {
             gui_base::custom_window_frame(self,ctx,frame,
                 "Screenshot Utility Tool", //the title in this row is used
                 |my_app: &mut Self, _frame: &mut eframe::Frame, ui| {
+                    if ui.input(|i|i.time)- my_app.time>0.2{
                         my_app.mode = 2;
-                        ui.ctx().request_repaint_after(Duration::from_millis(4000));
+                    }
+                        ui.ctx().request_repaint();
                 }
             );
         } else if self.mode == 2 {
