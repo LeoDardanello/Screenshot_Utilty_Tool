@@ -20,6 +20,7 @@ pub fn hotkey_handler_mode0(ev:Option<usize>,my_app:&mut MyApp,ui:&mut egui::Ui,
                 my_app.paint.clear();
                 my_app.edit_image=MyScreen::new(None, None);
                 my_app.mode = 1;
+                my_app.n_monitor = 0;
             }
             if i == 1 {//Save
                 MessageDialog::new()

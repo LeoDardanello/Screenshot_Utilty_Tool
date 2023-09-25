@@ -65,6 +65,7 @@ pub fn gui_mode0(my_app: &mut MyApp, frame: &mut eframe::Frame, ui: &mut egui::U
             my_app.def_paint.clear();
             my_app.paint.clear();
             my_app.mode = 1;
+            my_app.n_monitor = 0;
         }
     });
     
