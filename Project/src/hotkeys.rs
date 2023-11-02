@@ -1,5 +1,6 @@
 use global_hotkey::{GlobalHotKeyManager, hotkey::HotKey, GlobalHotKeyEvent};
 use keyboard_types::{Code, Modifiers};
+use native_dialog::MessageDialog;
 use crate::MyApp;
 
 pub struct HotkeysConfig{
@@ -16,13 +17,13 @@ pub struct HotkeysConfig{
 
 impl HotkeysConfig{
     pub fn new() -> HotkeysConfig{
-        let h:Vec<HotKey> = vec![HotKey::new(Some(Modifiers::SHIFT), Code::KeyD), HotKey::new(Some(Modifiers::SHIFT), Code::KeyA)];
-        let j:Vec<(Option<Modifiers>, Code)> = vec![(Some(Modifiers::SHIFT), Code::KeyD), (Some(Modifiers::SHIFT), Code::KeyA)];
-        let com:Vec<String> = vec!["Take screenshot".to_string(), "Save".to_string()];
+        let h:Vec<HotKey> = vec![HotKey::new(Some(Modifiers::CONTROL), Code::KeyA), HotKey::new(Some(Modifiers::CONTROL), Code::KeyS), HotKey::new(Some(Modifiers::CONTROL), Code::KeyC)];
+        let j:Vec<(Option<Modifiers>, Code)> = vec![(Some(Modifiers::CONTROL), Code::KeyA), (Some(Modifiers::CONTROL), Code::KeyS), (Some(Modifiers::CONTROL), Code::KeyC)];
+        let com:Vec<String> = vec!["Take screenshot".to_string(), "Save".to_string(), "Copy".to_string()];
         let man = GlobalHotKeyManager::new().unwrap();
         man.register_all(&h).unwrap(); //Registering default hotkeys
 
-        HotkeysConfig { hotkeys: h, hotkeys_seq: j, hotkeys_string: vec![("SHIFT".to_string(), "D".to_string()), ("SHIFT".to_string(), "A".to_string())], new_key: (Code::KeyA, "A".to_string()), new_mod: (Some(Modifiers::SHIFT), "SHIFT".to_string()), enable: true, changed_hotkey:0, commands: com, manager: man}
+        HotkeysConfig { hotkeys: h, hotkeys_seq: j, hotkeys_string: vec![("CTRL".to_string(), "A".to_string()), ("CTRL".to_string(), "S".to_string()),("CTRL".to_string(), "C".to_string())], new_key: (Code::KeyA, "A".to_string()), new_mod: (Some(Modifiers::CONTROL), "CTRL".to_string()), enable: true, changed_hotkey:0, commands: com, manager: man}
     }
 
     pub fn get_new_key(self: &Self) -> (Code, String){
@@ -58,10 +59,6 @@ impl HotkeysConfig{
         return &self.commands[i];
     }
 
-    // pub fn get_hotkey(self: &Self, i:usize) -> (&str, &str){
-    //     return (self.hotkeys_string[i].0.as_str(), self.hotkeys_string[i].1.as_str());
-    // }
-
     pub fn get_hotkey_as_string(self: &Self, i:usize) -> String{
 
         if self.hotkeys_string[i].0.eq(""){
@@ -76,7 +73,6 @@ impl HotkeysConfig{
         if let Ok(event) = GlobalHotKeyEvent::receiver().try_recv() {
             for i in 0..self.hotkeys.len(){
                 if event.id == self.hotkeys[i].id(){
-                    println!("Hotkey # {:?}", i+1);
                     return Some(i);
                 }
             }
@@ -109,16 +105,31 @@ impl HotkeysConfig{
     }
 }
 
+pub fn display_shortcut(my_app: &mut MyApp,ui:&mut egui::Ui){
+    ui.vertical(|ui|{
+
+        for i in 0..my_app.hotkey_conf.get_hotkeys_len() {
+            ui.horizontal(|ui| {
+    
+                let u = my_app.hotkey_conf.get_hotkey_as_string(i);
+    
+                ui.label(egui::RichText::new(my_app.hotkey_conf.get_command(i).to_owned()+&" :".to_string()).font(egui::FontId::proportional(14.0)));
+    
+                ui.label(egui::RichText::new(u).font(egui::FontId::proportional(14.0)));
+            });
+    
+        }
+    });
+}
+    
 pub fn edit_shortcut(my_app: &mut MyApp, ui: &mut egui::Ui){
-    ui.label(
-        egui::RichText::new("Click on the shortcut to edit it")
-            .font(egui::FontId::proportional(17.0)),
-    );
+    ui.label(egui::RichText::new("Click on the shortcut to edit it").font(egui::FontId::proportional(17.0)),);
     ui.add_space(10.0);
 
     ui.horizontal(|ui| {
         //hotkeys display
         ui.vertical(|ui| {
+
             for i in 0..my_app.hotkey_conf.get_hotkeys_len() {
                 ui.horizontal(|ui| {
                     let u = my_app.hotkey_conf.get_hotkey_as_string(i);
@@ -134,6 +145,7 @@ pub fn edit_shortcut(my_app: &mut MyApp, ui: &mut egui::Ui){
                         {
                             //If I click on the link, I unregister the hotkey
                             my_app.hotkey_conf.delete_hotkey(i);
+                            my_app.confirm_hotkey=false;
                         };
                     } else {
                         let mut new_mod = my_app.hotkey_conf.get_new_mod();
@@ -142,28 +154,15 @@ pub fn edit_shortcut(my_app: &mut MyApp, ui: &mut egui::Ui){
                             ui.label(u);
                         } else {
                             ui.vertical(|ui| {
-                                //println!("{:?} + {:?}", self.modif, new_key);
                                 egui::ComboBox::from_label("Set new modifier")
-                                    .selected_text(format!("{:?}", new_mod.1))
+                                    .selected_text(format!("{}", new_mod.1))
                                     .show_ui(ui, |ui| {
-                                        ui.selectable_value(
-                                            &mut new_mod,
-                                            (None, "".to_string()),
-                                            "".to_string(),
-                                        );
-                                        ui.selectable_value(
-                                            &mut new_mod,
-                                            (Some(Modifiers::SHIFT), "SHIFT".to_string()),
-                                            "SHIFT",
-                                        );
-                                        ui.selectable_value(
-                                            &mut new_mod,
-                                            (Some(Modifiers::CONTROL), "CTRL".to_string()),
-                                            "CTRL",
-                                        );
+
+                                    ui.selectable_value(&mut new_mod,(Some(Modifiers::SHIFT), "SHIFT".to_string()),"SHIFT");
+                                    ui.selectable_value(&mut new_mod,(Some(Modifiers::CONTROL), "CTRL".to_string()),"CTRL");                                    
                                     });
                                 egui::ComboBox::from_label("Set new key")
-                                    .selected_text(format!("{:?}", new_key.1))
+                                    .selected_text(format!("{}", new_key.1))
                                     .show_ui(ui, |ui| {
                                         ui.selectable_value(
                                             &mut new_key,
@@ -306,6 +305,13 @@ pub fn edit_shortcut(my_app: &mut MyApp, ui: &mut egui::Ui){
                                     if success {
                                         //modification could fail if for example I try to set an already registered hotkey
                                         my_app.hotkey_conf.set_enable(true);
+                                        my_app.confirm_hotkey=true;
+                                    }else{
+                                        MessageDialog::new()
+                                        .set_title("Error")
+                                        .set_text("Hotkey already used!")
+                                        .show_alert()
+                                        .unwrap();
                                     }
                                 }
                                 my_app.hotkey_conf.set_new_hotkey(new_mod, new_key);
@@ -315,37 +321,5 @@ pub fn edit_shortcut(my_app: &mut MyApp, ui: &mut egui::Ui){
                 });
             }
         });
-        ui.add_space(185.0);
-        //radio button for format selection
-        ui.vertical(|ui| {
-            if ui
-                .add(egui::RadioButton::new(
-                    my_app.output_format == ".jpg",
-                    ".jpg",
-                ))
-                .clicked()
-            {
-                my_app.output_format = String::from(".jpg");
-            }
-
-            if ui
-                .add(egui::RadioButton::new(
-                    my_app.output_format == ".png",
-                    ".png",
-                ))
-                .clicked()
-            {
-                my_app.output_format = String::from(".png");
-            }
-            if ui
-                .add(egui::RadioButton::new(
-                    my_app.output_format == ".gif",
-                    ".gif",
-                ))
-                .clicked()
-            {
-                my_app.output_format = String::from(".gif");
-            }
-        })
     });
 }
